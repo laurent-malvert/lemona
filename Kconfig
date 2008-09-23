@@ -1,0 +1,37 @@
+#
+# Lemona Configuration
+#
+
+menu "Lemona"
+
+config LEMONA
+	tristate "Enable Lemona"
+	help
+	  Lemona is a Kernel Level monitoring system. By selecting this option
+	  every syscalls and memory mapped file will be monitored and reported.
+
+	  WARNING: Enabling this will slow down your system with more or less
+	  impact depending on its usage and characteristics.
+
+	  If unsure, say N.
+
+config	LEMONA_RELAY
+	bool "Enable relaying of log to user-land"
+	depends on LEMONA
+	select RELAY
+	select DEBUG_FS
+	help
+	  Activating this option will lead Lemona to use the relay and debugfs
+	  kernel facilities to make the logs available to user land processes.
+
+	  If unsure, say N.
+
+config	LEMONA_DEBUGFS_DIR
+	string "Name of the debugfs directory"
+	depends on LEMONA_RELAY
+	default lemona
+	help
+	  Name to be used to create the top lemona directory in the debugfs
+	  mount point.
+
+endmenu
