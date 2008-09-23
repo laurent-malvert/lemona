@@ -19,26 +19,30 @@
 
 
 struct zest {
-  int	size;  	/* size taken by this zest along with args value */
-  int	sysnr; 	/* syscall id */
-  int	argnr;	/* number of args */
+  int			size;  	/* size taken by this zest and args sz/value */
+
+  struct timespec	timein;	/* call start time (getmstimeofday) */
+  struct timespec	timeout;/* call end time */
+
+  pid_t			pid;	/* actual pid */
+  pid_t 		tgid;	/* thread group id */
+
+  uid_t			uid,euid,fsuid;	/* don't care about the suid ? */
+  gid_t			gid,egid,fsgid;	/* don't care about the sgid ? */
+
+  int			sysnr; 	/* syscall id */
+  int			argnr;	/* number of args */
+
   /*
    * pointer to an array of int indicating the size taken by each argument
    * this table is located directy after this structure.
    */
-  int	*argsz;
+  int			*argsz;
   /*
    * pointer to the first argument value. its should be placed just after
    * the end of paramsz. Every args value are one after the other.
    */
-  void	*args;
-  /* missing values
-   * pid
-   * tid
-   * uid
-   * cmd line
-   * time (in / out)
-   */
+  void			*args;
 };
 
 /*

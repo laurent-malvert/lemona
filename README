@@ -1,0 +1,76 @@
+Lemona Good To Know Stuff
+================================================
+
+* Supported Kernel & Architecture
+* How-To build statically
+* How-To build extenally
+* Loading Lemona
+* Unloading Lemona
+
+================================================
+Supported Kernel
+================================================
+
+Currently, Lemona has only be tested against the Linux 2.6.26.3
+vanilla sources. Futhermore, Lemona is only available for the x86
+architecture.
+
+================================================
+How-To build statically
+================================================
+
+If you want Lemona to be statically build into your kernel use the
+following intrustions:
+
+  - Download Lemona sources in a new directory (e.g. lemona)
+  - Go to the linux source directory to be patched
+    (e.g. /usr/src/linux-2.6.26.3)
+  - Create a symlink to lemona sources:
+      ln -s $YOUR_PATH/lemona .
+  - Edit arch/x86/Kconfig in your linux sources. Add the following
+    line at the end of it:
+      source "lemona/Kconfig"
+  - Edit the Makefile at the base of the linux sources. Add the following:
+      - under the core-y definition
+          lemona-y := lemona/
+      - to the vmlinux-dirs definition
+          $(lemona-y)
+  - Update your kernel .config (either by hand of by using make
+    menuconfig for instance)
+  - Go to the Lemona menu (at the end of the first screen from menuconfig)
+  - Activate Lemona statically
+  - Save the configuration
+  - Compile your kernel
+
+================================================
+How-To build externally
+================================================
+
+Building Lemona as a kernel module is quite simple:
+
+  - Download Lemona sources in a new directory
+  - If you are not running the kernel for which lemona should be built
+    use the folowing command (The targeted kernel should have its
+    modules installed):
+      LEMONA_TARGET="2.6.26.3" make
+    Where 2.6.26.3 is the version of your kernel in /lib/modules
+  - If you want relay support to be built define the LEMONA_RELAY env variable:
+      LEMONA_RELAY=1 make
+
+================================================
+Loading Lemona
+================================================
+
+To load Lemona simply use the following command:
+  insmod ./lemona.ko
+You should see a line like the following in your logs (use dmesg to see it):
+  Initialization Lemona for kernel tree 2.6.26.3...Done
+
+================================================
+Unloading Lemona
+================================================
+
+To unload Lemona simply use the following command:
+  rmmod lemona
+The following line should appear in your logs (use dmesg to see it)
+  Uninitializing Lemona...Done
