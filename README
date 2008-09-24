@@ -20,7 +20,7 @@ How-To build statically
 ================================================
 
 If you want Lemona to be statically build into your kernel use the
-following intrustions:
+following intructions:
 
   - Download Lemona sources in a new directory (e.g. lemona)
   - Go to the linux source directory to be patched
