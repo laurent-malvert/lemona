@@ -64,7 +64,8 @@ Loading Lemona
 To load Lemona simply use the following command:
   insmod ./lemona.ko
 You should see a line like the following in your logs (use dmesg to see it):
-  Initialization Lemona for kernel tree 2.6.26.3...Done
+  -==Lemona==- Initialization for kernel tree 2.6.26.3...
+  -==Lemona==- Done.
 
 ================================================
 Unloading Lemona
@@ -73,4 +74,5 @@ Unloading Lemona
 To unload Lemona simply use the following command:
   rmmod lemona
 The following line should appear in your logs (use dmesg to see it)
-  Uninitializing Lemona...Done
+  -==Lemona==- Uninitializing...
+  -==Lemona==- Done.

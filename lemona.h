@@ -15,14 +15,27 @@
 #ifndef _LEMONA_H_
 # define _LEMONA_H_
 
+# include <linux/time.h>	/* struct timespec */
+
 # include "lemona_relay.h"
 
+/*
+ * So it'll be easier to spot lemona messages.
+ *
+ * The token paste operator (i.e. ##) is used to avoid a warning if no
+ * trailing arguments are provided (see the GCC C Extension manual).
+ */
+# define LEMONA_PRINTK_PREFIX	" -==Lemona==- "
+# define lemona_printk(s, ...)	printk(LEMONA_PRINTK_PREFIX s, ## __VA_ARGS__)
 
+/*
+ * Every single log entry is represented by a zest.
+ */
 struct zest {
   int			size;  	/* size taken by this zest and args sz/value */
 
-  struct timespec	timein;	/* call start time (getmstimeofday) */
-  struct timespec	timeout;/* call end time */
+  bool			in;
+  struct timespec	time;	/* call start/end time (getnstimeofday) */
 
   pid_t			pid;	/* actual pid */
   pid_t 		tgid;	/* thread group id */
@@ -34,19 +47,53 @@ struct zest {
   int			argnr;	/* number of args */
 
   /*
-   * pointer to an array of int indicating the size taken by each argument
-   * this table is located directy after this structure.
+   * Pointer to an array of int indicating the size taken by each
+   * argument this table is located directy after this structure.
    */
   int			*argsz;
   /*
-   * pointer to the first argument value. its should be placed just after
-   * the end of paramsz. Every args value are one after the other.
+   * Pointer to the first argument value. its should be placed just
+   * after the end of argsz. Every args value are one after the
+   * other.
    */
   void			*args;
+
+  int			extnr;	/* extra value number */
+  int			*extsz;	/* size of each extension */
+  void			*exts;	/* extra values. located after the last arg */
 };
 
 /*
- * Contains all information needed by lemona throughout the module
+ * We're going to have one handler for each arg/ext.
+ */
+/*
+ * These functions are used in two different maneers:
+ *  - if dest is NULL, the space required by the argument is to be returned
+ *  - if dest is not NULL, the argument should be placed in the structure
+ *    and the number of written byte returned (this should match the value
+ *    returned if zest was to be NULL).
+ */
+typedef int	(*bladefn)(void *dest, void* fruit);
+
+struct __mixer {
+  int		argnr;
+  int		extnr;
+  bladefn	blades[4];
+};
+
+/*
+ * We have several mixer, one for each syscall. We use the array
+ * declared in mixers.c to have a kind of automated way of logging
+ * syscall events.
+ */
+struct mixer {
+  int			sysnr;
+  struct __mixer	in;
+  struct __mixer	out;
+} __attribute__((packed));
+
+/*
+ * Contains all information needed by lemona throughout the module.
  */
 struct lemona {
   struct lemona_relay	relay;

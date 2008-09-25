@@ -24,6 +24,11 @@
 #   define CONFIG_LEMONA_DEBUGFS_DIR	"lemona"
 #  endif
 
+/*
+ * Since a log entry is a zest, lot of them give us a lemon, right...?
+ */
+# define LEMONA_RELAY_CHANNEL_NAME	"lemon"
+
 struct lemona_relay {
   /*
    * Hold the struct returned by debugfs during init.
@@ -48,7 +53,7 @@ void		lemona_relay_cleanup(void);
 
 struct lemona_relay { };
 
-#  define lemona_relay_init()
+#  define lemona_relay_init()	 0
 #  define lemona_relay_cleanup()
 
 # endif

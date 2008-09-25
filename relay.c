@@ -58,15 +58,15 @@ int __init		lemona_relay_init(void)
       juice->dfs_dir = debugfs_create_dir(debugfs_dir_name, NULL);
       if (juice->dfs_dir == NULL)
 	{
-	  printk("debugfs_create_dir: failed\n");
+	  lemona_printk("debugfs_create_dir: failed\n");
 	  err = IS_ERR(juice->dfs_dir) ? PTR_ERR(juice->dfs_dir) : -ENOMEM;
 	  goto err;
 	}
-      juice->rchan = relay_open("lemon", juice->dfs_dir,
+      juice->rchan = relay_open(LEMONA_RELAY_CHANNEL_NAME, juice->dfs_dir,
 				512 * 1024, 5, &relay_callbacks, NULL);
       if (juice->rchan == NULL)
 	{
-	  printk("relay_open: failed\n");
+	  lemona_printk("relay_open: failed\n");
 	  err = IS_ERR(juice->rchan) ? PTR_ERR(juice->rchan) : -ENOMEM;
 	  goto err;
 	}
@@ -76,6 +76,12 @@ int __init		lemona_relay_init(void)
  err:
   lemona_relay_cleanup();
   return (err);
+}
+
+int			lemona_relay_log(struct zest *zest)
+{
+  // TODO: implement lemona_relay_log
+  return (-ENOSYS);
 }
 
 void			lemona_relay_cleanup(void)

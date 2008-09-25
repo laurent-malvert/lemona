@@ -36,7 +36,7 @@ static int __init	lemona_init(void)
 {
   long			err = 0;
 
-  printk("Initialization Lemona for kernel tree " UTS_RELEASE "...");
+  lemona_printk("Initialization for kernel tree " UTS_RELEASE "...");
   juice = kzalloc(sizeof(*juice), GFP_KERNEL);
   if (juice == NULL)
     {
@@ -46,20 +46,20 @@ static int __init	lemona_init(void)
   err = lemona_relay_init();
   if (err)
     goto err;
-  printk("Done\n");
+  lemona_printk("Done.\n");
   return (0);
 
  err:
   lemona_cleanup();
-  printk("Failed\n");
+  lemona_printk("Failed.\n");
   return (err);
 }
 
 static void __exit	lemona_exit(void)
 {
-  printk("Uninitializing Lemona...");
+  lemona_printk("Uninitializing Lemona...\n");
   lemona_cleanup();
-  printk("Done\n");
+  lemona_printk("Done.\n");
 }
 
 module_init(lemona_init);

@@ -16,7 +16,7 @@
 # kernel build system and can use its language.
 ifneq ($(KERNELRELEASE),)
 
-lemona-objs 		:= init.o
+lemona-objs 		:= init.o mixers.o logging.o
 obj-$(CONFIG_LEMONA)	+= lemona.o
 
 #if relay support is needed add the relevant files
