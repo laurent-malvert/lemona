@@ -35,6 +35,10 @@ following intructions:
           lemona-y := lemona/
       - to the vmlinux-dirs definition
           $(lemona-y)
+      - under $(lib-y) := $(libs-y1) $(libs-y2)
+          lemona-y	:=  $(patsubst %/, %/built-in.o, $(lemona-y))
+      - to the vmlinux-main definition
+          $(lemona-y)
   - Update your kernel .config (either by hand of by using make
     menuconfig for instance)
   - Go to the Lemona menu (at the end of the first screen from menuconfig)

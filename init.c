@@ -23,7 +23,8 @@
 
 MODULE_LICENSE("Dual MIT/GPL");
 
-struct lemona*		juice = NULL;
+static atomic_t		lemona_initiated	= ATOMIC_INIT(0);
+struct lemona*		juice			= NULL;
 
 static void		lemona_cleanup(void)
 {
@@ -36,7 +37,7 @@ static int __init	lemona_init(void)
 {
   long			err = 0;
 
-  lemona_printk("Initialization for kernel tree " UTS_RELEASE "...");
+  lemona_printk("Initialization for kernel tree " UTS_RELEASE "...\n");
   juice = kzalloc(sizeof(*juice), GFP_KERNEL);
   if (juice == NULL)
     {
@@ -47,6 +48,7 @@ static int __init	lemona_init(void)
   if (err)
     goto err;
   lemona_printk("Done.\n");
+  atomic_set(&lemona_initiated, 1);
   return (0);
 
  err:

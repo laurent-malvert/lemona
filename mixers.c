@@ -73,8 +73,8 @@ const struct mixer mixers[]={
   {
     .sysnr	= __NR_write ,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 3,
+      .extnr	= 0,
       .blades	= { NULL }
     },
     .out	= {

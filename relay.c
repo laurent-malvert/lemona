@@ -80,8 +80,8 @@ int __init		lemona_relay_init(void)
 
 int			lemona_relay_log(struct zest *zest)
 {
-  // TODO: implement lemona_relay_log
-  return (-ENOSYS);
+  relay_write(juice->rchan, "This is a test\n", strlen("This is a test\n"));
+  return (0);
 }
 
 void			lemona_relay_cleanup(void)

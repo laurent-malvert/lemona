@@ -45,9 +45,11 @@ struct lemona_relay {
 #  define rchan		relay.chan
 #  define dfs_dir	relay.dir
 
+struct zest;
+
 int __init	lemona_relay_init(void);
 void		lemona_relay_cleanup(void);
-
+int		lemona_relay_log(struct zest *);
 
 # else
 
@@ -55,6 +57,7 @@ struct lemona_relay { };
 
 #  define lemona_relay_init()	 0
 #  define lemona_relay_cleanup()
+#  define lemona_relay_log(z)	0
 
 # endif
 

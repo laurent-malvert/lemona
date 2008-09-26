@@ -6,6 +6,7 @@ menu "Lemona"
 
 config LEMONA
 	tristate "Enable Lemona"
+	depends on KALLSYMS && KALLSYMS_ALL
 	help
 	  Lemona is a Kernel Level monitoring system. By selecting this option
 	  every syscalls and memory mapped file will be monitored and reported.
@@ -18,11 +19,12 @@ config LEMONA
 config	LEMONA_RELAY
 	bool "Enable relaying of log to user-land"
 	depends on LEMONA
-	select RELAY
-	select DEBUG_FS
+	depends on RELAY && DEBUG_FS
 	help
 	  Activating this option will lead Lemona to use the relay and debugfs
 	  kernel facilities to make the logs available to user land processes.
+
+	  Note: RELAY & DEBUG_FS config options need to be selected
 
 	  If unsure, say N.
 

@@ -99,4 +99,13 @@ struct lemona {
   struct lemona_relay	relay;
 };
 
+
+typedef int	(*lemonalogfn)(int sysnr, bool in, int argnr, int extnr, ...);
+
+/*
+ * Prototypes
+ */
+extern int		lemona_log(int sysnr, bool in,
+				   int argnr, int extnr, ...);
+
 #endif

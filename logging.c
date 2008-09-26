@@ -17,6 +17,7 @@
 #include <linux/err.h>		/* ERR_PTR, PTR_ERR, IS_ERR */
 #include <linux/slab.h>		/* kzalloc */
 #include <linux/sched.h>	/* task_struct, current */
+#include <linux/module.h>	/* EXPORT_SYMBOL */
 
 #include "lemona.h"
 
@@ -50,19 +51,20 @@ static int		lemona_zest_get_size(const struct mixer *mixer,
     {
       if (blades[i] == NULL)
 	{
-	  lemona_printk("lemona_zest_get_size: "
-			"Invalid mixer blade:\n"
-			"sysnr: %i\n" "blade: %i\n" "in: %s\n",
-			mixer->sysnr, i, in ? "true" : "false");
+	  lemona_printk("lemona_zest_get_size: Invalid mixer blade:\n");
+	  lemona_printk("\tsysnr: %i\n", mixer->sysnr);
+	  lemona_printk("\tblade: %i\n", i);
+	  lemona_printk("\tin: %s\n",in ? "true" : "false");
 	  return (-EINVAL);
 	}
       tmp = blades[i](NULL, va_arg(ap, void *));
       if (tmp == -1)
 	{
 	  lemona_printk("lemona_zest_get_size: "
-			"Unable to determine argument size:\n"
-			"sysnr: %i\n" "blade: %i\n" "in: %s\n",
-			mixer->sysnr, i, in ? "true" : "false");
+			"Unable to determine argument size:\n");
+	  lemona_printk("\tsysnr: %i\n", mixer->sysnr);
+	  lemona_printk("\tblade: %i\n", i);
+	  lemona_printk("\tin: %s\n",in ? "true" : "false");
 	  return (-EINVAL);
 	}
       size += tmp;
@@ -172,7 +174,7 @@ static struct zest	*lemona_zest_create(const struct mixer *mixer, bool in,
 					    int argnr, int extnr, va_list ap)
 {
   int			zsz	= 0;
-  struct zest		*z	= NULL;
+  struct zest		*z	= ERR_PTR(-ENOMEM);
   const struct __mixer	*inout;
 
   inout = in == true ? &(mixer->in) : &(mixer->out);
@@ -269,6 +271,7 @@ int			lemona_log(int sysnr, bool in,
    *  - lemona_relay_log
    *  - ...
    */
+  ret = lemona_relay_log(z);
 
  out:
   va_end(ap);
