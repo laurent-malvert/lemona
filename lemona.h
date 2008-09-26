@@ -18,6 +18,7 @@
 # include <linux/time.h>	/* struct timespec */
 
 # include "lemona_relay.h"
+# include "lemona_blades.h"
 
 /*
  * So it'll be easier to spot lemona messages.
@@ -31,7 +32,7 @@
 /*
  * Every single log entry is represented by a zest.
  */
-struct zest {
+struct	lemona_zest {
   int			size;  	/* size taken by this zest and args sz/value */
 
   bool			in;
@@ -61,7 +62,7 @@ struct zest {
   int			extnr;	/* extra value number */
   int			*extsz;	/* size of each extension */
   void			*exts;	/* extra values. located after the last arg */
-};
+} __attribute__((packed));
 
 /*
  * We're going to have one handler for each arg/ext.
@@ -73,12 +74,19 @@ struct zest {
  *    and the number of written byte returned (this should match the value
  *    returned if zest was to be NULL).
  */
-typedef int	(*bladefn)(void *dest, void* fruit);
+typedef int	(*bladefn)(struct lemona_zest *zest, bool isExt,
+			   int idx, int off,
+			   void *fruit1, void *fruit2);
 
-struct __mixer {
-  int		argnr;
-  int		extnr;
-  bladefn	blades[4];
+struct	__lemona_mixer_handler {
+  bool		dual;
+  bladefn	blade;
+};
+
+struct	__lemona_mixer {
+  int				argnr;
+  int				extnr;
+  struct __lemona_mixer_handler	handlers[4];
 };
 
 /*
@@ -86,16 +94,16 @@ struct __mixer {
  * declared in mixers.c to have a kind of automated way of logging
  * syscall events.
  */
-struct mixer {
+struct	lemona_mixer {
   int			sysnr;
-  struct __mixer	in;
-  struct __mixer	out;
-} __attribute__((packed));
+  struct __lemona_mixer	in;
+  struct __lemona_mixer	out;
+};
 
 /*
  * Contains all information needed by lemona throughout the module.
  */
-struct lemona {
+struct	lemona {
   struct lemona_relay	relay;
 };
 

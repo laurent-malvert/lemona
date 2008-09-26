@@ -16,4220 +16,5518 @@
 
 #include "lemona.h"
 
-const struct mixer mixers[]={
-
+const struct lemona_mixer	lemona_mixers[]= {
   {
-    .sysnr	= __NR_restart_syscall ,
+    .sysnr	= __NR_restart_syscall,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_exit ,
+    .sysnr	= __NR_exit,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fork ,
+    .sysnr	= __NR_fork,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_read ,
+    .sysnr	= __NR_read,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_write ,
+    .sysnr	= __NR_write,
     .in		= {
       .argnr	= 3,
       .extnr	= 0,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= false	, .blade = lemona_blade_integer		},
+	{ .dual	= true	, .blade = lemona_blade_output_buffer	},
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_open ,
+    .sysnr	= __NR_open,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_close ,
+    .sysnr	= __NR_close,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_waitpid ,
+    .sysnr	= __NR_waitpid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_creat ,
+    .sysnr	= __NR_creat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_link ,
+    .sysnr	= __NR_link,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_unlink ,
+    .sysnr	= __NR_unlink,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_execve ,
+    .sysnr	= __NR_execve,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_chdir ,
+    .sysnr	= __NR_chdir,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_time ,
+    .sysnr	= __NR_time,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mknod ,
+    .sysnr	= __NR_mknod,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_chmod ,
+    .sysnr	= __NR_chmod,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_lchown ,
+    .sysnr	= __NR_lchown,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_break ,
+    .sysnr	= __NR_break,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_oldstat ,
+    .sysnr	= __NR_oldstat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_lseek ,
+    .sysnr	= __NR_lseek,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getpid ,
+    .sysnr	= __NR_getpid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mount ,
+    .sysnr	= __NR_mount,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_umount ,
+    .sysnr	= __NR_umount,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setuid ,
+    .sysnr	= __NR_setuid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getuid ,
+    .sysnr	= __NR_getuid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_stime ,
+    .sysnr	= __NR_stime,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_ptrace ,
+    .sysnr	= __NR_ptrace,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_alarm ,
+    .sysnr	= __NR_alarm,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_oldfstat ,
+    .sysnr	= __NR_oldfstat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_pause ,
+    .sysnr	= __NR_pause,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_utime ,
+    .sysnr	= __NR_utime,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_stty ,
+    .sysnr	= __NR_stty,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_gtty ,
+    .sysnr	= __NR_gtty,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_access ,
+    .sysnr	= __NR_access,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_nice ,
+    .sysnr	= __NR_nice,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_ftime ,
+    .sysnr	= __NR_ftime,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sync ,
+    .sysnr	= __NR_sync,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_kill ,
+    .sysnr	= __NR_kill,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_rename ,
+    .sysnr	= __NR_rename,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mkdir ,
+    .sysnr	= __NR_mkdir,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_rmdir ,
+    .sysnr	= __NR_rmdir,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_dup ,
+    .sysnr	= __NR_dup,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_pipe ,
+    .sysnr	= __NR_pipe,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_times ,
+    .sysnr	= __NR_times,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_prof ,
+    .sysnr	= __NR_prof,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_brk ,
+    .sysnr	= __NR_brk,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setgid ,
+    .sysnr	= __NR_setgid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getgid ,
+    .sysnr	= __NR_getgid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_signal ,
+    .sysnr	= __NR_signal,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_geteuid ,
+    .sysnr	= __NR_geteuid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getegid ,
+    .sysnr	= __NR_getegid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_acct ,
+    .sysnr	= __NR_acct,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_umount2 ,
+    .sysnr	= __NR_umount2,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_lock ,
+    .sysnr	= __NR_lock,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_ioctl ,
+    .sysnr	= __NR_ioctl,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fcntl ,
+    .sysnr	= __NR_fcntl,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mpx ,
+    .sysnr	= __NR_mpx,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setpgid ,
+    .sysnr	= __NR_setpgid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_ulimit ,
+    .sysnr	= __NR_ulimit,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_oldolduname ,
+    .sysnr	= __NR_oldolduname,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_umask ,
+    .sysnr	= __NR_umask,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_chroot ,
+    .sysnr	= __NR_chroot,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_ustat ,
+    .sysnr	= __NR_ustat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_dup2 ,
+    .sysnr	= __NR_dup2,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getppid ,
+    .sysnr	= __NR_getppid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getpgrp ,
+    .sysnr	= __NR_getpgrp,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setsid ,
+    .sysnr	= __NR_setsid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sigaction ,
+    .sysnr	= __NR_sigaction,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sgetmask ,
+    .sysnr	= __NR_sgetmask,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_ssetmask ,
+    .sysnr	= __NR_ssetmask,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setreuid ,
+    .sysnr	= __NR_setreuid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setregid ,
+    .sysnr	= __NR_setregid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sigsuspend ,
+    .sysnr	= __NR_sigsuspend,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sigpending ,
+    .sysnr	= __NR_sigpending,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sethostname ,
+    .sysnr	= __NR_sethostname,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setrlimit ,
+    .sysnr	= __NR_setrlimit,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getrlimit ,
+    .sysnr	= __NR_getrlimit,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getrusage ,
+    .sysnr	= __NR_getrusage,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_gettimeofday ,
+    .sysnr	= __NR_gettimeofday,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_settimeofday ,
+    .sysnr	= __NR_settimeofday,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getgroups ,
+    .sysnr	= __NR_getgroups,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setgroups ,
+    .sysnr	= __NR_setgroups,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_select ,
+    .sysnr	= __NR_select,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_symlink ,
+    .sysnr	= __NR_symlink,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_oldlstat ,
+    .sysnr	= __NR_oldlstat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_readlink ,
+    .sysnr	= __NR_readlink,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_uselib ,
+    .sysnr	= __NR_uselib,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_swapon ,
+    .sysnr	= __NR_swapon,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_reboot ,
+    .sysnr	= __NR_reboot,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_readdir ,
+    .sysnr	= __NR_readdir,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mmap ,
+    .sysnr	= __NR_mmap,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_munmap ,
+    .sysnr	= __NR_munmap,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_truncate ,
+    .sysnr	= __NR_truncate,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_ftruncate ,
+    .sysnr	= __NR_ftruncate,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fchmod ,
+    .sysnr	= __NR_fchmod,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fchown ,
+    .sysnr	= __NR_fchown,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getpriority ,
+    .sysnr	= __NR_getpriority,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setpriority ,
+    .sysnr	= __NR_setpriority,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_profil ,
+    .sysnr	= __NR_profil,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_statfs ,
+    .sysnr	= __NR_statfs,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fstatfs ,
+    .sysnr	= __NR_fstatfs,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_ioperm ,
+    .sysnr	= __NR_ioperm,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_socketcall ,
+    .sysnr	= __NR_socketcall,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_syslog ,
+    .sysnr	= __NR_syslog,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setitimer ,
+    .sysnr	= __NR_setitimer,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getitimer ,
+    .sysnr	= __NR_getitimer,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_stat ,
+    .sysnr	= __NR_stat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_lstat ,
+    .sysnr	= __NR_lstat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fstat ,
+    .sysnr	= __NR_fstat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_olduname ,
+    .sysnr	= __NR_olduname,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_iopl ,
+    .sysnr	= __NR_iopl,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_vhangup ,
+    .sysnr	= __NR_vhangup,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_idle ,
+    .sysnr	= __NR_idle,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_vm86old ,
+    .sysnr	= __NR_vm86old,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_wait4 ,
+    .sysnr	= __NR_wait4,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_swapoff ,
+    .sysnr	= __NR_swapoff,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sysinfo ,
+    .sysnr	= __NR_sysinfo,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_ipc ,
+    .sysnr	= __NR_ipc,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fsync ,
+    .sysnr	= __NR_fsync,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sigreturn ,
+    .sysnr	= __NR_sigreturn,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_clone ,
+    .sysnr	= __NR_clone,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setdomainname ,
+    .sysnr	= __NR_setdomainname,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_uname ,
+    .sysnr	= __NR_uname,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_modify_ldt ,
+    .sysnr	= __NR_modify_ldt,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_adjtimex ,
+    .sysnr	= __NR_adjtimex,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mprotect ,
+    .sysnr	= __NR_mprotect,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sigprocmask ,
+    .sysnr	= __NR_sigprocmask,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_create_module ,
+    .sysnr	= __NR_create_module,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_init_module ,
+    .sysnr	= __NR_init_module,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_delete_module ,
+    .sysnr	= __NR_delete_module,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_get_kernel_syms ,
+    .sysnr	= __NR_get_kernel_syms,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_quotactl ,
+    .sysnr	= __NR_quotactl,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getpgid ,
+    .sysnr	= __NR_getpgid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fchdir ,
+    .sysnr	= __NR_fchdir,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_bdflush ,
+    .sysnr	= __NR_bdflush,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sysfs ,
+    .sysnr	= __NR_sysfs,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_personality ,
+    .sysnr	= __NR_personality,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_afs_syscall ,
+    .sysnr	= __NR_afs_syscall,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setfsuid ,
+    .sysnr	= __NR_setfsuid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setfsgid ,
+    .sysnr	= __NR_setfsgid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR__llseek ,
+    .sysnr	= __NR__llseek,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getdents ,
+    .sysnr	= __NR_getdents,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR__newselect ,
+    .sysnr	= __NR__newselect,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_flock ,
+    .sysnr	= __NR_flock,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_msync ,
+    .sysnr	= __NR_msync,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_readv ,
+    .sysnr	= __NR_readv,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_writev ,
+    .sysnr	= __NR_writev,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getsid ,
+    .sysnr	= __NR_getsid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fdatasync ,
+    .sysnr	= __NR_fdatasync,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR__sysctl ,
+    .sysnr	= __NR__sysctl,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mlock ,
+    .sysnr	= __NR_mlock,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_munlock ,
+    .sysnr	= __NR_munlock,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mlockall ,
+    .sysnr	= __NR_mlockall,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_munlockall ,
+    .sysnr	= __NR_munlockall,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sched_setparam ,
+    .sysnr	= __NR_sched_setparam,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sched_getparam ,
+    .sysnr	= __NR_sched_getparam,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sched_setscheduler ,
+    .sysnr	= __NR_sched_setscheduler,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sched_getscheduler ,
+    .sysnr	= __NR_sched_getscheduler,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sched_yield ,
+    .sysnr	= __NR_sched_yield,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sched_get_priority_max ,
+    .sysnr	= __NR_sched_get_priority_max,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sched_get_priority_min ,
+    .sysnr	= __NR_sched_get_priority_min,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sched_rr_get_interval ,
+    .sysnr	= __NR_sched_rr_get_interval,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_nanosleep ,
+    .sysnr	= __NR_nanosleep,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mremap ,
+    .sysnr	= __NR_mremap,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setresuid ,
+    .sysnr	= __NR_setresuid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getresuid ,
+    .sysnr	= __NR_getresuid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_vm86 ,
+    .sysnr	= __NR_vm86,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_query_module ,
+    .sysnr	= __NR_query_module,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_poll ,
+    .sysnr	= __NR_poll,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_nfsservctl ,
+    .sysnr	= __NR_nfsservctl,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setresgid ,
+    .sysnr	= __NR_setresgid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getresgid ,
+    .sysnr	= __NR_getresgid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_prctl ,
+    .sysnr	= __NR_prctl,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_rt_sigreturn ,
+    .sysnr	= __NR_rt_sigreturn,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_rt_sigaction ,
+    .sysnr	= __NR_rt_sigaction,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_rt_sigprocmask ,
+    .sysnr	= __NR_rt_sigprocmask,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_rt_sigpending ,
+    .sysnr	= __NR_rt_sigpending,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_rt_sigtimedwait ,
+    .sysnr	= __NR_rt_sigtimedwait,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_rt_sigqueueinfo ,
+    .sysnr	= __NR_rt_sigqueueinfo,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_rt_sigsuspend ,
+    .sysnr	= __NR_rt_sigsuspend,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_pread64 ,
+    .sysnr	= __NR_pread64,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_pwrite64 ,
+    .sysnr	= __NR_pwrite64,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_chown ,
+    .sysnr	= __NR_chown,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getcwd ,
+    .sysnr	= __NR_getcwd,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_capget ,
+    .sysnr	= __NR_capget,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_capset ,
+    .sysnr	= __NR_capset,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sigaltstack ,
+    .sysnr	= __NR_sigaltstack,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sendfile ,
+    .sysnr	= __NR_sendfile,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getpmsg ,
+    .sysnr	= __NR_getpmsg,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_putpmsg ,
+    .sysnr	= __NR_putpmsg,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_vfork ,
+    .sysnr	= __NR_vfork,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_ugetrlimit ,
+    .sysnr	= __NR_ugetrlimit,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mmap2 ,
+    .sysnr	= __NR_mmap2,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_truncate64 ,
+    .sysnr	= __NR_truncate64,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_ftruncate64 ,
+    .sysnr	= __NR_ftruncate64,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_stat64 ,
+    .sysnr	= __NR_stat64,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_lstat64 ,
+    .sysnr	= __NR_lstat64,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fstat64 ,
+    .sysnr	= __NR_fstat64,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_lchown32 ,
+    .sysnr	= __NR_lchown32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getuid32 ,
+    .sysnr	= __NR_getuid32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getgid32 ,
+    .sysnr	= __NR_getgid32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_geteuid32 ,
+    .sysnr	= __NR_geteuid32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getegid32 ,
+    .sysnr	= __NR_getegid32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setreuid32 ,
+    .sysnr	= __NR_setreuid32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setregid32 ,
+    .sysnr	= __NR_setregid32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getgroups32 ,
+    .sysnr	= __NR_getgroups32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setgroups32 ,
+    .sysnr	= __NR_setgroups32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fchown32 ,
+    .sysnr	= __NR_fchown32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setresuid32 ,
+    .sysnr	= __NR_setresuid32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getresuid32 ,
+    .sysnr	= __NR_getresuid32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setresgid32 ,
+    .sysnr	= __NR_setresgid32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getresgid32 ,
+    .sysnr	= __NR_getresgid32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_chown32 ,
+    .sysnr	= __NR_chown32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setuid32 ,
+    .sysnr	= __NR_setuid32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setgid32 ,
+    .sysnr	= __NR_setgid32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setfsuid32 ,
+    .sysnr	= __NR_setfsuid32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setfsgid32 ,
+    .sysnr	= __NR_setfsgid32,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_pivot_root ,
+    .sysnr	= __NR_pivot_root,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mincore ,
+    .sysnr	= __NR_mincore,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_madvise ,
+    .sysnr	= __NR_madvise,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_madvise1 ,
+    .sysnr	= __NR_madvise1,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getdents64 ,
+    .sysnr	= __NR_getdents64,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fcntl64 ,
+    .sysnr	= __NR_fcntl64,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_gettid ,
+    .sysnr	= __NR_gettid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_readahead ,
+    .sysnr	= __NR_readahead,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_setxattr ,
+    .sysnr	= __NR_setxattr,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_lsetxattr ,
+    .sysnr	= __NR_lsetxattr,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fsetxattr ,
+    .sysnr	= __NR_fsetxattr,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getxattr ,
+    .sysnr	= __NR_getxattr,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_lgetxattr ,
+    .sysnr	= __NR_lgetxattr,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fgetxattr ,
+    .sysnr	= __NR_fgetxattr,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_listxattr ,
+    .sysnr	= __NR_listxattr,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_llistxattr ,
+    .sysnr	= __NR_llistxattr,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_flistxattr ,
+    .sysnr	= __NR_flistxattr,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_removexattr ,
+    .sysnr	= __NR_removexattr,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_lremovexattr ,
+    .sysnr	= __NR_lremovexattr,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fremovexattr ,
+    .sysnr	= __NR_fremovexattr,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_tkill ,
+    .sysnr	= __NR_tkill,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sendfile64 ,
+    .sysnr	= __NR_sendfile64,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_futex ,
+    .sysnr	= __NR_futex,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sched_setaffinity ,
+    .sysnr	= __NR_sched_setaffinity,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sched_getaffinity ,
+    .sysnr	= __NR_sched_getaffinity,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_set_thread_area ,
+    .sysnr	= __NR_set_thread_area,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_get_thread_area ,
+    .sysnr	= __NR_get_thread_area,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_io_setup ,
+    .sysnr	= __NR_io_setup,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_io_destroy ,
+    .sysnr	= __NR_io_destroy,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_io_getevents ,
+    .sysnr	= __NR_io_getevents,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_io_submit ,
+    .sysnr	= __NR_io_submit,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_io_cancel ,
+    .sysnr	= __NR_io_cancel,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fadvise64 ,
+    .sysnr	= __NR_fadvise64,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_exit_group ,
+    .sysnr	= __NR_exit_group,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_lookup_dcookie ,
+    .sysnr	= __NR_lookup_dcookie,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_epoll_create ,
+    .sysnr	= __NR_epoll_create,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_epoll_ctl ,
+    .sysnr	= __NR_epoll_ctl,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_epoll_wait ,
+    .sysnr	= __NR_epoll_wait,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_remap_file_pages ,
+    .sysnr	= __NR_remap_file_pages,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_set_tid_address ,
+    .sysnr	= __NR_set_tid_address,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_timer_create ,
+    .sysnr	= __NR_timer_create,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_timer_settime ,
+    .sysnr	= __NR_timer_settime,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_timer_gettime ,
+    .sysnr	= __NR_timer_gettime,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_timer_getoverrun ,
+    .sysnr	= __NR_timer_getoverrun,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_timer_delete ,
+    .sysnr	= __NR_timer_delete,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_clock_settime ,
+    .sysnr	= __NR_clock_settime,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_clock_gettime ,
+    .sysnr	= __NR_clock_gettime,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_clock_getres ,
+    .sysnr	= __NR_clock_getres,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_clock_nanosleep ,
+    .sysnr	= __NR_clock_nanosleep,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_statfs64 ,
+    .sysnr	= __NR_statfs64,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fstatfs64 ,
+    .sysnr	= __NR_fstatfs64,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_tgkill ,
+    .sysnr	= __NR_tgkill,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_utimes ,
+    .sysnr	= __NR_utimes,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fadvise64_64 ,
+    .sysnr	= __NR_fadvise64_64,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_vserver ,
+    .sysnr	= __NR_vserver,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mbind ,
+    .sysnr	= __NR_mbind,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_get_mempolicy ,
+    .sysnr	= __NR_get_mempolicy,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_set_mempolicy ,
+    .sysnr	= __NR_set_mempolicy,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mq_open ,
+    .sysnr	= __NR_mq_open,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mq_unlink ,
+    .sysnr	= __NR_mq_unlink,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mq_timedsend ,
+    .sysnr	= __NR_mq_timedsend,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mq_timedreceive ,
+    .sysnr	= __NR_mq_timedreceive,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mq_notify ,
+    .sysnr	= __NR_mq_notify,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mq_getsetattr ,
+    .sysnr	= __NR_mq_getsetattr,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_kexec_load ,
+    .sysnr	= __NR_kexec_load,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_waitid ,
+    .sysnr	= __NR_waitid,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_add_key ,
+    .sysnr	= __NR_add_key,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_request_key ,
+    .sysnr	= __NR_request_key,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_keyctl ,
+    .sysnr	= __NR_keyctl,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_ioprio_set ,
+    .sysnr	= __NR_ioprio_set,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_ioprio_get ,
+    .sysnr	= __NR_ioprio_get,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_inotify_init ,
+    .sysnr	= __NR_inotify_init,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_inotify_add_watch ,
+    .sysnr	= __NR_inotify_add_watch,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_inotify_rm_watch ,
+    .sysnr	= __NR_inotify_rm_watch,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_migrate_pages ,
+    .sysnr	= __NR_migrate_pages,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_openat ,
+    .sysnr	= __NR_openat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mkdirat ,
+    .sysnr	= __NR_mkdirat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_mknodat ,
+    .sysnr	= __NR_mknodat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fchownat ,
+    .sysnr	= __NR_fchownat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_futimesat ,
+    .sysnr	= __NR_futimesat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fstatat64 ,
+    .sysnr	= __NR_fstatat64,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_unlinkat ,
+    .sysnr	= __NR_unlinkat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_renameat ,
+    .sysnr	= __NR_renameat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_linkat ,
+    .sysnr	= __NR_linkat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_symlinkat ,
+    .sysnr	= __NR_symlinkat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_readlinkat ,
+    .sysnr	= __NR_readlinkat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fchmodat ,
+    .sysnr	= __NR_fchmodat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_faccessat ,
+    .sysnr	= __NR_faccessat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_pselect6 ,
+    .sysnr	= __NR_pselect6,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_ppoll ,
+    .sysnr	= __NR_ppoll,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_unshare ,
+    .sysnr	= __NR_unshare,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_set_robust_list ,
+    .sysnr	= __NR_set_robust_list,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_get_robust_list ,
+    .sysnr	= __NR_get_robust_list,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_splice ,
+    .sysnr	= __NR_splice,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_sync_file_range ,
+    .sysnr	= __NR_sync_file_range,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_tee ,
+    .sysnr	= __NR_tee,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_vmsplice ,
+    .sysnr	= __NR_vmsplice,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_move_pages ,
+    .sysnr	= __NR_move_pages,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_getcpu ,
+    .sysnr	= __NR_getcpu,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_epoll_pwait ,
+    .sysnr	= __NR_epoll_pwait,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_utimensat ,
+    .sysnr	= __NR_utimensat,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_signalfd ,
+    .sysnr	= __NR_signalfd,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
 /*   { */
-/*     .sysnr	= __NR_timerfd_create , */
+/*     .sysnr	= __NR_timerfd_create, */
 /*     .in		= { */
 /*       .argnr	= -1, */
 /*       .extnr	= -1, */
-/*       .blades	= { NULL } */
+/*       .handlers	= { */
+/* 	{ .dual	= true, .blade = NULL }, */
+/*       } */
 /*     }, */
 /*     .out	= { */
 /*       .argnr	= -1, */
 /*       .extnr	= -1, */
-/*       .blades	= { NULL } */
-/*     }, */
+/*       .handlers	= { */
+/* 	{ .dual = false, .blade = NULL }, */
+/*       }, */
+/*     } */
 /*   }, */
   {
-    .sysnr	= __NR_eventfd ,
+    .sysnr	= __NR_eventfd,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-    .sysnr	= __NR_fallocate ,
+    .sysnr	= __NR_fallocate,
     .in		= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
-      .blades	= { NULL }
-    },
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
 /*   { */
-/*     .sysnr	= __NR_timerfd_settime , */
+/*     .sysnr	= __NR_timerfd_settime, */
 /*     .in		= { */
 /*       .argnr	= -1, */
 /*       .extnr	= -1, */
-/*       .blades	= { NULL } */
+/*       .handlers	= { */
+/* 	{ .dual	= true, .blade = NULL }, */
+/*       } */
 /*     }, */
 /*     .out	= { */
 /*       .argnr	= -1, */
 /*       .extnr	= -1, */
-/*       .blades	= { NULL } */
-/*     }, */
+/*       .handlers	= { */
+/* 	{ .dual = false, .blade = NULL }, */
+/*       }, */
+/*     } */
 /*   }, */
 /*   { */
-/*     .sysnr	= __NR_timerfd_gettime , */
+/*     .sysnr	= __NR_timerfd_gettime, */
 /*     .in		= { */
 /*       .argnr	= -1, */
 /*       .extnr	= -1, */
-/*       .blades	= { NULL } */
+/*       .handlers	= { */
+/* 	{ .dual	= true, .blade = NULL }, */
+/*       } */
 /*     }, */
 /*     .out	= { */
 /*       .argnr	= -1, */
 /*       .extnr	= -1, */
-/*       .blades	= { NULL } */
-/*     }, */
+/*       .handlers	= { */
+/* 	{ .dual = false, .blade = NULL }, */
+/*       }, */
+/*     } */
 /*   }, */
 };
 
-const int	mixers_size = sizeof(mixers) / sizeof(*mixers);
+const int	lemona_mixers_size = sizeof(lemona_mixers)
+					/ sizeof(*lemona_mixers);
+

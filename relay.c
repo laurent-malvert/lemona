@@ -78,7 +78,7 @@ int __init		lemona_relay_init(void)
   return (err);
 }
 
-int			lemona_relay_log(struct zest *zest)
+int			lemona_relay_log(const struct lemona_zest *zest)
 {
   relay_write(juice->rchan, "This is a test\n", strlen("This is a test\n"));
   return (0);

@@ -17,39 +17,38 @@
 #include <linux/err.h>		/* ERR_PTR, PTR_ERR, IS_ERR */
 #include <linux/slab.h>		/* kzalloc */
 #include <linux/sched.h>	/* task_struct, current */
-#include <linux/module.h>	/* EXPORT_SYMBOL */
 
 #include "lemona.h"
 
-extern const struct mixer	mixers[];
-extern const int		mixers_size;
+extern const struct lemona_mixer	lemona_mixers[];
+extern const int			lemona_mixers_size;
 
-static int		lemona_zest_get_size(const struct mixer *mixer,
-					     bool in, va_list ap)
+static int	lemona_zest_get_size(const struct lemona_mixer *mixer,
+				     bool in, va_list ap)
 {
-  int			i	= 0;
-  int			tmp	= 0;
-  int			size	= 0;
-  int			bladesnr;
-  const bladefn		*blades;
+  int				i	= 0;
+  int				tmp	= 0;
+  int				size	= 0;
+  int				bladesnr;
+  const struct __lemona_mixer_handler	*handlers;
 
   if (unlikely(mixer == NULL))
     return (-EINVAL);
 
   if (in == true)
     {
-      blades	= mixer->in.blades;
+      handlers	= mixer->in.handlers;
       bladesnr	= mixer->in.argnr + mixer->in.extnr;
     }
   else
     {
-      blades	= mixer->out.blades;
+      handlers	= mixer->out.handlers;
       bladesnr	= mixer->out.argnr + mixer->out.extnr;
     }
   /* one blade for each arg then for each ext */
-  for (i = 0; i < bladesnr; ++i)
+  for (i = 0; i < bladesnr; i += handlers[i].dual ? 2 : 1)
     {
-      if (blades[i] == NULL)
+      if (handlers[i].blade == NULL)
 	{
 	  lemona_printk("lemona_zest_get_size: Invalid mixer blade:\n");
 	  lemona_printk("\tsysnr: %i\n", mixer->sysnr);
@@ -57,7 +56,11 @@ static int		lemona_zest_get_size(const struct mixer *mixer,
 	  lemona_printk("\tin: %s\n",in ? "true" : "false");
 	  return (-EINVAL);
 	}
-      tmp = blades[i](NULL, va_arg(ap, void *));
+      if (handlers[i].dual == true)
+	tmp = handlers[i].blade(NULL, false, i, 0,
+				va_arg(ap, void *), va_arg(ap, void *));
+      else
+	tmp = handlers[i].blade(NULL, false, i, 0, va_arg(ap, void *), NULL);
       if (tmp == -1)
 	{
 	  lemona_printk("lemona_zest_get_size: "
@@ -70,16 +73,17 @@ static int		lemona_zest_get_size(const struct mixer *mixer,
       size += tmp;
     }
   /* we're adding space for the zest itself and the args/exts size array */
-  return (sizeof(struct zest) + (bladesnr * sizeof(int)) + size);
+  return (sizeof(struct lemona_zest) + (bladesnr * sizeof(int)) + size);
 }
 
-static int		lemona_zest_fill(const struct mixer *mixer, bool in,
-					 struct zest *z, va_list ap)
+static int	lemona_zest_fill(const struct lemona_mixer *mixer,
+				 bool in, struct lemona_zest *z,
+				 va_list ap)
 {
-  int			i;
-  int			pos	= 0;
-  int			ret	= 0;
-  const bladefn		*blades;
+  int					i;
+  int					off		= 0;
+  int					ret		= 0;
+  const struct __lemona_mixer_handler	*handlers;
 
   /* we don't check our arguments, this should have already been done */
   getnstimeofday(&(z->time));
@@ -114,42 +118,50 @@ static int		lemona_zest_fill(const struct mixer *mixer, bool in,
    * Which blades to use?
    */
   if (in == true)
-    blades	= mixer->in.blades;
+    handlers	= mixer->in.handlers;
   else
-    blades	= mixer->out.blades;
+    handlers	= mixer->out.handlers;
 
   /*
    * Lets put our args into our zest
    */
-  pos = (int)((char *)z->argsz - (char *)z);
-  for (i = 0; i < z->argnr; ++i)
+  off = (int)((char *)z->args - (char *)z);
+  for (i = 0; i < z->argnr; i += handlers[i].dual ? 2 : 1)
     {
-      ret = blades[i]((char *)z + pos, va_arg(ap, void *));
+      if (handlers[i].dual == true)
+	ret = handlers[i].blade(z, false, i, off,
+				va_arg(ap, void *), va_arg(ap, void *));
+      else
+	ret = handlers[i].blade(z, false, i, off, va_arg(ap, void *), NULL);
       if (ret < 0)
 	  goto out;
 
       z->argsz[i]	= ret;
-      pos		= pos + ret;
+      off		= off + ret;
     }
 
   /*
    * Now it's the exts turn. (yes, I could have made a small function/macro)
    */
-  z->extsz	= (int *)((char *)z + pos); /* just after the last arg value */
+  z->extsz	= (int *)((char *)z + off); /* just after the last arg value */
   z->exts	= z->extsz + z->extnr; /* located right after z->extsz */
-  pos		= (int)((char *)z->extsz - (char *)z);
-  for (i = 0; i < z->extnr; ++i)
+  off		= (int)((char *)z->exts - (char *)z);
+  for (i = 0; i < z->extnr; i += handlers[i].dual ? 2 : 1)
     {
-      ret = blades[i + z->argnr]((char *)z + pos, va_arg(ap, void *));
+      if (handlers[i].dual == true)
+	ret = handlers[i].blade(z, true, i, off,
+				va_arg(ap, void *), va_arg(ap, void *));
+      else
+	ret = handlers[i].blade(z, true, i, off, va_arg(ap, void *), NULL);
       if (ret < 0)
 	  goto out;
 
       z->argsz[i]	= ret;
-      pos		= pos + ret;
+      off		= off + ret;
     }
 
  out:
-  return (ret);
+  return (off);
 }
 
 /**
@@ -170,26 +182,24 @@ static int		lemona_zest_fill(const struct mixer *mixer, bool in,
  * TODO: shall we pass the timespec struct here? Which mean it would
  * be computed straight after the syscall has been entered.
  */
-static struct zest	*lemona_zest_create(const struct mixer *mixer, bool in,
-					    int argnr, int extnr, va_list ap)
+static struct lemona_zest *lemona_zest_create(const struct lemona_mixer *mixer,
+					      bool in, int argnr, int extnr,
+					      va_list ap)
 {
-  int			zsz	= 0;
-  struct zest		*z	= ERR_PTR(-ENOMEM);
-  const struct __mixer	*inout;
+  int				zsz	= 0;
+  struct lemona_zest		*z	= ERR_PTR(-ENOMEM);
+  const struct __lemona_mixer	*inout;
 
   inout = in == true ? &(mixer->in) : &(mixer->out);
   if (inout->argnr != argnr || inout->extnr != extnr)
     {
-      lemona_printk("Conflicting values for syscall %i:\n"
-		    "argnr: %i instead of %i\n"
-		    "extnr: %i instead of %i\n"
-		    "in: %s\n"
-		    "idx: %i\n",
-		    mixer->sysnr,
-		    argnr, inout->argnr,
-		    extnr, inout->extnr,
-		    in ? "true" : "false",
-		    (int)((char *)mixer - (char *)mixers) / sizeof(*mixer));
+      lemona_printk("Conflicting values for syscall %i:\n", mixer->sysnr);
+      lemona_printk("argnr: %i instead of %i\n", argnr, inout->argnr);
+      lemona_printk("extnr: %i instead of %i\n", extnr, inout->extnr);
+      lemona_printk("in: %s\n", in ? "true" : "false");
+      lemona_printk("idx: %i\n",
+		    (int)((char *)mixer - (char *)lemona_mixers)
+		    / sizeof(*mixer));
       return (ERR_PTR(-EINVAL));
     }
   zsz = lemona_zest_get_size(mixer, in, ap);
@@ -215,7 +225,7 @@ static struct zest	*lemona_zest_create(const struct mixer *mixer, bool in,
  * should allow us to avoid duplicating code in kernel patches and
  * provide for easier addition of yep unsupported syscall monitoring.
  *
- * Note, all arguments should be passed as pointer, even integers. The
+ * NOTE: All arguments should be passed as pointer, even integers. The
  * mixers blades will be responsible to cast them in the type they're
  * expecting to handle.
  *
@@ -228,14 +238,14 @@ int			lemona_log(int sysnr, bool in,
   va_list		ap;
   int			i;
   int			ret	= 0;
-  struct zest		*z	= NULL;
+  struct lemona_zest	*z	= NULL;
 
   /* look for the right mixer */
-  for (i = 0; i < mixers_size; ++i)
-    if (sysnr == mixers[i].sysnr)
+  for (i = 0; i < lemona_mixers_size; ++i)
+    if (sysnr == lemona_mixers[i].sysnr)
       break;
   /* none? get out of here */
-  if (i == mixers_size)
+  if (i == lemona_mixers_size)
     {
       lemona_printk("No mixer found for syscall: %i\n", sysnr);
       return (-EINVAL);
@@ -243,7 +253,7 @@ int			lemona_log(int sysnr, bool in,
 
   /* let's mix! */
   va_start(ap, extnr);
-  z = lemona_zest_create(mixers + i, in, argnr, extnr, ap);
+  z = lemona_zest_create(lemona_mixers + i, in, argnr, extnr, ap);
   if (IS_ERR(z))
     {
       ret = PTR_ERR(z);
@@ -256,7 +266,7 @@ int			lemona_log(int sysnr, bool in,
    */
   va_end(ap);
   va_start(ap, extnr);
-  ret = lemona_zest_fill(mixers + i, in, z, ap);
+  ret = lemona_zest_fill(lemona_mixers + i, in, z, ap);
   if (ret != z->size)
     {
       lemona_printk("zest_fill returned a different "
