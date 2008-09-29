@@ -60,4 +60,9 @@ clean:
 	-o -name '*.symvers' -o -name '*~' -o -name '*.order'	\
 	-o -name '*.cmd' -type f | xargs rm -f
 	@rm -rf .tmp_versions
+
+patchclean: clean
+	@find -name '.svn' -type d | xargs rm -rf
+	@find -name '*.tmp' -type f | xargs rm -f
+
 endif

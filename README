@@ -25,7 +25,7 @@ following intructions:
   - Download Lemona sources in a new directory (e.g. lemona)
   - Go to the linux source directory to be patched
     (e.g. /usr/src/linux-2.6.26.3)
-  - Create a symlink to lemona sources:
+  - Create symlinks to lemona sources:
       ln -s $YOUR_PATH/lemona .
   - Edit arch/x86/Kconfig in your linux sources. Add the following
     line at the end of it:

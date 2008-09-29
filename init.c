@@ -23,7 +23,9 @@
 
 MODULE_LICENSE("Dual MIT/GPL");
 
-static atomic_t		lemona_initiated	= ATOMIC_INIT(0);
+extern atomic_t		lemona_activated;
+extern atomic_t		lemona_clients;
+
 struct lemona*		juice			= NULL;
 
 static void		lemona_cleanup(void)
@@ -48,7 +50,7 @@ static int __init	lemona_init(void)
   if (err)
     goto err;
   lemona_printk("Done.\n");
-  atomic_set(&lemona_initiated, 1);
+  atomic_set(&lemona_activated, 1);
   return (0);
 
  err:
@@ -60,6 +62,13 @@ static int __init	lemona_init(void)
 static void __exit	lemona_exit(void)
 {
   lemona_printk("Uninitializing Lemona...\n");
+  atomic_set(&lemona_activated, 0);
+  /*
+   * Wait until our last client finish working.
+   * Their logs will be lost anyway, but we don't want to generate an Oops
+   */
+  if (atomic_read(&lemona_clients) > 0)
+    schedule();
   lemona_cleanup();
   lemona_printk("Done.\n");
 }

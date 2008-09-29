@@ -25,6 +25,20 @@
 #  endif
 
 /*
+ * Size of a sub-buffer in relay?
+ */
+#  ifndef CONFIG_LEMONA_RELAY_SBUF_SZ
+#   define CONFIG_LEMONA_RELAY_SBUF_SZ	(256 * 1024)
+#  endif
+
+/*
+ * Number of sub-buffer in relay?
+ */
+#  ifndef CONFIG_LEMONA_RELAY_SBUF_NR
+#   define CONFIG_LEMONA_RELAY_SBUF_NR	(4)
+#  endif
+
+/*
  * Since a log entry is a zest, lot of them give us a lemon, right...?
  */
 # define LEMONA_RELAY_CHANNEL_NAME	"lemon"
@@ -51,7 +65,7 @@ int __init	lemona_relay_init(void);
 void		lemona_relay_cleanup(void);
 int		lemona_relay_log(const struct lemona_zest *);
 
-# else
+# else /*  CONFIG_LEMONA_RELAY */
 
 struct lemona_relay { };
 
@@ -59,7 +73,6 @@ struct lemona_relay { };
 #  define lemona_relay_cleanup()
 #  define lemona_relay_log(z)	0
 
-# endif
-
+# endif /* CONFIG_LEMONA_RELAY */
 
 #endif

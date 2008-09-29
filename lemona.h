@@ -15,19 +15,11 @@
 #ifndef _LEMONA_H_
 # define _LEMONA_H_
 
-# include <linux/time.h>	/* struct timespec */
-
-# include "lemona_relay.h"
-# include "lemona_blades.h"
-
-/*
- * So it'll be easier to spot lemona messages.
- *
- * The token paste operator (i.e. ##) is used to avoid a warning if no
- * trailing arguments are provided (see the GCC C Extension manual).
- */
-# define LEMONA_PRINTK_PREFIX	" -==Lemona==- "
-# define lemona_printk(s, ...)	printk(LEMONA_PRINTK_PREFIX s, ## __VA_ARGS__)
+# ifdef __KERNEL__
+#  include <linux/time.h>	/* struct timespec */
+# else
+#  include <time.h>		/* struct timespec */
+# endif
 
 /*
  * Every single log entry is represented by a zest.
@@ -64,6 +56,20 @@ struct	lemona_zest {
   void			*exts;	/* extra values. located after the last arg */
 } __attribute__((packed));
 
+# ifdef __KERNEL__
+
+#  include "lemona_relay.h"
+#  include "lemona_blades.h"
+
+/*
+ * So it'll be easier to spot lemona messages.
+ *
+ * The token paste operator (i.e. ##) is used to avoid a warning if no
+ * trailing arguments are provided (see the GCC C Extension manual).
+ */
+#  define LEMONA_PRINTK_PREFIX	" -==Lemona==- "
+#  define lemona_printk(s, ...)	printk(LEMONA_PRINTK_PREFIX s, ## __VA_ARGS__)
+
 /*
  * We're going to have one handler for each arg/ext.
  */
@@ -73,6 +79,15 @@ struct	lemona_zest {
  *  - if dest is not NULL, the argument should be placed in the structure
  *    and the number of written byte returned (this should match the value
  *    returned if zest was to be NULL).
+ */
+/**
+ * bladefn - function pointer for blades
+ * @zest: The zest to be filled or NULL if only size is to be computed
+ * @isExt: Is the given arg(s) are part of the extended values?
+ * @idx: Index of the first value (either in args or exts).
+ * @off: Offset at which to write the first value
+ * @fruit1: The first value
+ * @fruit2: The second value
  */
 typedef int	(*bladefn)(struct lemona_zest *zest, bool isExt,
 			   int idx, int off,
@@ -115,5 +130,7 @@ typedef int	(*lemonalogfn)(int sysnr, bool in, int argnr, int extnr, ...);
  */
 extern int		lemona_log(int sysnr, bool in,
 				   int argnr, int extnr, ...);
+
+# endif /* __KERNEL __ */
 
 #endif

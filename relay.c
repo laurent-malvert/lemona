@@ -22,11 +22,31 @@
 /*
  * Lemona module's options
  */
-static char		*debugfs_dir_name = CONFIG_LEMONA_DEBUGFS_DIR;
+static char		*debugfs_dir_name	= CONFIG_LEMONA_DEBUGFS_DIR;
+static int		relay_subbuf_sz		= CONFIG_LEMONA_RELAY_SBUF_SZ;
+static int		relay_subbuf_nr		= CONFIG_LEMONA_RELAY_SBUF_NR;
 module_param(debugfs_dir_name, charp, S_IRUGO);
+module_param(relay_subbuf_sz, int, S_IRUGO);
+module_param(relay_subbuf_nr, int, S_IRUGO);
 /***/
 
 extern struct lemona	*juice;
+
+/*
+ * For now, I've decided to put ourselves in no-overwrite mode. I
+ * frankly don't know which one to choose. Is it more important to
+ * have the following zest or the one already written? Hard choice,
+ * he?
+ */
+static int		lemona_relay_subbuf_start(struct rchan_buf *buf,
+						  void *subbuf,
+						  void *prev_subbuf,
+						  unsigned int prev_padding)
+{
+  if (relay_buf_full(buf))
+    return (0); /* TODO: some code to avoid creating zest if it's full */
+  return (1);
+}
 
 static struct dentry	*lemona_relay_create_buf_file(const char *filename,
 						      struct dentry *parent,
@@ -45,6 +65,7 @@ static int		lemona_relay_remove_buf_file(struct dentry *dentry)
 }
 
 static struct rchan_callbacks	relay_callbacks = {
+  .subbuf_start		= lemona_relay_subbuf_start,
   .create_buf_file	= lemona_relay_create_buf_file,
   .remove_buf_file	= lemona_relay_remove_buf_file
 };
@@ -63,7 +84,8 @@ int __init		lemona_relay_init(void)
 	  goto err;
 	}
       juice->rchan = relay_open(LEMONA_RELAY_CHANNEL_NAME, juice->dfs_dir,
-				512 * 1024, 5, &relay_callbacks, NULL);
+				relay_subbuf_sz, relay_subbuf_nr,
+				&relay_callbacks, NULL);
       if (juice->rchan == NULL)
 	{
 	  lemona_printk("relay_open: failed\n");
@@ -80,7 +102,7 @@ int __init		lemona_relay_init(void)
 
 int			lemona_relay_log(const struct lemona_zest *zest)
 {
-  relay_write(juice->rchan, "This is a test\n", strlen("This is a test\n"));
+  relay_write(juice->rchan, zest, zest->size);
   return (0);
 }
 

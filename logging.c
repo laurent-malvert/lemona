@@ -23,13 +23,15 @@
 extern const struct lemona_mixer	lemona_mixers[];
 extern const int			lemona_mixers_size;
 
+atomic_t				lemona_clients	= ATOMIC_INIT(0);
+
 static int	lemona_zest_get_size(const struct lemona_mixer *mixer,
 				     bool in, va_list ap)
 {
-  int				i	= 0;
-  int				tmp	= 0;
-  int				size	= 0;
-  int				bladesnr;
+  int					i	= 0;
+  int					tmp	= 0;
+  int					size	= 0;
+  int					bladesnr;
   const struct __lemona_mixer_handler	*handlers;
 
   if (unlikely(mixer == NULL))
@@ -175,10 +177,6 @@ static int	lemona_zest_fill(const struct lemona_mixer *mixer,
  * syscall it should avoid duplicating code in kernel patches and
  * provide for easier addition of yep unsupported syscall monitoring.
  *
- * Note, all arguments should be passed as pointer, even integers. The
- * mixers blades will be responsible on casting them in the type
- * they're expecting to handle.
- *
  * TODO: shall we pass the timespec struct here? Which mean it would
  * be computed straight after the syscall has been entered.
  */
@@ -240,14 +238,17 @@ int			lemona_log(int sysnr, bool in,
   int			ret	= 0;
   struct lemona_zest	*z	= NULL;
 
+  atomic_inc(&lemona_clients);
   /* look for the right mixer */
   for (i = 0; i < lemona_mixers_size; ++i)
     if (sysnr == lemona_mixers[i].sysnr)
       break;
+
   /* none? get out of here */
   if (i == lemona_mixers_size)
     {
       lemona_printk("No mixer found for syscall: %i\n", sysnr);
+      atomic_dec(&lemona_clients);
       return (-EINVAL);
     }
 
@@ -286,6 +287,7 @@ int			lemona_log(int sysnr, bool in,
  out:
   va_end(ap);
   kfree(z); /* it handles NULL pointer, no worries ;-) */
+  atomic_dec(&lemona_clients);
   return (ret);
 }
 
