@@ -6,6 +6,7 @@ Lemona Good To Know Stuff
 * How-To Build Using Partial Patch (Developers)
 * Loading Lemona (if build as a Module)
 * Unloading Lemona (if build as a Module)
+* How-To Generate Kernel Patch (Developers)
 
 ================================================
 Supported Kernel
@@ -24,14 +25,17 @@ Building Lemona as a kernel module is quite simple:
   - Download the patch corresponding to your kernel:
      wget http://lemona.googlecode.com/svn/trunk/patchs/patch-X.X.XX.X \
      -O lemona.patch-X.X.XX.X
+
   - Apply the patch to your kernel
      cd $(PATH_TO_KERNEL_SRC)
      patch -p1 < lemona_patch-X.X.XX.X
+
   - Select the build mode for lemona in your kernel .config by using
     make menuconfig for instance
      make menuconfig
        Lemona ->
          Enable Lemona
+
   - Build & install your new kernel
 
 ================================================
@@ -40,15 +44,18 @@ How-To Build Using Partial Patch (Developers)
 
   - Checkout the lemona sources
      svn co http://lemona.googlecode.com/svn/trunk/ lemona-read-only
+
   - Update your kernel sources to include lemona
      cd $(PATH_TO_KERNEL_SRC)
      patch -p1 < $(PATH_TO_LEMONA_SRC)/patchs/patch-X.X.XX.X.partial
      ln -s $(PATH_TO_LEMONA_SRC) lemona
+
   - Select the build mode for lemona in your kernel .config by using
     make menuconfig for instance
      make menuconfig
        Lemona ->
          Enable Lemona
+
   - Build & install your new kernel
 
 ================================================
@@ -70,3 +77,34 @@ To unload Lemona simply use the following command:
 The following line should appear in your logs (use dmesg to see it)
   -==Lemona==- Uninitializing...
   -==Lemona==- Done.
+
+================================================
+How-To Generate Kernel Patch (Developers)
+================================================
+
+To generate a new lemona patch, you will need the following:
+  - a Linux Kernel vanilla untouched (i.e. you just extracted it and
+    didn't do ANYTHING else. No make menuconfig, no compilation, NOTHING).
+    We'll call it linux.vanilla.
+
+  - The same Kernel modified to support Lemona but without any object,
+    backup, vn or other uneeded files.
+    We'll call it linux.lemona
+
+  - These 2 folders should be directly accessible from a common one
+    (use symbolic links if necessary)
+
+Now, generating the patch is quite easy:
+  - Go to the directory where you can directly access both kernel sources
+
+  - Execute the following command (where X.X.XX.X is the kernel version)
+     diff -uNr linux.vanilla linux.lemona > patch-X.X.XX.X
+
+  - NOTE: Be sure NOT to have any trailing directory before either
+    linux.vanilla or linux.lemona or the standard patching method (-p1
+    option to patch) won't work
+
+  - Check your patch to ensure that it didn't include any unwanted
+    change (maybe you forgot to delete a backup file?)
+
+
