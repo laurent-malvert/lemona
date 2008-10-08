@@ -54,12 +54,40 @@ static struct dentry	*lemona_relay_create_buf_file(const char *filename,
 						      struct rchan_buf *buf,
 						      int *is_global)
 {
-  return (debugfs_create_file(filename, mode, parent,
-			      buf, &relay_file_operations));
+  struct dentry			*d;
+  struct lemona_relay_file	*f;
+
+  d = debugfs_create_file(filename, mode, parent,
+			  buf, &relay_file_operations);
+  if (d != NULL)
+    {
+      f = kmalloc(sizeof(*f), GFP_KERNEL);
+      if (f == NULL)
+	{
+	  debugfs_remove(d);
+	  d = NULL;
+	}
+      else
+	{
+	  f->d = d;
+	  list_add_tail(&(f->next), &(juice->relay.files));
+	}
+    }
+  return (d);
 }
 
 static int		lemona_relay_remove_buf_file(struct dentry *dentry)
 {
+  struct lemona_relay_file	*f;
+
+  list_for_each_entry(f, &(juice->relay.files), next) {
+    if (f->d == dentry)
+      {
+	list_del(&(f->next));
+	kfree(f);
+	break;
+      }
+  }
   debugfs_remove(dentry);
   return (0);
 }
@@ -83,6 +111,11 @@ int __init		lemona_relay_init(void)
 	  err = IS_ERR(juice->dfs_dir) ? PTR_ERR(juice->dfs_dir) : -ENOMEM;
 	  goto err;
 	}
+      /*
+	need to be done before relay_open, since relay open will call
+	our lemona_relay_subbuf_start handler which use the list
+       */
+      INIT_LIST_HEAD(&(juice->relay.files));
       juice->rchan = relay_open(LEMONA_RELAY_CHANNEL_NAME, juice->dfs_dir,
 				relay_subbuf_sz, relay_subbuf_nr,
 				&relay_callbacks, NULL);
@@ -98,6 +131,17 @@ int __init		lemona_relay_init(void)
  err:
   lemona_relay_cleanup();
   return (err);
+}
+
+bool			lemona_relay_is_ours(const struct dentry *dentry)
+{
+  struct lemona_relay_file	*f;
+
+  list_for_each_entry(f, &(juice->relay.files), next) {
+    if (f->d == dentry)
+      return (true);
+  }
+  return (false);
 }
 
 int			lemona_relay_log(const struct lemona_zest *zest)

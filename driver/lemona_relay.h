@@ -43,17 +43,27 @@
  */
 # define LEMONA_RELAY_CHANNEL_NAME	"lemon"
 
+struct lemona_relay_file {
+  struct list_head	next;
+  struct dentry		*d;
+};
+
 struct lemona_relay {
   /*
    * Hold the struct returned by debugfs during init.
    * The directory will use the value of CONFIG_LEMONA_DEBUGFS_DIR.
    * This is overridable during module loading and from the kernel config.
    */
-  struct dentry	*dir;
+  struct dentry		*dir;
   /*
    * Structure designing the channel created by relay for us to use
    */
-  struct rchan	*chan;
+  struct rchan		*chan;
+
+  /*
+   * Lit of files (struct dentry) created for relay
+   */
+  struct list_head	files;
 };
 
 #  define rchan		relay.chan
@@ -64,6 +74,7 @@ struct lemona_zest;
 int __init	lemona_relay_init(void);
 void		lemona_relay_cleanup(void);
 int		lemona_relay_log(const struct lemona_zest *);
+bool		lemona_relay_is_our(const struct dentry *dentry);
 
 # else /*  CONFIG_LEMONA_RELAY */
 
@@ -72,6 +83,7 @@ struct lemona_relay { };
 #  define lemona_relay_init()	 0
 #  define lemona_relay_cleanup()
 #  define lemona_relay_log(z)	0
+#  define lemona_relay_is_our(d) false
 
 # endif /* CONFIG_LEMONA_RELAY */
 

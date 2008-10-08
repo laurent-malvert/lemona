@@ -18,6 +18,10 @@
 #include <linux/slab.h>		/* kzalloc */
 #include <linux/sched.h>	/* task_struct, current */
 
+#include <linux/in.h>
+#include <linux/net.h>
+#include <linux/socket.h>
+
 #include "lemona.h"
 
 extern const struct lemona_mixer	lemona_mixers[];
@@ -212,6 +216,47 @@ static struct lemona_zest *lemona_zest_create(const struct lemona_mixer *mixer,
   return (z);
 }
 
+/*
+ * This is simply a test to check how to send something on the network.
+ * Server IP/PORT should be given at module load time or during kernel config
+ */
+static void		lemona_send_log(struct lemona_zest *zest)
+{
+  int			ret;
+  struct socket		*sock = NULL;
+  struct sockaddr_in	sin = {
+    .sin_family		= AF_INET,
+    .sin_addr.s_addr	= htonl(INADDR_LOOPBACK),
+    .sin_port		= htons(4242)
+  };
+  struct kvec		kvec = {
+    .iov_base		= "Test Message\n",
+    .iov_len		= sizeof("Test Message\n")
+  };
+  struct msghdr		hdr = { 0 };
+
+  ret = sock_create_kern(AF_INET, SOCK_STREAM, IPPROTO_TCP, &sock);
+  if (ret < 0)
+    {
+      lemona_printk("Unable to create new socket: %i\n", ret);
+      goto out;
+    }
+
+  ret = kernel_connect(sock, (struct sockaddr *)&sin, sizeof(sin), 0);
+  if (ret < 0)
+    {
+      lemona_printk("Unable to connect: %i\n", ret);
+      goto out;
+    }
+
+  ret = kernel_sendmsg(sock, &hdr, &kvec, 1, kvec.iov_len);
+  lemona_printk("Sent message: %i\n", ret);
+
+ out:
+  if (sock != NULL)
+    sock_release(sock);
+}
+
 /**
  * lemona_log - generate a new zest and add it to the log
  * @sysnr: syscall being monitored
@@ -283,6 +328,7 @@ int			lemona_log(int sysnr, bool in,
    *  - ...
    */
   ret = lemona_relay_log(z);
+/*   lemona_send_log(z); */
 
  out:
   va_end(ap);

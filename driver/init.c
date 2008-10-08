@@ -67,7 +67,7 @@ static void __exit	lemona_exit(void)
    * Wait until our last client finish working.
    * Their logs will be lost anyway, but we don't want to generate an Oops
    */
-  if (atomic_read(&lemona_clients) > 0)
+  while (atomic_read(&lemona_clients) > 0)
     schedule();
   lemona_cleanup();
   lemona_printk("Done.\n");
