@@ -12,22 +12,26 @@
 ** governing permissions and limitations under the License.
 */
 
-#include <stdarg.h>
+#include <stdarg.h>		/* va_* */
 
 #include <linux/err.h>		/* ERR_PTR, PTR_ERR, IS_ERR */
 #include <linux/slab.h>		/* kzalloc */
 #include <linux/sched.h>	/* task_struct, current */
-
-#include <linux/in.h>
-#include <linux/net.h>
-#include <linux/socket.h>
 
 #include "lemona.h"
 
 extern const struct lemona_mixer	lemona_mixers[];
 extern const int			lemona_mixers_size;
 
+#if defined (CONFIG_LEMONA_MODULE)
 atomic_t				lemona_clients	= ATOMIC_INIT(0);
+# define lemona_clients_inc() atomic_inc(&lemona_clients)
+# define lemona_clients_dec() atomic_dec(&lemona_clients)
+#else
+# define lemona_clients_inc(x)
+# define lemona_clients_dec(x)
+#endif
+
 
 static int	lemona_zest_get_size(const struct lemona_mixer *mixer,
 				     bool in, va_list ap)
@@ -216,47 +220,6 @@ static struct lemona_zest *lemona_zest_create(const struct lemona_mixer *mixer,
   return (z);
 }
 
-/*
- * This is simply a test to check how to send something on the network.
- * Server IP/PORT should be given at module load time or during kernel config
- */
-static void		lemona_send_log(struct lemona_zest *zest)
-{
-  int			ret;
-  struct socket		*sock = NULL;
-  struct sockaddr_in	sin = {
-    .sin_family		= AF_INET,
-    .sin_addr.s_addr	= htonl(INADDR_LOOPBACK),
-    .sin_port		= htons(4242)
-  };
-  struct kvec		kvec = {
-    .iov_base		= "Test Message\n",
-    .iov_len		= sizeof("Test Message\n")
-  };
-  struct msghdr		hdr = { 0 };
-
-  ret = sock_create_kern(AF_INET, SOCK_STREAM, IPPROTO_TCP, &sock);
-  if (ret < 0)
-    {
-      lemona_printk("Unable to create new socket: %i\n", ret);
-      goto out;
-    }
-
-  ret = kernel_connect(sock, (struct sockaddr *)&sin, sizeof(sin), 0);
-  if (ret < 0)
-    {
-      lemona_printk("Unable to connect: %i\n", ret);
-      goto out;
-    }
-
-  ret = kernel_sendmsg(sock, &hdr, &kvec, 1, kvec.iov_len);
-  lemona_printk("Sent message: %i\n", ret);
-
- out:
-  if (sock != NULL)
-    sock_release(sock);
-}
-
 /**
  * lemona_log - generate a new zest and add it to the log
  * @sysnr: syscall being monitored
@@ -283,7 +246,8 @@ int			lemona_log(int sysnr, bool in,
   int			ret	= 0;
   struct lemona_zest	*z	= NULL;
 
-  atomic_inc(&lemona_clients);
+  lemona_clients_inc();
+
   /* look for the right mixer */
   for (i = 0; i < lemona_mixers_size; ++i)
     if (sysnr == lemona_mixers[i].sysnr)
@@ -293,7 +257,7 @@ int			lemona_log(int sysnr, bool in,
   if (i == lemona_mixers_size)
     {
       lemona_printk("No mixer found for syscall: %i\n", sysnr);
-      atomic_dec(&lemona_clients);
+      lemona_clients_dec();
       return (-EINVAL);
     }
 
@@ -316,24 +280,26 @@ int			lemona_log(int sysnr, bool in,
   if (ret != z->size)
     {
       lemona_printk("zest_fill returned a different "
-		    "value than zest_get_size: %i instead of %i\n",
-		    ret, z->size);
+		    "value than zest_get_size (syscall %i): "
+		    "%i instead of %i\n",
+		    sysnr, ret, z->size);
       ret = -EINVAL;
       goto out;
     }
+  ret = 0;
 
   /*
    * TODO: call the different logging facilities:
    *  - lemona_relay_log
    *  - ...
    */
-  ret = lemona_relay_log(z);
-/*   lemona_send_log(z); */
+  lemona_relay_log(z);
+  lemona_net_log(z);
 
  out:
   va_end(ap);
   kfree(z); /* it handles NULL pointer, no worries ;-) */
-  atomic_dec(&lemona_clients);
+  lemona_clients_dec();
   return (ret);
 }
 

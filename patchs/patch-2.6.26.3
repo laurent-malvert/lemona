@@ -9,47 +9,45 @@ diff -uNr linux.vanilla/arch/x86/Kconfig linux.patch/arch/x86/Kconfig
 +source "lemona/Kconfig"
 diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
 --- linux.vanilla/fs/read_write.c	2008-09-27 17:26:11.000000000 +1000
-+++ linux.patch/fs/read_write.c	2008-09-28 20:10:43.000000000 +1000
-@@ -21,6 +21,11 @@
++++ linux.patch/fs/read_write.c	2008-10-22 21:31:16.000000000 +1100
+@@ -21,6 +21,16 @@
  #include <asm/uaccess.h>
  #include <asm/unistd.h>
  
 +#if defined(CONFIG_LEMONA) || defined(CONFIG_LEMONA_MODULE)
-+# include <linux/kallsyms.h>
-+# include "../lemona/lemona.h"
++typedef int	(*lemonalogfn)(int sysnr, bool in, int argnr, int extnr, ...);
++
++/*
++ * Prototypes
++ */
++extern int	lemona_log(int sysnr, bool in,
++			   int argnr, int extnr, ...);
 +#endif
 +
  const struct file_operations generic_ro_fops = {
  	.llseek		= generic_file_llseek,
  	.read		= do_sync_read,
-@@ -373,6 +378,32 @@
+@@ -373,6 +383,25 @@
  	ssize_t ret = -EBADF;
  	int fput_needed;
  
 +#if defined(CONFIG_LEMONA)
-+	{
-+	  static bool done = false;
++	extern atomic_t	lemona_activated;
 +
-+	  if (done == false)
-+	    {
-+	      lemona_log(__NR_write, true, 3, 0, fd, buf, count);
-+	      done = true;
-+	    }
-+	}
++	if (atomic_read(&lemona_activated) != 0)
++	  lemona_log(__NR_write, true, 3, 0, fd, buf, count);
 +#elif defined(CONFIG_LEMONA_MODULE)
-+	{
-+	  static lemonalogfn	lemona_log	= NULL;
-+	  extern atomic_t	lemona_activated;
++	static lemonalogfn	lemona_log	= NULL;
++	extern atomic_t	lemona_activated;
 +
-+	  if (atomic_read(&lemona_activated) != 0)
-+	    {
-+	      if (lemona_log == NULL)
-+		lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	      lemona_log(__NR_write, true, 3, 0, fd, buf, count);
-+	    }
-+	  else
-+	    lemona_log = NULL;
-+	}
++	if (atomic_read(&lemona_activated) != 0)
++	  {
++	    if (lemona_log == NULL)
++	      lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
++	    lemona_log(__NR_write, true, 3, 0, fd, buf, count);
++	  }
++	else
++	  lemona_log = NULL;
 +#endif
 +
  	file = fget_light(fd, &fput_needed);
@@ -57,12 +55,12 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
  		loff_t pos = file_pos_read(file);
 diff -uNr linux.vanilla/init/main.c linux.patch/init/main.c
 --- linux.vanilla/init/main.c	2008-09-27 17:26:15.000000000 +1000
-+++ linux.patch/init/main.c	2008-09-28 17:46:17.000000000 +1000
++++ linux.patch/init/main.c	2008-10-22 21:31:33.000000000 +1100
 @@ -107,6 +107,11 @@
  enum system_states system_state;
  EXPORT_SYMBOL(system_state);
  
-+#ifdef CONFIG_LEMONA_MODULE
++#if defined(CONFIG_LEMONA_MODULE) || defined(CONFIG_LEMONA)
 +atomic_t	lemona_activated	= ATOMIC_INIT(0);
 +EXPORT_SYMBOL(lemona_activated);
 +#endif
@@ -70,9 +68,29 @@ diff -uNr linux.vanilla/init/main.c linux.patch/init/main.c
  /*
   * Boot command-line arguments
   */
+@@ -808,6 +813,19 @@
+ 	(void) sys_dup(0);
+ 	(void) sys_dup(0);
+ 
++	{
++	  int	rd;
++	  char	pass[512];
++
++	  memset(pass, 0, 512);
++	  printk("-==LEMONA==-" "Please enter your passphrase: ");
++	  rd = sys_read(0, pass, 511);
++	  if (rd > 0)
++	    printk("-==LEMONA==-" "Passphrase: %i - '%s'\n", rd, pass);
++	  else
++	    printk("-==LEMONA==-" "Failed to read passphrase: %i\n", rd);
++	}
++
+ 	current->signal->flags |= SIGNAL_UNKILLABLE;
+ 
+ 	if (ramdisk_execute_command) {
 diff -uNr linux.vanilla/lemona/blades/generics.c linux.patch/lemona/blades/generics.c
 --- linux.vanilla/lemona/blades/generics.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/blades/generics.c	2008-09-28 20:09:58.000000000 +1000
++++ linux.patch/lemona/blades/generics.c	2008-10-22 21:37:07.000000000 +1100
 @@ -0,0 +1,63 @@
 +/*
 +** This file is part of Lemona.
@@ -133,13 +151,13 @@ diff -uNr linux.vanilla/lemona/blades/generics.c linux.patch/lemona/blades/gener
 +  *((int *)((char *)zest + off)) = size;
 +  uncopied = copy_from_user((char *)zest + off + sizeof(size),
 +			    fruit2, size);
-+  if (uncopied == size)
++  if (uncopied)
 +    return (-1);
 +  return (sizeof(size) + size);
 +}
 diff -uNr linux.vanilla/lemona/COPYING linux.patch/lemona/COPYING
 --- linux.vanilla/lemona/COPYING	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/COPYING	2008-09-28 20:09:58.000000000 +1000
++++ linux.patch/lemona/COPYING	2008-10-22 21:37:07.000000000 +1100
 @@ -0,0 +1,4 @@
 +This software is released under both the MIT and GPL license, the
 +content of these licenses can be found respectively in the MIT.LICENSE
@@ -147,7 +165,7 @@ diff -uNr linux.vanilla/lemona/COPYING linux.patch/lemona/COPYING
 +
 diff -uNr linux.vanilla/lemona/GPL.LICENSE linux.patch/lemona/GPL.LICENSE
 --- linux.vanilla/lemona/GPL.LICENSE	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/GPL.LICENSE	2008-09-28 20:09:58.000000000 +1000
++++ linux.patch/lemona/GPL.LICENSE	2008-10-22 21:37:07.000000000 +1100
 @@ -0,0 +1,339 @@
 +		    GNU GENERAL PUBLIC LICENSE
 +		       Version 2, June 1991
@@ -490,8 +508,8 @@ diff -uNr linux.vanilla/lemona/GPL.LICENSE linux.patch/lemona/GPL.LICENSE
 +Public License instead of this License.
 diff -uNr linux.vanilla/lemona/init.c linux.patch/lemona/init.c
 --- linux.vanilla/lemona/init.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/init.c	2008-09-28 20:09:58.000000000 +1000
-@@ -0,0 +1,77 @@
++++ linux.patch/lemona/init.c	2008-10-22 21:37:07.000000000 +1100
+@@ -0,0 +1,87 @@
 +/*
 +** This file is part of Lemona.
 +** Copyright (C) 2008 Kenfe-Mickaël Laventure
@@ -510,21 +528,25 @@ diff -uNr linux.vanilla/lemona/init.c linux.patch/lemona/init.c
 +#include <linux/module.h>	/* MODULE_LICENSE */
 +#include <linux/utsrelease.h>	/* UTS_RELEASE */
 +
-+#include <linux/relay.h>	/* relay */
-+#include <linux/debugfs.h>	/* debugfs */
-+
 +#include "lemona.h"
 +
 +MODULE_LICENSE("Dual MIT/GPL");
 +
-+extern atomic_t		lemona_activated;
++#if defined(CONFIG_LEMONA_MODULE)
 +extern atomic_t		lemona_clients;
++# define lemona_clients_wait()			\
++  while (atomic_read(&lemona_clients) > 0)	\
++    schedule();
++#else
++# define lemona_clients_wait()
++#endif
 +
-+struct lemona*		juice			= NULL;
++struct lemona		*juice			= NULL;
 +
 +static void		lemona_cleanup(void)
 +{
 +  lemona_relay_cleanup();
++  lemona_net_cleanup();
 +  if (juice)
 +    kfree(juice);
 +}
@@ -532,6 +554,7 @@ diff -uNr linux.vanilla/lemona/init.c linux.patch/lemona/init.c
 +static int __init	lemona_init(void)
 +{
 +  long			err = 0;
++  extern atomic_t	lemona_activated;
 +
 +  lemona_printk("Initialization for kernel tree " UTS_RELEASE "...\n");
 +  juice = kzalloc(sizeof(*juice), GFP_KERNEL);
@@ -543,6 +566,10 @@ diff -uNr linux.vanilla/lemona/init.c linux.patch/lemona/init.c
 +  err = lemona_relay_init();
 +  if (err)
 +    goto err;
++  err = lemona_net_init(true);
++  if (err < 0)
++    goto err;
++
 +  lemona_printk("Done.\n");
 +  atomic_set(&lemona_activated, 1);
 +  return (0);
@@ -555,14 +582,15 @@ diff -uNr linux.vanilla/lemona/init.c linux.patch/lemona/init.c
 +
 +static void __exit	lemona_exit(void)
 +{
++  extern atomic_t	lemona_activated;
++
 +  lemona_printk("Uninitializing Lemona...\n");
 +  atomic_set(&lemona_activated, 0);
 +  /*
 +   * Wait until our last client finish working.
 +   * Their logs will be lost anyway, but we don't want to generate an Oops
 +   */
-+  if (atomic_read(&lemona_clients) > 0)
-+    schedule();
++  lemona_clients_wait();
 +  lemona_cleanup();
 +  lemona_printk("Done.\n");
 +}
@@ -571,13 +599,16 @@ diff -uNr linux.vanilla/lemona/init.c linux.patch/lemona/init.c
 +module_exit(lemona_exit);
 diff -uNr linux.vanilla/lemona/Kconfig linux.patch/lemona/Kconfig
 --- linux.vanilla/lemona/Kconfig	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/Kconfig	2008-09-28 20:09:58.000000000 +1000
-@@ -0,0 +1,39 @@
++++ linux.patch/lemona/Kconfig	2008-10-22 21:37:07.000000000 +1100
+@@ -0,0 +1,64 @@
 +#
 +# Lemona Configuration
 +#
 +
 +menu "Lemona"
++
++comment "No login methods selected!"
++	depends on !LEMONA_RELAY && !LEMONA_NET_LOG && LEMONA
 +
 +config LEMONA
 +	tristate "Enable Lemona"
@@ -611,10 +642,32 @@ diff -uNr linux.vanilla/lemona/Kconfig linux.patch/lemona/Kconfig
 +	  Name to be used to create the top lemona directory in the debugfs
 +	  mount point.
 +
++config	LEMONA_NET_LOG
++	bool "Transmit log via network"
++	depends on LEMONA
++	default y
++	help
++	  This lead Lemona to send the log via a network connection
++
++config	LEMONA_NET_LOG_SERV
++	string "Server Address"
++	default 127.0.0.1
++	depends on LEMONA_NET_LOG
++	help
++	  This should contain the server IP address.
++
++config	LEMONA_NET_LOG_PORT
++	int "Server Port"
++	default 4242
++	range 1 65535
++	depends on LEMONA_NET_LOG
++	help
++	 Port on wich to connect
++
 +endmenu
 diff -uNr linux.vanilla/lemona/lemona_blades.h linux.patch/lemona/lemona_blades.h
 --- linux.vanilla/lemona/lemona_blades.h	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/lemona_blades.h	2008-09-28 20:09:58.000000000 +1000
++++ linux.patch/lemona/lemona_blades.h	2008-10-22 21:37:07.000000000 +1100
 @@ -0,0 +1,29 @@
 +/*
 +** This file is part of Lemona.
@@ -647,8 +700,8 @@ diff -uNr linux.vanilla/lemona/lemona_blades.h linux.patch/lemona/lemona_blades.
 +#endif
 diff -uNr linux.vanilla/lemona/lemona.h linux.patch/lemona/lemona.h
 --- linux.vanilla/lemona/lemona.h	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/lemona.h	2008-09-28 20:09:58.000000000 +1000
-@@ -0,0 +1,136 @@
++++ linux.patch/lemona/lemona.h	2008-10-22 21:37:07.000000000 +1100
+@@ -0,0 +1,137 @@
 +/*
 +** This file is part of Lemona.
 +** Copyright (C) 2008 Kenfe-Mickaël Laventure
@@ -709,6 +762,7 @@ diff -uNr linux.vanilla/lemona/lemona.h linux.patch/lemona/lemona.h
 +
 +# ifdef __KERNEL__
 +
++#  include "lemona_net.h"
 +#  include "lemona_relay.h"
 +#  include "lemona_blades.h"
 +
@@ -771,8 +825,8 @@ diff -uNr linux.vanilla/lemona/lemona.h linux.patch/lemona/lemona.h
 + */
 +struct	lemona {
 +  struct lemona_relay	relay;
++  struct lemona_net	net;
 +};
-+
 +
 +typedef int	(*lemonalogfn)(int sysnr, bool in, int argnr, int extnr, ...);
 +
@@ -785,10 +839,80 @@ diff -uNr linux.vanilla/lemona/lemona.h linux.patch/lemona/lemona.h
 +# endif /* __KERNEL __ */
 +
 +#endif
+diff -uNr linux.vanilla/lemona/lemona_net.h linux.patch/lemona/lemona_net.h
+--- linux.vanilla/lemona/lemona_net.h	1970-01-01 10:00:00.000000000 +1000
++++ linux.patch/lemona/lemona_net.h	2008-10-22 21:37:07.000000000 +1100
+@@ -0,0 +1,66 @@
++/*
++** This file is part of Lemona.
++** Copyright (C) 2008 Kenfe-Mickaël Laventure
++**
++** The contents of this file are subject to the terms of either the
++** GNU General Public License Version 2 ("GPL") or the MIT License
++** (collectively, the "License"). You may not use this file except in
++** compliance with the License. You can obtain a copy of the License
++** at http://www.opensource.org/licenses/gpl-2.0.php and
++** http://www.opensource.org/licenses/mit-license.php or GPL.LICENSE
++** and MIT.LICENSE. See the License for the specific language
++** governing permissions and limitations under the License.
++*/
++
++#ifndef _LEMONA_NET_H_
++# define _LEMONA_NET_H_
++
++# if defined(CONFIG_LEMONA_NET_LOG)
++
++#  include <linux/in.h>		/* AF_INET, IPPROTO_TCP, struct sockaddr_in */
++#  include <linux/net.h>	/* SOCK_STREAM */
++#  include <linux/socket.h>	/* sock_*, kernel_* */
++
++#  include <linux/mutex.h>	/* take a guess ;-) */
++
++
++/*
++ * This can be overrided via the kernel config or module parameter
++ */
++#  ifndef CONFIG_LEMONA_NET_LOG_SERV
++#   define CONFIG_LEMONA_NET_LOG_SERV	"127.0.0.1"
++#  endif
++
++/*
++ * This can be overrided via the kernel config or module parameter
++ */
++#  ifndef CONFIG_LEMONA_NET_LOG_PORT
++#   define CONFIG_LEMONA_NET_LOG_PORT	4242
++#  endif
++
++/* How many seconds shall we wait before trying to reconnect to the server? */
++# define NET_LOG_RETRY	60
++
++struct lemona_net {
++  struct mutex		lock;
++  unsigned long		timeout;
++
++  struct sockaddr_in	sin;
++  struct socket		*sock;
++};
++
++int	lemona_net_init(bool init);
++void	lemona_net_log(struct lemona_zest *zest);
++void	lemona_net_cleanup(void);
++
++# else /* CONFIG_LEMONA_NET_LOG */
++
++struct lemona_net { };
++
++# define lemona_net_init(x)	0
++# define lemona_net_log()
++# define lemona_net_cleanup()
++
++# endif /* CONFIG_LEMONA_NET_LOG */
++
++#endif
 diff -uNr linux.vanilla/lemona/lemona_relay.h linux.patch/lemona/lemona_relay.h
 --- linux.vanilla/lemona/lemona_relay.h	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/lemona_relay.h	2008-09-28 20:09:58.000000000 +1000
-@@ -0,0 +1,78 @@
++++ linux.patch/lemona/lemona_relay.h	2008-10-22 21:37:07.000000000 +1100
+@@ -0,0 +1,95 @@
 +/*
 +** This file is part of Lemona.
 +** Copyright (C) 2008 Kenfe-Mickaël Laventure
@@ -808,8 +932,13 @@ diff -uNr linux.vanilla/lemona/lemona_relay.h linux.patch/lemona/lemona_relay.h
 +
 +# ifdef CONFIG_LEMONA_RELAY
 +
++#  include <linux/relay.h>	/* relay */
++#  include <linux/debugfs.h>	/* debugfs */
++
++
++
 +/*
-+ * This can be override via the kernel config or module parameter
++ * This can be overrided via the kernel config or module parameter
 + */
 +#  ifndef CONFIG_LEMONA_DEBUGFS_DIR
 +#   define CONFIG_LEMONA_DEBUGFS_DIR	"lemona"
@@ -834,17 +963,27 @@ diff -uNr linux.vanilla/lemona/lemona_relay.h linux.patch/lemona/lemona_relay.h
 + */
 +# define LEMONA_RELAY_CHANNEL_NAME	"lemon"
 +
++struct lemona_relay_file {
++  struct list_head	next;
++  struct dentry		*d;
++};
++
 +struct lemona_relay {
 +  /*
 +   * Hold the struct returned by debugfs during init.
 +   * The directory will use the value of CONFIG_LEMONA_DEBUGFS_DIR.
 +   * This is overridable during module loading and from the kernel config.
 +   */
-+  struct dentry	*dir;
++  struct dentry		*dir;
 +  /*
 +   * Structure designing the channel created by relay for us to use
 +   */
-+  struct rchan	*chan;
++  struct rchan		*chan;
++
++  /*
++   * Lit of files (struct dentry) created for relay
++   */
++  struct list_head	files;
 +};
 +
 +#  define rchan		relay.chan
@@ -855,6 +994,7 @@ diff -uNr linux.vanilla/lemona/lemona_relay.h linux.patch/lemona/lemona_relay.h
 +int __init	lemona_relay_init(void);
 +void		lemona_relay_cleanup(void);
 +int		lemona_relay_log(const struct lemona_zest *);
++bool		lemona_relay_is_our(const struct dentry *dentry);
 +
 +# else /*  CONFIG_LEMONA_RELAY */
 +
@@ -863,14 +1003,15 @@ diff -uNr linux.vanilla/lemona/lemona_relay.h linux.patch/lemona/lemona_relay.h
 +#  define lemona_relay_init()	 0
 +#  define lemona_relay_cleanup()
 +#  define lemona_relay_log(z)	0
++#  define lemona_relay_is_our(d) false
 +
 +# endif /* CONFIG_LEMONA_RELAY */
 +
 +#endif
 diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 --- linux.vanilla/lemona/logging.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/logging.c	2008-09-28 20:09:58.000000000 +1000
-@@ -0,0 +1,293 @@
++++ linux.patch/lemona/logging.c	2008-10-22 21:37:07.000000000 +1100
+@@ -0,0 +1,305 @@
 +/*
 +** This file is part of Lemona.
 +** Copyright (C) 2008 Kenfe-Mickaël Laventure
@@ -885,7 +1026,7 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 +** governing permissions and limitations under the License.
 +*/
 +
-+#include <stdarg.h>
++#include <stdarg.h>		/* va_* */
 +
 +#include <linux/err.h>		/* ERR_PTR, PTR_ERR, IS_ERR */
 +#include <linux/slab.h>		/* kzalloc */
@@ -896,7 +1037,15 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 +extern const struct lemona_mixer	lemona_mixers[];
 +extern const int			lemona_mixers_size;
 +
++#if defined (CONFIG_LEMONA_MODULE)
 +atomic_t				lemona_clients	= ATOMIC_INIT(0);
++# define lemona_clients_inc() atomic_inc(&lemona_clients)
++# define lemona_clients_dec() atomic_dec(&lemona_clients)
++#else
++# define lemona_clients_inc(x)
++# define lemona_clients_dec(x)
++#endif
++
 +
 +static int	lemona_zest_get_size(const struct lemona_mixer *mixer,
 +				     bool in, va_list ap)
@@ -1111,7 +1260,8 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 +  int			ret	= 0;
 +  struct lemona_zest	*z	= NULL;
 +
-+  atomic_inc(&lemona_clients);
++  lemona_clients_inc();
++
 +  /* look for the right mixer */
 +  for (i = 0; i < lemona_mixers_size; ++i)
 +    if (sysnr == lemona_mixers[i].sysnr)
@@ -1121,7 +1271,7 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 +  if (i == lemona_mixers_size)
 +    {
 +      lemona_printk("No mixer found for syscall: %i\n", sysnr);
-+      atomic_dec(&lemona_clients);
++      lemona_clients_dec();
 +      return (-EINVAL);
 +    }
 +
@@ -1144,30 +1294,33 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 +  if (ret != z->size)
 +    {
 +      lemona_printk("zest_fill returned a different "
-+		    "value than zest_get_size: %i instead of %i\n",
-+		    ret, z->size);
++		    "value than zest_get_size (syscall %i): "
++		    "%i instead of %i\n",
++		    sysnr, ret, z->size);
 +      ret = -EINVAL;
 +      goto out;
 +    }
++  ret = 0;
 +
 +  /*
 +   * TODO: call the different logging facilities:
 +   *  - lemona_relay_log
 +   *  - ...
 +   */
-+  ret = lemona_relay_log(z);
++  lemona_relay_log(z);
++  lemona_net_log(z);
 +
 + out:
 +  va_end(ap);
 +  kfree(z); /* it handles NULL pointer, no worries ;-) */
-+  atomic_dec(&lemona_clients);
++  lemona_clients_dec();
 +  return (ret);
 +}
 +
 diff -uNr linux.vanilla/lemona/Makefile linux.patch/lemona/Makefile
 --- linux.vanilla/lemona/Makefile	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/Makefile	2008-09-28 20:09:58.000000000 +1000
-@@ -0,0 +1,68 @@
++++ linux.patch/lemona/Makefile	2008-10-22 21:37:07.000000000 +1100
+@@ -0,0 +1,78 @@
 +##
 +## This file is part of Lemona.
 +## Copyright (C) 2008 Kenfe-Mickaël Laventure
@@ -1193,6 +1346,11 @@ diff -uNr linux.vanilla/lemona/Makefile linux.patch/lemona/Makefile
 +#if relay support is needed add the relevant files
 +	ifneq ($(CONFIG_LEMONA_RELAY),)
 +		lemona-objs	+= relay.o
++	endif
++
++#if net support is needed add the relevant files
++	ifneq ($(CONFIG_LEMONA_NET_LOG),)
++		lemona-objs	+= net.o
 +	endif
 +
 +# originated from command line, force CONFIG_LEMONA_RELAY declaration
@@ -1221,6 +1379,11 @@ diff -uNr linux.vanilla/lemona/Makefile linux.patch/lemona/Makefile
 +		export CONFIG_LEMONA_RELAY
 +	endif
 +
++	ifneq ($(LEMONA_NET_LOG),)
++		CONFIG_LEMONA_NET_LOG	:= 1
++		export CONFIG_LEMONA_NET_LOG
++	endif
++
 +default:
 +	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
 +
@@ -1238,7 +1401,7 @@ diff -uNr linux.vanilla/lemona/Makefile linux.patch/lemona/Makefile
 +endif
 diff -uNr linux.vanilla/lemona/MIT.LICENSE linux.patch/lemona/MIT.LICENSE
 --- linux.vanilla/lemona/MIT.LICENSE	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/MIT.LICENSE	2008-09-28 20:09:58.000000000 +1000
++++ linux.patch/lemona/MIT.LICENSE	2008-10-22 21:37:07.000000000 +1100
 @@ -0,0 +1,19 @@
 +Copyright (c) 2008 Kenfe-Mickaël Laventure, Laurent Malvert
 +
@@ -1261,7 +1424,7 @@ diff -uNr linux.vanilla/lemona/MIT.LICENSE linux.patch/lemona/MIT.LICENSE
 +THE SOFTWARE.
 diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 --- linux.vanilla/lemona/mixers.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/mixers.c	2008-09-28 20:09:58.000000000 +1000
++++ linux.patch/lemona/mixers.c	2008-10-22 21:37:07.000000000 +1100
 @@ -0,0 +1,5533 @@
 +/*
 +** This file is part of Lemona.
@@ -6796,96 +6959,10 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +const int	lemona_mixers_size = sizeof(lemona_mixers)
 +					/ sizeof(*lemona_mixers);
 +
-diff -uNr linux.vanilla/lemona/README linux.patch/lemona/README
---- linux.vanilla/lemona/README	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/README	2008-09-28 20:09:58.000000000 +1000
-@@ -0,0 +1,82 @@
-+Lemona Good To Know Stuff
-+================================================
-+
-+* Supported Kernel & Architecture
-+* How-To build statically
-+* How-To build extenally
-+* Loading Lemona
-+* Unloading Lemona
-+
-+================================================
-+Supported Kernel
-+================================================
-+
-+Currently, Lemona has only be tested against the Linux 2.6.26.3
-+vanilla sources. Futhermore, Lemona is only available for the x86
-+architecture.
-+
-+================================================
-+How-To build statically
-+================================================
-+
-+If you want Lemona to be statically build into your kernel use the
-+following intructions:
-+
-+  - Download Lemona sources in a new directory (e.g. lemona)
-+  - Go to the linux source directory to be patched
-+    (e.g. /usr/src/linux-2.6.26.3)
-+  - Create symlinks to lemona sources:
-+      ln -s $YOUR_PATH/lemona .
-+  - Edit arch/x86/Kconfig in your linux sources. Add the following
-+    line at the end of it:
-+      source "lemona/Kconfig"
-+  - Edit the Makefile at the base of the linux sources. Add the following:
-+      - under the core-y definition
-+          lemona-y := lemona/
-+      - to the vmlinux-dirs definition
-+          $(lemona-y)
-+      - under $(lib-y) := $(libs-y1) $(libs-y2)
-+          lemona-y	:=  $(patsubst %/, %/built-in.o, $(lemona-y))
-+      - to the vmlinux-main definition
-+          $(lemona-y)
-+  - Update your kernel .config (either by hand of by using make
-+    menuconfig for instance)
-+  - Go to the Lemona menu (at the end of the first screen from menuconfig)
-+  - Activate Lemona statically
-+  - Save the configuration
-+  - Compile your kernel
-+
-+================================================
-+How-To build externally
-+================================================
-+
-+Building Lemona as a kernel module is quite simple:
-+
-+  - Download Lemona sources in a new directory
-+  - If you are not running the kernel for which lemona should be built
-+    use the folowing command (The targeted kernel should have its
-+    modules installed):
-+      LEMONA_TARGET="2.6.26.3" make
-+    Where 2.6.26.3 is the version of your kernel in /lib/modules
-+  - If you want relay support to be built define the LEMONA_RELAY env variable:
-+      LEMONA_RELAY=1 make
-+
-+================================================
-+Loading Lemona
-+================================================
-+
-+To load Lemona simply use the following command:
-+  insmod ./lemona.ko
-+You should see a line like the following in your logs (use dmesg to see it):
-+  -==Lemona==- Initialization for kernel tree 2.6.26.3...
-+  -==Lemona==- Done.
-+
-+================================================
-+Unloading Lemona
-+================================================
-+
-+To unload Lemona simply use the following command:
-+  rmmod lemona
-+The following line should appear in your logs (use dmesg to see it)
-+  -==Lemona==- Uninitializing...
-+  -==Lemona==- Done.
-diff -uNr linux.vanilla/lemona/relay.c linux.patch/lemona/relay.c
---- linux.vanilla/lemona/relay.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/relay.c	2008-09-28 20:09:58.000000000 +1000
-@@ -0,0 +1,118 @@
+diff -uNr linux.vanilla/lemona/net.c linux.patch/lemona/net.c
+--- linux.vanilla/lemona/net.c	1970-01-01 10:00:00.000000000 +1000
++++ linux.patch/lemona/net.c	2008-10-22 21:37:07.000000000 +1100
+@@ -0,0 +1,129 @@
 +/*
 +** This file is part of Lemona.
 +** Copyright (C) 2008 Kenfe-Mickaël Laventure
@@ -6902,8 +6979,259 @@ diff -uNr linux.vanilla/lemona/relay.c linux.patch/lemona/relay.c
 +
 +#include <linux/module.h> /* module_param */
 +
-+#include <linux/relay.h>
-+#include <linux/debugfs.h>
++#include "lemona.h"
++
++static char		*net_log_addr	= CONFIG_LEMONA_NET_LOG_SERV;
++static int		net_log_port	= CONFIG_LEMONA_NET_LOG_PORT;
++module_param(net_log_addr, charp, S_IRUGO);
++module_param(net_log_port, int, S_IRUGO);
++
++extern struct lemona	*juice;
++
++static void	__lemona_net_cleanup(void);
++
++static inline int	lemona_net_serv_get(void)
++{
++  u32			a, b, c, d;
++
++  if (sscanf(net_log_addr, "%u.%u.%u.%u", &a, &b, &c, &d) != 4)
++    return (-1);
++  if (a > 255 || b > 255 || c > 255 || d > 255)
++    return (-1);
++  return (htonl((a << 24) | (b << 16) | (c << 8) | d));
++}
++
++int				lemona_net_init(bool init)
++{
++  int			ret	= 0;
++  struct socket		*sock	= NULL;
++
++  if (init == true)
++    {
++      mutex_init(&(juice->net.lock));
++
++      juice->net.sin.sin_family		= AF_INET;
++      juice->net.sin.sin_addr.s_addr	= lemona_net_serv_get();
++      juice->net.sin.sin_port		= htons(net_log_port);
++    }
++
++  mutex_lock(&(juice->net.lock));
++
++  if (juice->net.sock == NULL
++      && !(ret = time_after(jiffies, juice->net.timeout))
++      && init == false)
++    goto out;
++
++  ret = sock_create_kern(AF_INET, SOCK_STREAM, IPPROTO_TCP, &sock);
++  if (ret < 0)
++    {
++      lemona_printk("Unable to create new socket: %i\n", ret);
++      goto out;
++    }
++  juice->net.sock			= sock;
++
++  ret = kernel_connect(juice->net.sock,
++		       (struct sockaddr *)&(juice->net.sin),
++		       sizeof(juice->net.sin), 0);
++  if (ret < 0)
++    {
++      lemona_printk("Unable to connect to server: %i\n", ret);
++      goto out;
++    }
++
++ out:
++  if (ret != 0)
++    {
++      juice->net.timeout	= jiffies + (NET_LOG_RETRY * HZ);
++      __lemona_net_cleanup();
++    }
++  mutex_unlock(&(juice->net.lock));
++  return (init ? 0 : ret);
++}
++
++/*
++ * This is simply a test to check how to send something on the network.
++ * Server IP/PORT should be given at module load time or during kernel config
++ */
++void			lemona_net_log(struct lemona_zest *zest)
++{
++  if (lemona_net_init(false) != 0)
++    return; /* couldn't get a socket working */
++
++  if (juice->net.sock)
++    {
++      int			ret;
++      struct kvec		kvec = {
++	.iov_base		= zest,
++	.iov_len		= zest->size
++      };
++      struct msghdr		hdr = { 0 };
++
++      ret = kernel_sendmsg(juice->net.sock, &hdr, &kvec, 1, kvec.iov_len);
++      if (ret < 0)
++	{
++	  lemona_printk("kernel_sendmsg: unable to send message: %i\n", ret);
++	  lemona_net_cleanup();
++	  /* this is the time after which we will be able to try again */
++	  juice->net.timeout	= jiffies + (NET_LOG_RETRY * HZ);
++	}
++    }
++}
++
++static void	__lemona_net_cleanup(void)
++{
++  if (!juice->net.sock)
++    return;
++  sock_release(juice->net.sock);
++  juice->net.sock	= NULL;
++}
++
++void	lemona_net_cleanup(void)
++{
++  mutex_lock(&(juice->net.lock));
++  __lemona_net_cleanup();
++  mutex_unlock(&(juice->net.lock));
++}
+diff -uNr linux.vanilla/lemona/README linux.patch/lemona/README
+--- linux.vanilla/lemona/README	1970-01-01 10:00:00.000000000 +1000
++++ linux.patch/lemona/README	2008-10-22 21:37:07.000000000 +1100
+@@ -0,0 +1,117 @@
++Lemona Good To Know Stuff
++================================================
++
++* Supported Kernel & Architecture
++* How-To Build Using Full Patch
++* How-To Build Using Partial Patch (Developers)
++* Loading Lemona (if build as a Module)
++* Unloading Lemona (if build as a Module)
++* How-To Generate Kernel Patch (Developers)
++
++================================================
++Supported Kernel
++================================================
++
++Currently, Lemona has only be tested against the Linux 2.6.26.3
++vanilla sources. Futhermore, Lemona is only available for the x86
++architecture.
++
++================================================
++How-To Build Using Full Patch
++================================================
++
++Building Lemona as a kernel module is quite simple:
++
++  - Download the patch corresponding to your kernel:
++     wget http://lemona.googlecode.com/svn/trunk/patchs/patch-X.X.XX.X \
++     -O lemona.patch-X.X.XX.X
++
++  - Apply the patch to your kernel
++     cd $(PATH_TO_KERNEL_SRC)
++     patch -p1 < lemona_patch-X.X.XX.X
++
++  - Select the build mode for lemona in your kernel .config by using
++    make menuconfig for instance
++     make menuconfig
++       General Setup ->
++         Kernel->user space relay support (formerly relayfs)
++         Configure standard kernel features (for small systems) ->
++           Load all symbols for debugging/ksymoops
++             Include all symbol in kallsyms
++       Kernel Hacking ->
++         Debug Filesystem
++       Lemona ->
++         Enable Lemona
++
++  - Build & install your new kernel
++
++================================================
++How-To Build Using Partial Patch (Developers)
++================================================
++
++  - Checkout the lemona sources
++     svn co http://lemona.googlecode.com/svn/trunk/ lemona-read-only
++
++  - Update your kernel sources to include lemona
++     cd $(PATH_TO_KERNEL_SRC)
++     patch -p1 < $(PATH_TO_LEMONA_SRC)/patchs/patch-X.X.XX.X.partial
++     ln -s $(PATH_TO_LEMONA_SRC) lemona
++
++  - Select the build mode for lemona in your kernel .config by using
++    make menuconfig for instance
++     make menuconfig
++       Lemona ->
++         Enable Lemona
++
++  - Build & install your new kernel
++
++================================================
++Loading Lemona (if build as a Module)
++================================================
++
++To load Lemona simply use the following command:
++  insmod ./lemona.ko
++You should see a line like the following in your logs (use dmesg to see it):
++  -==Lemona==- Initialization for kernel tree 2.6.26.3...
++  -==Lemona==- Done.
++
++================================================
++Unloading Lemona (if build as a Module)
++================================================
++
++To unload Lemona simply use the following command:
++  rmmod lemona
++The following line should appear in your logs (use dmesg to see it)
++  -==Lemona==- Uninitializing...
++  -==Lemona==- Done.
++
++================================================
++How-To Generate Kernel Patch (Developers)
++================================================
++
++To generate a new lemona patch, you will need the following:
++  - a Linux Kernel vanilla untouched (i.e. you just extracted it and
++    didn't do ANYTHING else. No make menuconfig, no compilation, NOTHING).
++    We'll call it linux.vanilla.
++
++  - The same Kernel modified to support Lemona but without any object,
++    backup, vn or other uneeded files.
++    We'll call it linux.lemona
++
++  - These 2 folders should be directly accessible from a common one
++    (use symbolic links if necessary)
++
++Now, generating the patch is quite easy:
++  - Go to the directory where you can directly access both kernel sources
++
++  - Execute the following command (where X.X.XX.X is the kernel version)
++     diff -uNr linux.vanilla linux.lemona > patch-X.X.XX.X
++
++  - NOTE: Be sure NOT to have any trailing directory before either
++    linux.vanilla or linux.lemona or the standard patching method (-p1
++    option to patch) won't work
++
++  - Check your patch to ensure that it didn't include any unwanted
++    change (maybe you forgot to delete a backup file?)
++
++
+diff -uNr linux.vanilla/lemona/relay.c linux.patch/lemona/relay.c
+--- linux.vanilla/lemona/relay.c	1970-01-01 10:00:00.000000000 +1000
++++ linux.patch/lemona/relay.c	2008-10-22 21:37:07.000000000 +1100
+@@ -0,0 +1,159 @@
++/*
++** This file is part of Lemona.
++** Copyright (C) 2008 Kenfe-Mickaël Laventure
++**
++** The contents of this file are subject to the terms of either the
++** GNU General Public License Version 2 ("GPL") or the MIT License
++** (collectively, the "License"). You may not use this file except in
++** compliance with the License. You can obtain a copy of the License
++** at http://www.opensource.org/licenses/gpl-2.0.php and
++** http://www.opensource.org/licenses/mit-license.php or GPL.LICENSE
++** and MIT.LICENSE. See the License for the specific language
++** governing permissions and limitations under the License.
++*/
++
++#include <linux/module.h> /* module_param */
 +
 +#include "lemona.h"
 +
@@ -6942,12 +7270,40 @@ diff -uNr linux.vanilla/lemona/relay.c linux.patch/lemona/relay.c
 +						      struct rchan_buf *buf,
 +						      int *is_global)
 +{
-+  return (debugfs_create_file(filename, mode, parent,
-+			      buf, &relay_file_operations));
++  struct dentry			*d;
++  struct lemona_relay_file	*f;
++
++  d = debugfs_create_file(filename, mode, parent,
++			  buf, &relay_file_operations);
++  if (d != NULL)
++    {
++      f = kmalloc(sizeof(*f), GFP_KERNEL);
++      if (f == NULL)
++	{
++	  debugfs_remove(d);
++	  d = NULL;
++	}
++      else
++	{
++	  f->d = d;
++	  list_add_tail(&(f->next), &(juice->relay.files));
++	}
++    }
++  return (d);
 +}
 +
 +static int		lemona_relay_remove_buf_file(struct dentry *dentry)
 +{
++  struct lemona_relay_file	*f;
++
++  list_for_each_entry(f, &(juice->relay.files), next) {
++    if (f->d == dentry)
++      {
++	list_del(&(f->next));
++	kfree(f);
++	break;
++      }
++  }
 +  debugfs_remove(dentry);
 +  return (0);
 +}
@@ -6971,6 +7327,11 @@ diff -uNr linux.vanilla/lemona/relay.c linux.patch/lemona/relay.c
 +	  err = IS_ERR(juice->dfs_dir) ? PTR_ERR(juice->dfs_dir) : -ENOMEM;
 +	  goto err;
 +	}
++      /*
++	need to be done before relay_open, since relay open will call
++	our lemona_relay_subbuf_start handler which use the list
++       */
++      INIT_LIST_HEAD(&(juice->relay.files));
 +      juice->rchan = relay_open(LEMONA_RELAY_CHANNEL_NAME, juice->dfs_dir,
 +				relay_subbuf_sz, relay_subbuf_nr,
 +				&relay_callbacks, NULL);
@@ -6986,6 +7347,17 @@ diff -uNr linux.vanilla/lemona/relay.c linux.patch/lemona/relay.c
 + err:
 +  lemona_relay_cleanup();
 +  return (err);
++}
++
++bool			lemona_relay_is_ours(const struct dentry *dentry)
++{
++  struct lemona_relay_file	*f;
++
++  list_for_each_entry(f, &(juice->relay.files), next) {
++    if (f->d == dentry)
++      return (true);
++  }
++  return (false);
 +}
 +
 +int			lemona_relay_log(const struct lemona_zest *zest)
@@ -7006,7 +7378,7 @@ diff -uNr linux.vanilla/lemona/relay.c linux.patch/lemona/relay.c
 +}
 diff -uNr linux.vanilla/Makefile linux.patch/Makefile
 --- linux.vanilla/Makefile	2008-09-27 17:26:00.000000000 +1000
-+++ linux.patch/Makefile	2008-09-28 17:46:17.000000000 +1000
++++ linux.patch/Makefile	2008-10-22 21:31:37.000000000 +1100
 @@ -454,6 +454,7 @@
  net-y		:= net/
  libs-y		:= lib/

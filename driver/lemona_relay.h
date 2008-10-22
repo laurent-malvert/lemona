@@ -17,8 +17,13 @@
 
 # ifdef CONFIG_LEMONA_RELAY
 
+#  include <linux/relay.h>	/* relay */
+#  include <linux/debugfs.h>	/* debugfs */
+
+
+
 /*
- * This can be override via the kernel config or module parameter
+ * This can be overrided via the kernel config or module parameter
  */
 #  ifndef CONFIG_LEMONA_DEBUGFS_DIR
 #   define CONFIG_LEMONA_DEBUGFS_DIR	"lemona"

@@ -4,6 +4,9 @@
 
 menu "Lemona"
 
+comment "No login methods selected!"
+	depends on !LEMONA_RELAY && !LEMONA_NET_LOG && LEMONA
+
 config LEMONA
 	tristate "Enable Lemona"
 	depends on KALLSYMS && KALLSYMS_ALL
@@ -35,5 +38,27 @@ config	LEMONA_DEBUGFS_DIR
 	help
 	  Name to be used to create the top lemona directory in the debugfs
 	  mount point.
+
+config	LEMONA_NET_LOG
+	bool "Transmit log via network"
+	depends on LEMONA
+	default y
+	help
+	  This lead Lemona to send the log via a network connection
+
+config	LEMONA_NET_LOG_SERV
+	string "Server Address"
+	default 127.0.0.1
+	depends on LEMONA_NET_LOG
+	help
+	  This should contain the server IP address.
+
+config	LEMONA_NET_LOG_PORT
+	int "Server Port"
+	default 4242
+	range 1 65535
+	depends on LEMONA_NET_LOG
+	help
+	 Port on wich to connect
 
 endmenu

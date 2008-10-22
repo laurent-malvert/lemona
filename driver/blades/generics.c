@@ -57,7 +57,7 @@ int	lemona_blade_output_buffer(struct lemona_zest *zest,
   *((int *)((char *)zest + off)) = size;
   uncopied = copy_from_user((char *)zest + off + sizeof(size),
 			    fruit2, size);
-  if (uncopied == size)
+  if (uncopied)
     return (-1);
   return (sizeof(size) + size);
 }

@@ -14,9 +14,6 @@
 
 #include <linux/module.h> /* module_param */
 
-#include <linux/relay.h>
-#include <linux/debugfs.h>
-
 #include "lemona.h"
 
 /*

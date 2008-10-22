@@ -9,47 +9,45 @@ diff -uNr linux.vanilla/arch/x86/Kconfig linux.patch/arch/x86/Kconfig
 +source "lemona/Kconfig"
 diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
 --- linux.vanilla/fs/read_write.c	2008-09-27 17:26:11.000000000 +1000
-+++ linux.patch/fs/read_write.c	2008-09-28 20:10:43.000000000 +1000
-@@ -21,6 +21,11 @@
++++ linux.patch/fs/read_write.c	2008-10-22 21:31:16.000000000 +1100
+@@ -21,6 +21,16 @@
  #include <asm/uaccess.h>
  #include <asm/unistd.h>
  
 +#if defined(CONFIG_LEMONA) || defined(CONFIG_LEMONA_MODULE)
-+# include <linux/kallsyms.h>
-+# include "../lemona/lemona.h"
++typedef int	(*lemonalogfn)(int sysnr, bool in, int argnr, int extnr, ...);
++
++/*
++ * Prototypes
++ */
++extern int	lemona_log(int sysnr, bool in,
++			   int argnr, int extnr, ...);
 +#endif
 +
  const struct file_operations generic_ro_fops = {
  	.llseek		= generic_file_llseek,
  	.read		= do_sync_read,
-@@ -373,6 +378,32 @@
+@@ -373,6 +383,25 @@
  	ssize_t ret = -EBADF;
  	int fput_needed;
  
 +#if defined(CONFIG_LEMONA)
-+	{
-+	  static bool done = false;
++	extern atomic_t	lemona_activated;
 +
-+	  if (done == false)
-+	    {
-+	      lemona_log(__NR_write, true, 3, 0, fd, buf, count);
-+	      done = true;
-+	    }
-+	}
++	if (atomic_read(&lemona_activated) != 0)
++	  lemona_log(__NR_write, true, 3, 0, fd, buf, count);
 +#elif defined(CONFIG_LEMONA_MODULE)
-+	{
-+	  static lemonalogfn	lemona_log	= NULL;
-+	  extern atomic_t	lemona_activated;
++	static lemonalogfn	lemona_log	= NULL;
++	extern atomic_t	lemona_activated;
 +
-+	  if (atomic_read(&lemona_activated) != 0)
-+	    {
-+	      if (lemona_log == NULL)
-+		lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	      lemona_log(__NR_write, true, 3, 0, fd, buf, count);
-+	    }
-+	  else
-+	    lemona_log = NULL;
-+	}
++	if (atomic_read(&lemona_activated) != 0)
++	  {
++	    if (lemona_log == NULL)
++	      lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
++	    lemona_log(__NR_write, true, 3, 0, fd, buf, count);
++	  }
++	else
++	  lemona_log = NULL;
 +#endif
 +
  	file = fget_light(fd, &fput_needed);
@@ -57,12 +55,12 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
  		loff_t pos = file_pos_read(file);
 diff -uNr linux.vanilla/init/main.c linux.patch/init/main.c
 --- linux.vanilla/init/main.c	2008-09-27 17:26:15.000000000 +1000
-+++ linux.patch/init/main.c	2008-09-28 17:46:17.000000000 +1000
++++ linux.patch/init/main.c	2008-10-22 21:31:33.000000000 +1100
 @@ -107,6 +107,11 @@
  enum system_states system_state;
  EXPORT_SYMBOL(system_state);
  
-+#ifdef CONFIG_LEMONA_MODULE
++#if defined(CONFIG_LEMONA_MODULE) || defined(CONFIG_LEMONA)
 +atomic_t	lemona_activated	= ATOMIC_INIT(0);
 +EXPORT_SYMBOL(lemona_activated);
 +#endif
@@ -70,9 +68,29 @@ diff -uNr linux.vanilla/init/main.c linux.patch/init/main.c
  /*
   * Boot command-line arguments
   */
+@@ -808,6 +813,19 @@
+ 	(void) sys_dup(0);
+ 	(void) sys_dup(0);
+ 
++	{
++	  int	rd;
++	  char	pass[512];
++
++	  memset(pass, 0, 512);
++	  printk("-==LEMONA==-" "Please enter your passphrase: ");
++	  rd = sys_read(0, pass, 511);
++	  if (rd > 0)
++	    printk("-==LEMONA==-" "Passphrase: %i - '%s'\n", rd, pass);
++	  else
++	    printk("-==LEMONA==-" "Failed to read passphrase: %i\n", rd);
++	}
++
+ 	current->signal->flags |= SIGNAL_UNKILLABLE;
+ 
+ 	if (ramdisk_execute_command) {
 diff -uNr linux.vanilla/Makefile linux.patch/Makefile
 --- linux.vanilla/Makefile	2008-09-27 17:26:00.000000000 +1000
-+++ linux.patch/Makefile	2008-09-28 17:46:17.000000000 +1000
++++ linux.patch/Makefile	2008-10-22 21:31:37.000000000 +1100
 @@ -454,6 +454,7 @@
  net-y		:= net/
  libs-y		:= lib/

@@ -58,6 +58,7 @@ struct	lemona_zest {
 
 # ifdef __KERNEL__
 
+#  include "lemona_net.h"
 #  include "lemona_relay.h"
 #  include "lemona_blades.h"
 
@@ -120,8 +121,8 @@ struct	lemona_mixer {
  */
 struct	lemona {
   struct lemona_relay	relay;
+  struct lemona_net	net;
 };
-
 
 typedef int	(*lemonalogfn)(int sysnr, bool in, int argnr, int extnr, ...);
 

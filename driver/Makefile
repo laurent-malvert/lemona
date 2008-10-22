@@ -25,6 +25,11 @@ obj-$(CONFIG_LEMONA)	+= lemona.o
 		lemona-objs	+= relay.o
 	endif
 
+#if net support is needed add the relevant files
+	ifneq ($(CONFIG_LEMONA_NET_LOG),)
+		lemona-objs	+= net.o
+	endif
+
 # originated from command line, force CONFIG_LEMONA_RELAY declaration
 	ifneq ($(LEMONA_RELAY),)
 		EXTRA_CFLAGS		+= -DCONFIG_LEMONA_RELAY=1
@@ -49,6 +54,11 @@ else
 	ifneq ($(LEMONA_RELAY),)
 		CONFIG_LEMONA_RELAY	:= 1
 		export CONFIG_LEMONA_RELAY
+	endif
+
+	ifneq ($(LEMONA_NET_LOG),)
+		CONFIG_LEMONA_NET_LOG	:= 1
+		export CONFIG_LEMONA_NET_LOG
 	endif
 
 default:

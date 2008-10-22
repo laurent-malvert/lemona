@@ -33,6 +33,13 @@ Building Lemona as a kernel module is quite simple:
   - Select the build mode for lemona in your kernel .config by using
     make menuconfig for instance
      make menuconfig
+       General Setup ->
+         Kernel->user space relay support (formerly relayfs)
+         Configure standard kernel features (for small systems) ->
+           Load all symbols for debugging/ksymoops
+             Include all symbol in kallsyms
+       Kernel Hacking ->
+         Debug Filesystem
        Lemona ->
          Enable Lemona
 
