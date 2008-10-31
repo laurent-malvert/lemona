@@ -71,17 +71,18 @@ const struct lemona_mixer	lemona_mixers[]= {
   {
     .sysnr	= __NR_read,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 2,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+	{ .dual	= false	, .blade = lemona_blade_integer		},
+	{ .dual	= false	, .blade = lemona_blade_integer		},
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 2,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+	{ .dual = true	, .blade = lemona_blade_output_buffer64	},
       },
     }
   },
@@ -96,10 +97,10 @@ const struct lemona_mixer	lemona_mixers[]= {
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+	{ .dual = false	, .blade = lemona_blade_integer		},
       },
     }
   },
@@ -3081,34 +3082,38 @@ const struct lemona_mixer	lemona_mixers[]= {
   {
     .sysnr	= __NR_pread64,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 3,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+	{ .dual	= false	, .blade = lemona_blade_integer		},
+	{ .dual	= false	, .blade = lemona_blade_integer		},
+	{ .dual	= false	, .blade = lemona_blade_integer64	},
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 2,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+	{ .dual	= true	, .blade = lemona_blade_output_buffer64	},
       },
     }
   },
   {
     .sysnr	= __NR_pwrite64,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 4,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+	{ .dual	= false	, .blade = lemona_blade_integer		},
+	{ .dual	= true	, .blade = lemona_blade_output_buffer	},
+	{ .dual	= false	, .blade = lemona_blade_integer64	},
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+	{ .dual = false	, .blade = lemona_blade_integer64	},
       },
     }
   },
@@ -3809,6 +3814,45 @@ const struct lemona_mixer	lemona_mixers[]= {
       },
     }
   },
+
+  /* 222 is unused in 2.6.26.3 */
+  {
+    .sysnr	= -1,
+    .in		= {
+      .argnr	= -1,
+      .extnr	= -1,
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
+    },
+    .out	= {
+      .argnr	= -1,
+      .extnr	= -1,
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
+  },
+
+  /* 223 is unused in 2.6.26.3 */
+  {
+    .sysnr	= -1,
+    .in		= {
+      .argnr	= -1,
+      .extnr	= -1,
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
+    },
+    .out	= {
+      .argnr	= -1,
+      .extnr	= -1,
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
+  },
+
   {
     .sysnr	= __NR_gettid,
     .in		= {
@@ -4268,6 +4312,27 @@ const struct lemona_mixer	lemona_mixers[]= {
       },
     }
   },
+
+
+  /* 251 is unused in 2.6.26.3 */
+  {
+    .sysnr	= -1,
+    .in		= {
+      .argnr	= -1,
+      .extnr	= -1,
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
+    },
+    .out	= {
+      .argnr	= -1,
+      .extnr	= -1,
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
+  },
+
   {
     .sysnr	= __NR_exit_group,
     .in		= {
@@ -4829,6 +4894,26 @@ const struct lemona_mixer	lemona_mixers[]= {
       },
     }
   },
+
+  /* for some reason __NR_sys_setaltroot is commented in 2.6.26.3 */
+  {
+    .sysnr	= -1,
+    .in		= {
+      .argnr	= -1,
+      .extnr	= -1,
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
+    },
+    .out	= {
+      .argnr	= -1,
+      .extnr	= -1,
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
+  },
+
   {
     .sysnr	= __NR_add_key,
     .in		= {

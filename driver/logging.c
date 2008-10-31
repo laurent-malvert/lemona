@@ -12,7 +12,7 @@
 ** governing permissions and limitations under the License.
 */
 
-#include <stdarg.h>		/* va_* */
+#include <stdarg.h>			/* va_* */
 
 #include <linux/err.h>		/* ERR_PTR, PTR_ERR, IS_ERR */
 #include <linux/slab.h>		/* kzalloc */
@@ -32,14 +32,13 @@ atomic_t				lemona_clients	= ATOMIC_INIT(0);
 # define lemona_clients_dec(x)
 #endif
 
-
 static int	lemona_zest_get_size(const struct lemona_mixer *mixer,
-				     bool in, va_list ap)
+								 bool in, va_list ap)
 {
-  int					i	= 0;
-  int					tmp	= 0;
-  int					size	= 0;
-  int					bladesnr;
+  int									i	= 0;
+  int									tmp	= 0;
+  int									size	= 0;
+  int									bladesnr;
   const struct __lemona_mixer_handler	*handlers;
 
   if (unlikely(mixer == NULL))
@@ -59,27 +58,27 @@ static int	lemona_zest_get_size(const struct lemona_mixer *mixer,
   for (i = 0; i < bladesnr; i += handlers[i].dual ? 2 : 1)
     {
       if (handlers[i].blade == NULL)
-	{
-	  lemona_printk("lemona_zest_get_size: Invalid mixer blade:\n");
-	  lemona_printk("\tsysnr: %i\n", mixer->sysnr);
-	  lemona_printk("\tblade: %i\n", i);
-	  lemona_printk("\tin: %s\n",in ? "true" : "false");
-	  return (-EINVAL);
-	}
+		{
+		  lemona_printk("lemona_zest_get_size: Invalid mixer blade:\n");
+		  lemona_printk("\tsysnr: %i\n", mixer->sysnr);
+		  lemona_printk("\tblade: %i\n", i);
+		  lemona_printk("\tin: %s\n",in ? "true" : "false");
+		  return (-EINVAL);
+		}
       if (handlers[i].dual == true)
-	tmp = handlers[i].blade(NULL, false, i, 0,
-				va_arg(ap, void *), va_arg(ap, void *));
+		tmp = handlers[i].blade(NULL, false, i, 0,
+								va_arg(ap, void *), va_arg(ap, void *));
       else
-	tmp = handlers[i].blade(NULL, false, i, 0, va_arg(ap, void *), NULL);
+		tmp = handlers[i].blade(NULL, false, i, 0, va_arg(ap, void *), NULL);
       if (tmp == -1)
-	{
-	  lemona_printk("lemona_zest_get_size: "
-			"Unable to determine argument size:\n");
-	  lemona_printk("\tsysnr: %i\n", mixer->sysnr);
-	  lemona_printk("\tblade: %i\n", i);
-	  lemona_printk("\tin: %s\n",in ? "true" : "false");
-	  return (-EINVAL);
-	}
+		{
+		  lemona_printk("lemona_zest_get_size: "
+						"Unable to determine argument size:\n");
+		  lemona_printk("\tsysnr: %i\n", mixer->sysnr);
+		  lemona_printk("\tblade: %i\n", i);
+		  lemona_printk("\tin: %s\n",in ? "true" : "false");
+		  return (-EINVAL);
+		}
       size += tmp;
     }
   /* we're adding space for the zest itself and the args/exts size array */
@@ -87,12 +86,12 @@ static int	lemona_zest_get_size(const struct lemona_mixer *mixer,
 }
 
 static int	lemona_zest_fill(const struct lemona_mixer *mixer,
-				 bool in, struct lemona_zest *z,
-				 va_list ap)
+							 bool in, struct lemona_zest *z,
+							 va_list ap)
 {
-  int					i;
-  int					off		= 0;
-  int					ret		= 0;
+  int									i;
+  int									off		= 0;
+  int									ret		= 0;
   const struct __lemona_mixer_handler	*handlers;
 
   /* we don't check our arguments, this should have already been done */
@@ -139,15 +138,18 @@ static int	lemona_zest_fill(const struct lemona_mixer *mixer,
   for (i = 0; i < z->argnr; i += handlers[i].dual ? 2 : 1)
     {
       if (handlers[i].dual == true)
-	ret = handlers[i].blade(z, false, i, off,
-				va_arg(ap, void *), va_arg(ap, void *));
+		ret = handlers[i].blade(z, false, i, off,
+								va_arg(ap, void *), va_arg(ap, void *));
       else
-	ret = handlers[i].blade(z, false, i, off, va_arg(ap, void *), NULL);
+		ret = handlers[i].blade(z, false, i, off, va_arg(ap, void *), NULL);
       if (ret < 0)
-	  goto out;
+		{
+		  lemona_printk("args: in: %i blade %i returned -1\n", in, i);
+		  goto out;
+		}
 
-      z->argsz[i]	= ret;
-      off		= off + ret;
+      z->argsz[i]		= ret;
+      off				= off + ret;
     }
 
   /*
@@ -159,19 +161,22 @@ static int	lemona_zest_fill(const struct lemona_mixer *mixer,
   for (i = 0; i < z->extnr; i += handlers[i].dual ? 2 : 1)
     {
       if (handlers[i].dual == true)
-	ret = handlers[i].blade(z, true, i, off,
-				va_arg(ap, void *), va_arg(ap, void *));
+		ret = handlers[i].blade(z, true, i, off,
+								va_arg(ap, void *), va_arg(ap, void *));
       else
-	ret = handlers[i].blade(z, true, i, off, va_arg(ap, void *), NULL);
+		ret = handlers[i].blade(z, true, i, off, va_arg(ap, void *), NULL);
       if (ret < 0)
-	  goto out;
+		{
+		  lemona_printk("exts: in: %i blade %i returned -1\n", in, i);
+		  goto out;
+		}
 
       z->argsz[i]	= ret;
       off		= off + ret;
     }
 
  out:
-  return (off);
+  return (ret < 0 ? ret : off);
 }
 
 /**
@@ -189,11 +194,11 @@ static int	lemona_zest_fill(const struct lemona_mixer *mixer,
  * be computed straight after the syscall has been entered.
  */
 static struct lemona_zest *lemona_zest_create(const struct lemona_mixer *mixer,
-					      bool in, int argnr, int extnr,
-					      va_list ap)
+											  bool in, int argnr, int extnr,
+											  va_list ap)
 {
-  int				zsz	= 0;
-  struct lemona_zest		*z	= ERR_PTR(-ENOMEM);
+  int							zsz	= 0;
+  struct lemona_zest			*z	= ERR_PTR(-ENOMEM);
   const struct __lemona_mixer	*inout;
 
   inout = in == true ? &(mixer->in) : &(mixer->out);
@@ -204,8 +209,8 @@ static struct lemona_zest *lemona_zest_create(const struct lemona_mixer *mixer,
       lemona_printk("extnr: %i instead of %i\n", extnr, inout->extnr);
       lemona_printk("in: %s\n", in ? "true" : "false");
       lemona_printk("idx: %i\n",
-		    (int)((char *)mixer - (char *)lemona_mixers)
-		    / sizeof(*mixer));
+					(int)((char *)mixer - (char *)lemona_mixers)
+					/ sizeof(*mixer));
       return (ERR_PTR(-EINVAL));
     }
   zsz = lemona_zest_get_size(mixer, in, ap);
@@ -213,9 +218,9 @@ static struct lemona_zest *lemona_zest_create(const struct lemona_mixer *mixer,
     {
       z = kzalloc(zsz, GFP_KERNEL);
       if (z != NULL)
-	z->size = zsz;
+		z->size = zsz;
       else
-	z = ERR_PTR(-ENOMEM);
+		z = ERR_PTR(-ENOMEM);
     }
   return (z);
 }
@@ -239,7 +244,7 @@ static struct lemona_zest *lemona_zest_create(const struct lemona_mixer *mixer,
  * be computed straight after the syscall has been entered.
  */
 int			lemona_log(int sysnr, bool in,
-				   int argnr, int extnr, ...)
+					   int argnr, int extnr, ...)
 {
   va_list		ap;
   int			i;
@@ -249,12 +254,19 @@ int			lemona_log(int sysnr, bool in,
   lemona_clients_inc();
 
   /* look for the right mixer */
-  for (i = 0; i < lemona_mixers_size; ++i)
-    if (sysnr == lemona_mixers[i].sysnr)
-      break;
-
-  /* none? get out of here */
-  if (i == lemona_mixers_size)
+  if (likely(sysnr < lemona_mixers_size
+	     && lemona_mixers[sysnr].sysnr == sysnr))
+    i = sysnr;
+  else if (unlikely(lemona_mixers[sysnr].sysnr != sysnr
+					&& lemona_mixers[sysnr].sysnr != -1)) /* uhuh... */
+    {
+      lemona_printk("Mixer array is corrupted: %i != %i\n",
+		    sysnr,
+		    lemona_mixers[sysnr].sysnr);
+      lemona_clients_dec();
+      return (-EINVAL);
+    }
+  else /* lemona_mixers[sysnr].sysnr == -1 || out of bound */
     {
       lemona_printk("No mixer found for syscall: %i\n", sysnr);
       lemona_clients_dec();
@@ -302,4 +314,3 @@ int			lemona_log(int sysnr, bool in,
   lemona_clients_dec();
   return (ret);
 }
-

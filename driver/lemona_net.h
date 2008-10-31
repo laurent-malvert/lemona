@@ -58,7 +58,7 @@ void	lemona_net_cleanup(void);
 struct lemona_net { };
 
 # define lemona_net_init(x)	0
-# define lemona_net_log()
+# define lemona_net_log(x)
 # define lemona_net_cleanup()
 
 # endif /* CONFIG_LEMONA_NET_LOG */

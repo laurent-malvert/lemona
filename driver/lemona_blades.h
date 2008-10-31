@@ -21,9 +21,17 @@ int	lemona_blade_integer(struct lemona_zest *zest,
 			     bool isExt, int idx, int off,
 			     void *fruit1, void *fruit2);
 
+int	lemona_blade_integer64(struct lemona_zest *zest,
+			       bool isExt, int idx, int off,
+			       void *fruit1, void *fruit2);
+
 /* this is a dual blade */
 int	lemona_blade_output_buffer(struct lemona_zest *zest,
 				   bool isExt, int idx, int off,
 				   void *fruit1, void* fruit2);
 
+/* this is a dual blade */
+int	lemona_blade_output_buffer64(struct lemona_zest *zest,
+				     bool isExt, int idx, int off,
+				     void *fruit1, void* fruit2);
 #endif
