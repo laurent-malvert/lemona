@@ -16,13 +16,13 @@
 # kernel build system and can use its language.
 ifneq ($(KERNELRELEASE),)
 
-blades-objs		:= blades/generics.o
-lemona-objs 		:= init.o mixers.o logging.o $(blades-objs)
+blades-objs				:= blades/generics.o blades/iovec.o blades/string.o
+lemona-objs				:= init.o mixers.o logging.o $(blades-objs)
 obj-$(CONFIG_LEMONA)	+= lemona.o
 
 #if relay support is needed add the relevant files
 	ifneq ($(CONFIG_LEMONA_RELAY),)
-		lemona-objs	+= relay.o
+			lemona-objs	+= relay.o
 	endif
 
 #if net support is needed add the relevant files

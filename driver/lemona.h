@@ -27,7 +27,7 @@
 struct	lemona_zest {
   int			size;  	/* size taken by this zest and args sz/value */
 
-  bool			in;
+  int			in;
   struct timespec	time;	/* call start/end time (getnstimeofday) */
 
   pid_t			pid;	/* actual pid */
@@ -90,9 +90,9 @@ struct	lemona_zest {
  * @fruit1: The first value
  * @fruit2: The second value
  */
-typedef int	(*bladefn)(struct lemona_zest *zest, bool isExt,
-			   int idx, int off,
-			   void *fruit1, void *fruit2);
+typedef int	(*bladefn)(struct lemona_zest *zest, int isExt,
+					   int idx, int off,
+					   void *fruit1, void *fruit2);
 
 struct	__lemona_mixer_handler {
   bool		dual;
@@ -124,13 +124,13 @@ struct	lemona {
   struct lemona_net	net;
 };
 
-typedef int	(*lemonalogfn)(int sysnr, bool in, int argnr, int extnr, ...);
+typedef int	(*lemonalogfn)(int sysnr, int in, int argnr, int extnr, ...);
 
 /*
  * Prototypes
  */
-extern int		lemona_log(int sysnr, bool in,
-				   int argnr, int extnr, ...);
+extern int		lemona_log(int sysnr, int in,
+						   int argnr, int extnr, ...);
 
 # endif /* __KERNEL __ */
 

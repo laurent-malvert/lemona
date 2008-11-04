@@ -21,7 +21,7 @@
 MODULE_LICENSE("Dual MIT/GPL");
 
 #if defined(CONFIG_LEMONA_MODULE)
-extern atomic_t		lemona_clients;
+extern atomic_t			lemona_clients;
 # define lemona_clients_wait()			\
   while (atomic_read(&lemona_clients) > 0)	\
     schedule();
@@ -29,9 +29,9 @@ extern atomic_t		lemona_clients;
 # define lemona_clients_wait()
 #endif
 
-struct lemona		*juice			= NULL;
+struct lemona			*juice			= NULL;
 
-static void		lemona_cleanup(void)
+static void				lemona_cleanup(void)
 {
   lemona_relay_cleanup();
   lemona_net_cleanup();
@@ -39,10 +39,10 @@ static void		lemona_cleanup(void)
     kfree(juice);
 }
 
-static int __init	lemona_init(void)
+static int __init		lemona_init(void)
 {
-  long			err = 0;
-  extern atomic_t	lemona_activated;
+  long					err = 0;
+  extern atomic_t		lemona_activated;
 
   lemona_printk("Initialization for kernel tree " UTS_RELEASE "...\n");
   juice = kzalloc(sizeof(*juice), GFP_KERNEL);
@@ -68,9 +68,9 @@ static int __init	lemona_init(void)
   return (err);
 }
 
-static void __exit	lemona_exit(void)
+static void __exit		lemona_exit(void)
 {
-  extern atomic_t	lemona_activated;
+  extern atomic_t		lemona_activated;
 
   lemona_printk("Uninitializing Lemona...\n");
   atomic_set(&lemona_activated, 0);

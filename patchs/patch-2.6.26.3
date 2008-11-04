@@ -1,6 +1,6 @@
 diff -uNr linux.vanilla/arch/x86/Kconfig linux.patch/arch/x86/Kconfig
 --- linux.vanilla/arch/x86/Kconfig	2008-09-27 17:25:59.000000000 +1000
-+++ linux.patch/arch/x86/Kconfig	2008-10-31 13:26:32.000000000 +1100
++++ linux.patch/arch/x86/Kconfig	2008-11-03 19:55:51.000000000 +1100
 @@ -1729,3 +1729,5 @@
  source "arch/x86/kvm/Kconfig"
  
@@ -9,7 +9,7 @@ diff -uNr linux.vanilla/arch/x86/Kconfig linux.patch/arch/x86/Kconfig
 +source "lemona/Kconfig"
 diff -uNr linux.vanilla/arch/x86/mm/fault.c linux.patch/arch/x86/mm/fault.c
 --- linux.vanilla/arch/x86/mm/fault.c	2008-09-27 17:25:59.000000000 +1000
-+++ linux.patch/arch/x86/mm/fault.c	2008-10-31 13:26:51.000000000 +1100
++++ linux.patch/arch/x86/mm/fault.c	2008-11-03 19:55:51.000000000 +1100
 @@ -723,6 +723,8 @@
  good_area:
  	si_code = SEGV_ACCERR;
@@ -27,43 +27,279 @@ diff -uNr linux.vanilla/arch/x86/mm/fault.c linux.patch/arch/x86/mm/fault.c
  	return;
  
  /*
+diff -uNr linux.vanilla/fs/file_table.c linux.patch/fs/file_table.c
+--- linux.vanilla/fs/file_table.c	2008-09-27 17:26:10.000000000 +1000
++++ linux.patch/fs/file_table.c	2008-11-03 19:55:43.000000000 +1100
+@@ -337,6 +337,7 @@
+ 
+ 	return file;
+ }
++EXPORT_SYMBOL(fget_light);
+ 
+ 
+ void put_filp(struct file *file)
+diff -uNr linux.vanilla/fs/open.c linux.patch/fs/open.c
+--- linux.vanilla/fs/open.c	2008-09-27 17:26:11.000000000 +1000
++++ linux.patch/fs/open.c	2008-11-03 19:55:43.000000000 +1100
+@@ -30,6 +30,8 @@
+ #include <linux/audit.h>
+ #include <linux/falloc.h>
+ 
++#include "../lemona/lemona_patch.h"
++
+ int vfs_statfs(struct dentry *dentry, struct kstatfs *buf)
+ {
+ 	int retval = -ENODEV;
+@@ -1110,7 +1112,44 @@
+ 	if (force_o_largefile())
+ 		flags |= O_LARGEFILE;
+ 
++#if defined(CONFIG_LEMONA)
++	if (atomic_read(&lemona_activated) != 0)
++	  lemona_log(__NR_open, true, 3, 0, filename, &flags, &mode);
++#elif defined(CONFIG_LEMONA_MODULE)
++	if (atomic_read(&lemona_activated) != 0)
++	  {
++		if (_lemona_log == NULL)
++		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
++		_lemona_log(__NR_open, true, 3, 0, filename, &flags, &mode);
++	  }
++	else
++	  _lemona_log = NULL;
++#endif
++
+ 	ret = do_sys_open(AT_FDCWD, filename, flags, mode);
++
++	/*
++	 * This should always be before asmlinkage_protect!
++	 *
++	 * We pass ret twice:
++	 *  - The first time to get the return value.
++	 *  - The second time to get the resoled filename (if fd >= 0)
++	 *
++	 */
++#if defined(CONFIG_LEMONA)
++	if (atomic_read(&lemona_activated) != 0)
++	  lemona_log(__NR_open, false, 1, 1, &ret, &ret);
++#elif defined(CONFIG_LEMONA_MODULE)
++	if (atomic_read(&lemona_activated) != 0)
++	  {
++		if (_lemona_log == NULL)
++		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
++		_lemona_log(__NR_open, false, 1, 1, &ret, &ret);
++	  }
++	else
++	  _lemona_log = NULL;
++#endif
++
+ 	/* avoid REGPARM breakage on x86: */
+ 	asmlinkage_protect(3, ret, filename, flags, mode);
+ 	return ret;
+@@ -1124,7 +1163,36 @@
+ 	if (force_o_largefile())
+ 		flags |= O_LARGEFILE;
+ 
++#if defined(CONFIG_LEMONA)
++	if (atomic_read(&lemona_activated) != 0)
++	  lemona_log(__NR_openat, true, 4, 0, &dfd, filename, &flags, &mode);
++#elif defined(CONFIG_LEMONA_MODULE)
++	if (atomic_read(&lemona_activated) != 0)
++	  {
++		if (_lemona_log == NULL)
++		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
++		_lemona_log(__NR_openat, true, 4, 0, &dfd, filename, &flags, &mode);
++	  }
++	else
++	  _lemona_log = NULL;
++#endif
++
+ 	ret = do_sys_open(dfd, filename, flags, mode);
++
++#if defined(CONFIG_LEMONA)
++	if (atomic_read(&lemona_activated) != 0)
++	  lemona_log(__NR_openat, false, 1, 1, &ret, &ret);
++#elif defined(CONFIG_LEMONA_MODULE)
++	if (atomic_read(&lemona_activated) != 0)
++	  {
++		if (_lemona_log == NULL)
++		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
++		_lemona_log(__NR_openat, false, 1, 1, &ret, &ret);
++	  }
++	else
++	  _lemona_log = NULL;
++#endif
++
+ 	/* avoid REGPARM breakage on x86: */
+ 	asmlinkage_protect(4, ret, dfd, filename, flags, mode);
+ 	return ret;
+@@ -1177,7 +1245,21 @@
+ 	struct file * filp;
+ 	struct files_struct *files = current->files;
+ 	struct fdtable *fdt;
+-	int retval;
++	int retval = -EBADF;
++
++#if defined(CONFIG_LEMONA)
++	if (atomic_read(&lemona_activated) != 0)
++	  lemona_log(__NR_close, true, 1, 0, &fd);
++#elif defined(CONFIG_LEMONA_MODULE)
++	if (atomic_read(&lemona_activated) != 0)
++	  {
++		if (_lemona_log == NULL)
++		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
++		_lemona_log(__NR_close, true, 1, 0, &fd);
++	  }
++	else
++	  _lemona_log = NULL;
++#endif
+ 
+ 	spin_lock(&files->file_lock);
+ 	fdt = files_fdtable(files);
+@@ -1199,11 +1281,25 @@
+ 		     retval == -ERESTART_RESTARTBLOCK))
+ 		retval = -EINTR;
+ 
+-	return retval;
++	goto out;
+ 
+ out_unlock:
+ 	spin_unlock(&files->file_lock);
+-	return -EBADF;
++out:
++#if defined(CONFIG_LEMONA)
++	if (atomic_read(&lemona_activated) != 0)
++	  lemona_log(__NR_close, false, 1, 0, &retval);
++#elif defined(CONFIG_LEMONA_MODULE)
++	if (atomic_read(&lemona_activated) != 0)
++	  {
++		if (_lemona_log == NULL)
++		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
++		_lemona_log(__NR_close, false, 1, 0, &retval);
++	  }
++	else
++	  _lemona_log = NULL;
++#endif
++	return retval;
+ }
+ 
+ EXPORT_SYMBOL(sys_close);
 diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
 --- linux.vanilla/fs/read_write.c	2008-09-27 17:26:11.000000000 +1000
-+++ linux.patch/fs/read_write.c	2008-10-31 13:25:00.000000000 +1100
-@@ -21,6 +21,27 @@
++++ linux.patch/fs/read_write.c	2008-11-03 19:55:43.000000000 +1100
+@@ -21,6 +21,9 @@
  #include <asm/uaccess.h>
  #include <asm/unistd.h>
  
-+#if defined(CONFIG_LEMONA) || defined(CONFIG_LEMONA_MODULE)
-+# include <linux/kallsyms.h>
-+# include <../lemona/lemona.h>
-+/*
-+ * Variable
-+ */
-+extern atomic_t	lemona_activated;
-+# if defined(CONFIG_LEMONA_MODULE)
-+static lemonalogfn		_lemona_log		= NULL;
-+static lemonarelayisoursfn	_lemona_relay_is_ours	= NULL;
-+void inline	lemona_get_fn(lemonalogfn *_lemona_log,
-+			      lemonarelayisoursfn *_lemona_relay_is_ours)
-+{
-+  *_lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+  *_lemona_relay_is_ours = (lemonarelayisoursfn)kallsyms_lookup_name("lemona_relay_is_ours");
-+}
-+
-+# endif
-+
-+#endif
++#define LEMONA_READ
++#include "../lemona/lemona_patch.h"
 +
  const struct file_operations generic_ro_fops = {
  	.llseek		= generic_file_llseek,
  	.read		= do_sync_read,
-@@ -355,15 +376,51 @@
+@@ -133,9 +136,27 @@
+ 	off_t retval;
+ 	struct file * file;
+ 	int fput_needed;
++#if defined(LEMONA)
++	bool lemona_file = false;
++#endif
+ 
+ 	retval = -EBADF;
+ 	file = fget_light(fd, &fput_needed);
++#if defined(CONFIG_LEMONA)
++	if (atomic_read(&lemona_activated) != 0)
++	  lemona_log(__NR_lseek, true, 3, 0, &fd, &offset, &origin);
++#elif defined(CONFIG_LEMONA_MODULE)
++	if (atomic_read(&lemona_activated) != 0)
++	  {
++	    if (_lemona_log == NULL)
++		  lemona_get_fn(&_lemona_log, &_lemona_relay_is_ours);
++	    if (file == NULL
++			|| (lemona_file = _lemona_relay_is_ours(file->f_dentry)))
++		  _lemona_log(__NR_lseek, true, 3, 0, &fd, &offset, &origin);
++	  }
++	else
++	  _lemona_log = NULL;
++#endif
+ 	if (!file)
+ 		goto bad;
+ 
+@@ -148,6 +169,19 @@
+ 	}
+ 	fput_light(file, fput_needed);
+ bad:
++#if defined(CONFIG_LEMONA)
++	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
++	  lemona_log(__NR_lseek, false, 1, 0, &retval);
++#elif defined(CONFIG_LEMONA_MODULE)
++	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
++	  {
++	    if (_lemona_log == NULL)
++	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
++	    _lemona_log(__NR_lseek, false, 1, 0, &retval);
++	  }
++	else
++	  _lemona_log = NULL;
++#endif
+ 	return retval;
+ }
+ 
+@@ -160,9 +194,29 @@
+ 	struct file * file;
+ 	loff_t offset;
+ 	int fput_needed;
++#if defined(LEMONA)
++	bool lemona_file = false;
++#endif
+ 
+ 	retval = -EBADF;
+ 	file = fget_light(fd, &fput_needed);
++#if defined(CONFIG_LEMONA)
++	if (atomic_read(&lemona_activated) != 0)
++	  lemona_log(__NR__llseek, true, 4, 0,
++				 &fd, &offset_high, &offset_low, &origin);
++#elif defined(CONFIG_LEMONA_MODULE)
++	if (atomic_read(&lemona_activated) != 0)
++	  {
++	    if (_lemona_log == NULL)
++		  lemona_get_fn(&_lemona_log, &_lemona_relay_is_ours);
++	    if (file == NULL
++			|| (lemona_file = _lemona_relay_is_ours(file->f_dentry)))
++		  _lemona_log(__NR__llseek, true, 4, 0,
++					  &fd, &offset_high, &offset_low, &origin);
++	  }
++	else
++	  _lemona_log = NULL;
++#endif
+ 	if (!file)
+ 		goto bad;
+ 
+@@ -182,6 +236,20 @@
+ out_putf:
+ 	fput_light(file, fput_needed);
+ bad:
++	offset = retval == 0 ? offset : retval; /* for LEMONA */
++#if defined(CONFIG_LEMONA)
++	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
++	  lemona_log(__NR__llseek, false, 1, 0, &offset);
++#elif defined(CONFIG_LEMONA_MODULE)
++	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
++	  {
++	    if (_lemona_log == NULL)
++	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
++	    _lemona_log(__NR__llseek, false, 1, 0, &offset);
++	  }
++	else
++	  _lemona_log = NULL;
++#endif
+ 	return retval;
+ }
+ #endif
+@@ -355,15 +423,49 @@
  	struct file *file;
  	ssize_t ret = -EBADF;
  	int fput_needed;
-+	loff_t pos;
-+#if defined(CONFIG_LEMONA) || defined(CONFIG_LEMONA_MODULE)
++#if defined(LEMONA)
 +	bool lemona_file = false;
 +#endif
  
@@ -71,7 +307,7 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
 +#if defined(CONFIG_LEMONA)
 +	if (atomic_read(&lemona_activated) != 0
 +	    && (file == NULL
-+		|| (lemona_file = lemona_relay_is_ours(file->f_dentry))))
++			|| (lemona_file = lemona_relay_is_ours(file->f_dentry))))
 +	  lemona_log(__NR_read, true, 2, 0, &fd, &count);
 +#elif defined(CONFIG_LEMONA_MODULE)
 +	if (atomic_read(&lemona_activated) != 0)
@@ -79,31 +315,29 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
 +	    if (_lemona_log == NULL)
 +	      lemona_get_fn(&_lemona_log, &_lemona_relay_is_ours);
 +	    if (file == NULL
-+					|| (lemona_file = _lemona_relay_is_ours(file->f_dentry)))
-+				_lemona_log(__NR_read, true, 2, 0, &fd, &count);
++			|| (lemona_file = _lemona_relay_is_ours(file->f_dentry)))
++		  _lemona_log(__NR_read, true, 2, 0, &fd, &count);
 +	  }
 +	else
 +	  _lemona_log			= NULL;
 +#endif
  	if (file) {
--		loff_t pos = file_pos_read(file);
-+		pos = file_pos_read(file);
+ 		loff_t pos = file_pos_read(file);
  		ret = vfs_read(file, buf, count, &pos);
  		file_pos_write(file, pos);
  		fput_light(file, fput_needed);
 +
-+		pos = ret >= 0 ? ret : pos; /* added for LEMONA */
  	}
  
 +#if defined(CONFIG_LEMONA)
 +	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  lemona_log(__NR_read, false, 2, 0, &pos, buf);
++	  lemona_log(__NR_read, false, 2, 0, buf, &ret);
 +#elif defined(CONFIG_LEMONA_MODULE)
 +	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
 +	  {
 +	    if (_lemona_log == NULL)
 +	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_read, false, 2, 0, &pos, buf);
++	    _lemona_log(__NR_read, false, 2, 0, buf, &ret);
 +	  }
 +	else
 +	  _lemona_log = NULL;
@@ -111,12 +345,10 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
  	return ret;
  }
  
-@@ -372,15 +429,45 @@
- 	struct file *file;
+@@ -373,6 +475,20 @@
  	ssize_t ret = -EBADF;
  	int fput_needed;
-+	loff_t pos;
-+
+ 
 +#if defined(CONFIG_LEMONA)
 +	if (atomic_read(&lemona_activated) != 0)
 +	  lemona_log(__NR_write, true, 3, 0, &fd, buf, &count);
@@ -125,32 +357,28 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
 +	  {
 +	    if (_lemona_log == NULL)
 +	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_write, true, 3, 0, &fd, buf, &count);
++		_lemona_log(__NR_write, true, 3, 0, &fd, buf, &count);
 +	  }
 +	else
 +	  _lemona_log = NULL;
 +#endif
- 
++
  	file = fget_light(fd, &fput_needed);
  	if (file) {
--		loff_t pos = file_pos_read(file);
-+		pos = file_pos_read(file);
- 		ret = vfs_write(file, buf, count, &pos);
- 		file_pos_write(file, pos);
+ 		loff_t pos = file_pos_read(file);
+@@ -381,6 +497,19 @@
  		fput_light(file, fput_needed);
-+
-+		pos = ret >= 0 ? ret : pos; /* added for LEMONA */
  	}
  
 +#if defined(CONFIG_LEMONA)
 +	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_write, false, 1, 0, &pos);
++	  lemona_log(__NR_write, false, 1, 0, &ret);
 +#elif defined(CONFIG_LEMONA_MODULE)
 +	if (atomic_read(&lemona_activated) != 0)
 +	  {
 +	    if (_lemona_log == NULL)
 +	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_write, false, 1, 0, &pos);
++	    _lemona_log(__NR_write, false, 1, 0, &ret);
 +	  }
 +	else
 +	  _lemona_log = NULL;
@@ -158,16 +386,23 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
  	return ret;
  }
  
-@@ -390,18 +477,54 @@
+@@ -390,18 +519,52 @@
  	struct file *file;
  	ssize_t ret = -EBADF;
  	int fput_needed;
-+#if defined(CONFIG_LEMONA) || defined(CONFIG_LEMONA_MODULE)
++#if defined(LEMONA)
 +	bool lemona_file = false;
 +#endif
  
 -	if (pos < 0)
 -		return -EINVAL;
+-
+-	file = fget_light(fd, &fput_needed);
+-	if (file) {
+-		ret = -ESPIPE;
+-		if (file->f_mode & FMODE_PREAD)
+-			ret = vfs_read(file, buf, count, &pos);
+-		fput_light(file, fput_needed);
 +	if (pos >= 0) {
 +		file = fget_light(fd, &fput_needed);
 +#if defined(CONFIG_LEMONA)
@@ -181,7 +416,7 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
 +	    if (_lemona_log == NULL)
 +	      lemona_get_fn(&_lemona_log, &_lemona_relay_is_ours);
 +	    if (file == NULL
-+		|| (lemona_file = _lemona_relay_is_ours(file->f_dentry)))
++			|| (lemona_file = _lemona_relay_is_ours(file->f_dentry)))
 +	      _lemona_log(__NR_pread64, true, 3, 0, &fd, &count, &pos);
 +	  }
 +	else
@@ -192,14 +427,6 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
 +			if (file->f_mode & FMODE_PREAD)
 +				ret = vfs_read(file, buf, count, &pos);
 +			fput_light(file, fput_needed);
- 
--	file = fget_light(fd, &fput_needed);
--	if (file) {
--		ret = -ESPIPE;
--		if (file->f_mode & FMODE_PREAD)
--			ret = vfs_read(file, buf, count, &pos);
--		fput_light(file, fput_needed);
-+			pos = ret >= 0 ? ret : pos; /* added for LEMONA */
 +		}
  	}
 +	else
@@ -207,13 +434,13 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
  
 +#if defined(CONFIG_LEMONA)
 +	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  lemona_log(__NR_pread64, false, 2, 0, &pos, buf);
++	  lemona_log(__NR_pread64, false, 2, 0, buf, &ret);
 +#elif defined(CONFIG_LEMONA_MODULE)
 +	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
 +	  {
 +	    if (_lemona_log == NULL)
 +	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_pread64, false, 2, 0, &pos, buf);
++	    _lemona_log(__NR_pread64, false, 2, 0, buf, &ret);
 +	  }
 +	else
 +	  _lemona_log = NULL;
@@ -221,7 +448,7 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
  	return ret;
  }
  
-@@ -412,17 +535,47 @@
+@@ -412,17 +575,45 @@
  	ssize_t ret = -EBADF;
  	int fput_needed;
  
@@ -229,13 +456,13 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
 -		return -EINVAL;
 +#if defined(CONFIG_LEMONA)
 +	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_pwrite64, true, 3, 0, &fd, buf, &count, &pos);
++	  lemona_log(__NR_pwrite64, true, 4, 0, &fd, buf, &count, &pos);
 +#elif defined(CONFIG_LEMONA_MODULE)
 +	if (atomic_read(&lemona_activated) != 0)
 +	  {
 +	    if (_lemona_log == NULL)
 +	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_pwrite64, true, 3, 0, &fd, buf, &count, &pos);
++	    _lemona_log(__NR_pwrite64, true, 4, 0, &fd, buf, &count, &pos);
 +	  }
 +	else
 +	  _lemona_log = NULL;
@@ -254,8 +481,6 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
 +			if (file->f_mode & FMODE_PWRITE)
 +				ret = vfs_write(file, buf, count, &pos);
 +			fput_light(file, fput_needed);
-+
-+			pos = ret >= 0 ? ret : pos; /* added for LEMONA */
 +		}
  	}
 +	else
@@ -263,13 +488,13 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
  
 +#if defined(CONFIG_LEMONA)
 +	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_pwrite64, false, 1, 0, &pos);
++	  lemona_log(__NR_pwrite64, false, 1, 0, &ret);
 +#elif defined(CONFIG_LEMONA_MODULE)
 +	if (atomic_read(&lemona_activated) != 0)
 +	  {
 +	    if (_lemona_log == NULL)
 +	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_pwrite64, false, 1, 0, &pos);
++	    _lemona_log(__NR_pwrite64, false, 1, 0, &ret);
 +	  }
 +	else
 +	  _lemona_log = NULL;
@@ -279,7 +504,7 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
  
 diff -uNr linux.vanilla/init/main.c linux.patch/init/main.c
 --- linux.vanilla/init/main.c	2008-09-27 17:26:15.000000000 +1000
-+++ linux.patch/init/main.c	2008-10-31 13:25:08.000000000 +1100
++++ linux.patch/init/main.c	2008-11-03 19:56:01.000000000 +1100
 @@ -107,6 +107,11 @@
  enum system_states system_state;
  EXPORT_SYMBOL(system_state);
@@ -292,11 +517,17 @@ diff -uNr linux.vanilla/init/main.c linux.patch/init/main.c
  /*
   * Boot command-line arguments
   */
-@@ -808,6 +813,25 @@
+@@ -808,6 +813,31 @@
  	(void) sys_dup(0);
  	(void) sys_dup(0);
  
-+#if defined(CONFIG_LEMONA)
++#if defined(CONFIG_LEMONA) && defined(CONFIG_LEMONA_NET_LOG)
++	/*
++	 * This is supposed to read the user passphrase and store it
++	 * so data send over the network will be encrypted.
++	 *
++	 * TODO: store the passphrase
++	 */
 +	if (atomic_read(&lemona_activated) != 0)
 +	  {
 +		int	rd;
@@ -320,7 +551,7 @@ diff -uNr linux.vanilla/init/main.c linux.patch/init/main.c
  	if (ramdisk_execute_command) {
 diff -uNr linux.vanilla/kernel/sched.c linux.patch/kernel/sched.c
 --- linux.vanilla/kernel/sched.c	2008-09-27 17:26:16.000000000 +1000
-+++ linux.patch/kernel/sched.c	2008-10-31 13:25:38.000000000 +1100
++++ linux.patch/kernel/sched.c	2008-11-03 19:56:26.000000000 +1100
 @@ -4188,6 +4188,8 @@
  	next = pick_next_task(rq, prev);
  
@@ -332,8 +563,8 @@ diff -uNr linux.vanilla/kernel/sched.c linux.patch/kernel/sched.c
  		rq->nr_switches++;
 diff -uNr linux.vanilla/lemona/blades/generics.c linux.patch/lemona/blades/generics.c
 --- linux.vanilla/lemona/blades/generics.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/blades/generics.c	2008-10-31 13:37:34.000000000 +1100
-@@ -0,0 +1,131 @@
++++ linux.patch/lemona/blades/generics.c	2008-11-03 19:56:57.000000000 +1100
+@@ -0,0 +1,209 @@
 +/*
 +** This file is part of Lemona.
 +** Copyright (C) 2008 Kenfe-Mickaël Laventure
@@ -353,8 +584,17 @@ diff -uNr linux.vanilla/lemona/blades/generics.c linux.patch/lemona/blades/gener
 +#include "../lemona.h"
 +
 +
++/**
++ * lemona_blade_integer - add a 32 bits integer value to a zest
++ * @zest: The zest to be filled
++ * @isExt: Is this part of the extended arguments?
++ * @idx: Index of the value in the zest
++ * @off: Offset relative to the zest at which to copy the value
++ * @fruit1: The value to be copied (32 bits)
++ * @fruit2: Unused
++ */
 +int		lemona_blade_integer(struct lemona_zest *zest,
-+							 bool isExt, int idx, int off,
++							 int isExt, int idx, int off,
 +							 void *fruit1, void *fruit2)
 +{
 +  int	val = *((int *)fruit1);
@@ -372,8 +612,17 @@ diff -uNr linux.vanilla/lemona/blades/generics.c linux.patch/lemona/blades/gener
 +  return (sizeof(val));
 +}
 +
++/**
++ * lemona_blade_integer64 - add a 64 bits integer value to a zest
++ * @zest: The zest to be filled
++ * @isExt: Is this part of the extended arguments?
++ * @idx: Index of the value in the zest
++ * @off: Offset relative to the zest at which to copy the value
++ * @fruit1: The value to be copied (64 bits)
++ * @fruit2: Unused
++ */
 +int		lemona_blade_integer64(struct lemona_zest *zest,
-+							   bool isExt, int idx, int off,
++							   int isExt, int idx, int off,
 +							   void *fruit1, void *fruit2)
 +{
 +  u64	val = *((u64 *)fruit1);
@@ -391,14 +640,68 @@ diff -uNr linux.vanilla/lemona/blades/generics.c linux.patch/lemona/blades/gener
 +  return (sizeof(val));
 +}
 +
-+/* this is a dual blade */
-+int		lemona_blade_output_buffer(struct lemona_zest *zest,
-+								   bool isExt, int idx, int off,
-+								   void *fruit1, void* fruit2)
++int		lemona_blade_long(struct lemona_zest *zest,
++						  int isExt, int idx, int off,
++						  void *fruit1, void *fruit2)
 +{
-+  size_t		size	= *((int *)fruit1);
++  long	val = *((long *)fruit1);
++  int	*sz;
++
++  /* shall we compute the size or fill the zest ? */
++  if (zest == NULL)
++    return (sizeof(val));
++
++  /* fill the zest */
++  sz = isExt == false ? zest->argsz : zest->extsz;
++  sz[idx] = sizeof(val);
++  *((int *)((char *)zest + off)) = val;
++
++  return (sizeof(val));
++}
++
++
++/*
++ * TODO: make this an alias to lemona_blade_integer64
++ */
++int		lemona_blade_long_long(struct lemona_zest *zest,
++							   int isExt, int idx, int off,
++							   void *fruit1, void *fruit2)
++{
++  long long		val = *((long long *)fruit1);
 +  int			*sz;
-+  unsigned long	uncopied;
++
++  /* shall we compute the size or fill the zest ? */
++  if (zest == NULL)
++    return (sizeof(val));
++
++  /* fill the zest */
++  sz = isExt == false ? zest->argsz : zest->extsz;
++  sz[idx] = sizeof(val);
++  *((int *)((char *)zest + off)) = val;
++
++  return (sizeof(val));
++}
++
++/**
++ * lemona_blade_output_buffer - add the size and buffer content to a zest
++ * @zest: The zest to be filled
++ * @isExt: Is this part of the extended arguments?
++ * @idx: Starting index of the arguments
++ * @off: Offset relative to the zest from which to copy the data
++ * @buf: The buffer addresse (need to be an userspace address)
++ * @len: Size of the buffer (32 bits). If < 0, it corresponds to an ERRNO
++ *
++ * If size is negative, the return value should be sizeof(ssize_t)
++ *
++ * NOTE: As you would have guessed this is a dual blade.
++ */
++int		lemona_blade_output_buffer(struct lemona_zest *zest,
++								   int isExt, int idx, int off,
++								   void __user *buf, void *len)
++{
++  ssize_t		size	= *((int *)len);
++  int			*sz;
++  unsigned long	uncopied = size;
 +
 +  /* shall we compute the size or fill the zest ? */
 +  if (zest == NULL)
@@ -415,25 +718,38 @@ diff -uNr linux.vanilla/lemona/blades/generics.c linux.patch/lemona/blades/gener
 +      sz[idx + 1] = size;
 +
 +      uncopied = copy_from_user((char *)zest + off + sizeof(size),
-+								fruit2, size);
++								buf, size);
++
 +      if (uncopied)
 +		{
-+		  lemona_printk("Copied %i instead of %i\n", size - uncopied, size);
++		  lemona_printk("(syscall %i) "
++						"output_buffer: %p/%p copied %i instead of %i\n",
++						zest->sysnr, buf, len,
++						(int)(size - uncopied), (int)size);
 +		  return (-1);
 +		}
 +    }
 +  return (sizeof(size) + (size >= 0 ? size : 0));
 +}
 +
-+/* this is a dual blade */
-+/*
-+for an unknown reason, argument order seem to be inversed by va_arg()...
-+*/
++/**
++ * lemona_blade_output_buffer64 - add the size and buffer content to a zest
++ * @zest: The zest to be filled
++ * @isExt: Is this part of the extended arguments?
++ * @idx: Starting index of the arguments
++ * @off: Offset relative to the zest from which to copy the data
++ * @buf: The buffer addresse (need to be an userspace address)
++ * @len: Size of the buffer (64 bits). If < 0, it corresponds to an ERRNO
++ *
++ * If size is negative, the return value should be sizeof(s64).
++ *
++ * NOTE: As you would have guessed this is a dual blade.
++ */
 +int	lemona_blade_output_buffer64(struct lemona_zest *zest,
-+								 bool isExt, int idx, int off,
-+								 void *fruit2, void* fruit1)
++								 int isExt, int idx, int off,
++								 void *buf, void *len)
 +{
-+  u64			size	= *((u64 *)fruit1);
++  s64			size	= *((u64 *)len);
 +  int			*sz;
 +  unsigned long	uncopied;
 +
@@ -452,22 +768,187 @@ diff -uNr linux.vanilla/lemona/blades/generics.c linux.patch/lemona/blades/gener
 +      sz[idx + 1] = size;
 +
 +      uncopied = copy_from_user((char *)zest + off + sizeof(size),
-+				fruit2, size);
++				buf, size);
 +      if (uncopied)
-+		{
-+		  lemona_printk("Access: %i Addr: %p/%p Copied %i instead of %i\n",
-+						access_ok(VERIFY_READ, fruit2, size),
-+						fruit1,
-+						fruit2,
-+						(int)size - uncopied, (int)size);
-+		  return (-1);
-+		}
++		return (-1);
 +    }
 +  return (sizeof(size) + (size >= 0 ? size : 0));
 +}
+diff -uNr linux.vanilla/lemona/blades/iovec.c linux.patch/lemona/blades/iovec.c
+--- linux.vanilla/lemona/blades/iovec.c	1970-01-01 10:00:00.000000000 +1000
++++ linux.patch/lemona/blades/iovec.c	2008-11-03 19:56:57.000000000 +1100
+@@ -0,0 +1,43 @@
++/*
++** This file is part of Lemona.
++** Copyright (C) 2008 Kenfe-Mickaël Laventure
++**
++** The contents of this file are subject to the terms of either the
++** GNU General Public License Version 2 ("GPL") or the MIT License
++** (collectively, the "License"). You may not use this file except in
++** compliance with the License. You can obtain a copy of the License
++** at http://www.opensource.org/licenses/gpl-2.0.php and
++** http://www.opensource.org/licenses/mit-license.php or GPL.LICENSE
++** and MIT.LICENSE. See the License for the specific language
++** governing permissions and limitations under the License.
++*/
++
++#include <linux/uaccess.h> /* copy_from_user */
++
++#include "../lemona.h"
++
++/**
++ * lemona_blade_iovec - Add the io vector to the zest
++ * @zest: The zest to be filled
++ * @isExt: Is this part of the extended arguments?
++ * @idx: Starting index of the arguments
++ * @off: Offset relative to the zest from which to copy the data
++ * @iov: Start of the io vector
++ * @vlen: Size of the io vector
++ *
++ * If called from a call entry (zest->in == true), only append the
++ * vector content to the zest.
++ *
++ * If called from a call exit (zest->in == false), only append the
++ * data pointed by the vector. /!\ In this case, the number of bytes
++ * to be copied if to be fetch from the value stored at the previous
++ * idx.
++ *
++ * NOTE: As you would have guessed this is a dual blade.
++ */
++int		lemona_blade_iovec(struct lemona_zest *zest,
++						   int isExt, int idx, int off,
++						   void *iov, void *vlen)
++{
++  return (0);
++}
+diff -uNr linux.vanilla/lemona/blades/string.c linux.patch/lemona/blades/string.c
+--- linux.vanilla/lemona/blades/string.c	1970-01-01 10:00:00.000000000 +1000
++++ linux.patch/lemona/blades/string.c	2008-11-03 19:56:57.000000000 +1100
+@@ -0,0 +1,121 @@
++/*
++** This file is part of Lemona.
++** Copyright (C) 2008 Kenfe-Mickaël Laventure
++**
++** The contents of this file are subject to the terms of either the
++** GNU General Public License Version 2 ("GPL") or the MIT License
++** (collectively, the "License"). You may not use this file except in
++** compliance with the License. You can obtain a copy of the License
++** at http://www.opensource.org/licenses/gpl-2.0.php and
++** http://www.opensource.org/licenses/mit-license.php or GPL.LICENSE
++** and MIT.LICENSE. See the License for the specific language
++** governing permissions and limitations under the License.
++*/
++
++#include <linux/file.h>			/* struct file, fget_light, fput_light */
++#include <linux/uaccess.h>		/* strncopy_from_user */
++
++#include "../lemona.h"
++
++/**
++ * lemona_blade_string_null - Append the content of a null terminated string
++ * @zest: The zest to be filled
++ * @isExt: Is this part of the extended arguments?
++ * @idx: Index of the string in the arguments
++ * @off: Offset relative to the zest from which to copy the data
++ * @str: String address (user space address)
++ * @unused: well... it's unused ;-)
++ *
++ * TODO: shall we return PATH_MAX instead of getting the real size?
++ * Is speed better than wasted space in zest?
++ */
++int		lemona_blade_string_null(struct lemona_zest *zest,
++								 int isExt, int idx, int off,
++								 void __user *str, void *unused)
++{
++  long	len;
++  int	*sz;
++
++  /* shall we compute the size or fill the zest ? */
++  if (zest == NULL)
++	{
++	  char	*buf;
++
++	  buf = kzalloc(PATH_MAX, GFP_KERNEL);
++	  if (buf == NULL)
++		return (-ENOMEM);
++
++	  len = strncpy_from_user(buf, str, PATH_MAX);
++	  kfree(buf);
++	  return (len);
++	}
++
++  /* fill the zest */
++  sz = isExt == false ? zest->argsz : zest->extsz;
++  /* copy and get size */
++  len = strncpy_from_user((char *)zest + off, str, PATH_MAX);
++  sz[idx] = len;
++  return (len);
++}
++
++/**
++ * lemona_blade_string_fd - Append the path of a file descriptor
++ * @zest: The zest to be filled
++ * @isExt: Is this part of the extended arguments?
++ * @idx: Index of the string in the arguments
++ * @off: Offset relative to the zest from which to copy the data
++ * @pfd: Pointer to the fd
++ * @unused: well... it's unused ;-)
++ *
++ * TODO: do we need to lock the dentry while going through it?
++ */
++int		lemona_blade_string_fd(struct lemona_zest *zest,
++							   int isExt, int idx, int off,
++							   void *pfd, void *unused)
++{
++  long			fd		= *((long *)pfd);
++  int			size	= 0;
++  struct file	*file;
++  struct dentry	*dentry;
++  int			fput_needed;
++  char			*dest;
++  int			*sz;
++
++  /* if the fd is invalid no need to go further */
++  if (fd < 0 || (file = fget_light(fd, &fput_needed)) == NULL)
++	return (size);
++
++  dentry = file->f_dentry;
++
++  /* shall we compute the size or fill the zest ? */
++  if (zest == NULL)
++	{
++	  while (dentry != dentry->d_parent)
++		{
++		  /* add space for '/' separator */
++		  size			+= (int)dentry->d_name.len + (size ? 1 : 0);
++		  dentry		= dentry->d_parent;
++		}
++
++	  fput_light(file, fput_needed);
++	  return (size + 1); /* add '/' (i.e. root path) */
++	}
++
++  /* fill the zest */
++  sz	= isExt == false ? zest->argsz : zest->extsz;
++  dest	= (char *)zest + off;
++  while (dentry != dentry->d_parent)
++	{
++	  /* add '/' separator if needed */
++	  if (size)
++		dest[size++]		= '/';
++	  strncpy(dest + size, dentry->d_name.name, dentry->d_name.len);
++	  size				+= (int)dentry->d_name.len;
++	  dentry			= dentry->d_parent;
++	}
++  /* add '/' (i.e. root path) */
++  dest[size++]	= '/';
++  sz[idx]		= size;
++  fput_light(file, fput_needed);
++  return (size);
++}
 diff -uNr linux.vanilla/lemona/COPYING linux.patch/lemona/COPYING
 --- linux.vanilla/lemona/COPYING	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/COPYING	2008-10-31 13:37:34.000000000 +1100
++++ linux.patch/lemona/COPYING	2008-11-03 19:56:57.000000000 +1100
 @@ -0,0 +1,4 @@
 +This software is released under both the MIT and GPL license, the
 +content of these licenses can be found respectively in the MIT.LICENSE
@@ -475,7 +956,7 @@ diff -uNr linux.vanilla/lemona/COPYING linux.patch/lemona/COPYING
 +
 diff -uNr linux.vanilla/lemona/GPL.LICENSE linux.patch/lemona/GPL.LICENSE
 --- linux.vanilla/lemona/GPL.LICENSE	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/GPL.LICENSE	2008-10-31 13:37:34.000000000 +1100
++++ linux.patch/lemona/GPL.LICENSE	2008-11-03 19:56:57.000000000 +1100
 @@ -0,0 +1,339 @@
 +		    GNU GENERAL PUBLIC LICENSE
 +		       Version 2, June 1991
@@ -818,7 +1299,7 @@ diff -uNr linux.vanilla/lemona/GPL.LICENSE linux.patch/lemona/GPL.LICENSE
 +Public License instead of this License.
 diff -uNr linux.vanilla/lemona/init.c linux.patch/lemona/init.c
 --- linux.vanilla/lemona/init.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/init.c	2008-10-31 13:37:34.000000000 +1100
++++ linux.patch/lemona/init.c	2008-11-03 19:56:57.000000000 +1100
 @@ -0,0 +1,87 @@
 +/*
 +** This file is part of Lemona.
@@ -843,7 +1324,7 @@ diff -uNr linux.vanilla/lemona/init.c linux.patch/lemona/init.c
 +MODULE_LICENSE("Dual MIT/GPL");
 +
 +#if defined(CONFIG_LEMONA_MODULE)
-+extern atomic_t		lemona_clients;
++extern atomic_t			lemona_clients;
 +# define lemona_clients_wait()			\
 +  while (atomic_read(&lemona_clients) > 0)	\
 +    schedule();
@@ -851,9 +1332,9 @@ diff -uNr linux.vanilla/lemona/init.c linux.patch/lemona/init.c
 +# define lemona_clients_wait()
 +#endif
 +
-+struct lemona		*juice			= NULL;
++struct lemona			*juice			= NULL;
 +
-+static void		lemona_cleanup(void)
++static void				lemona_cleanup(void)
 +{
 +  lemona_relay_cleanup();
 +  lemona_net_cleanup();
@@ -861,10 +1342,10 @@ diff -uNr linux.vanilla/lemona/init.c linux.patch/lemona/init.c
 +    kfree(juice);
 +}
 +
-+static int __init	lemona_init(void)
++static int __init		lemona_init(void)
 +{
-+  long			err = 0;
-+  extern atomic_t	lemona_activated;
++  long					err = 0;
++  extern atomic_t		lemona_activated;
 +
 +  lemona_printk("Initialization for kernel tree " UTS_RELEASE "...\n");
 +  juice = kzalloc(sizeof(*juice), GFP_KERNEL);
@@ -890,9 +1371,9 @@ diff -uNr linux.vanilla/lemona/init.c linux.patch/lemona/init.c
 +  return (err);
 +}
 +
-+static void __exit	lemona_exit(void)
++static void __exit		lemona_exit(void)
 +{
-+  extern atomic_t	lemona_activated;
++  extern atomic_t		lemona_activated;
 +
 +  lemona_printk("Uninitializing Lemona...\n");
 +  atomic_set(&lemona_activated, 0);
@@ -909,7 +1390,7 @@ diff -uNr linux.vanilla/lemona/init.c linux.patch/lemona/init.c
 +module_exit(lemona_exit);
 diff -uNr linux.vanilla/lemona/Kconfig linux.patch/lemona/Kconfig
 --- linux.vanilla/lemona/Kconfig	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/Kconfig	2008-10-31 13:37:34.000000000 +1100
++++ linux.patch/lemona/Kconfig	2008-11-03 19:56:57.000000000 +1100
 @@ -0,0 +1,64 @@
 +#
 +# Lemona Configuration
@@ -977,8 +1458,8 @@ diff -uNr linux.vanilla/lemona/Kconfig linux.patch/lemona/Kconfig
 +endmenu
 diff -uNr linux.vanilla/lemona/lemona_blades.h linux.patch/lemona/lemona_blades.h
 --- linux.vanilla/lemona/lemona_blades.h	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/lemona_blades.h	2008-10-31 13:37:34.000000000 +1100
-@@ -0,0 +1,37 @@
++++ linux.patch/lemona/lemona_blades.h	2008-11-03 19:56:57.000000000 +1100
+@@ -0,0 +1,59 @@
 +/*
 +** This file is part of Lemona.
 +** Copyright (C) 2008 Kenfe-Mickaël Laventure
@@ -998,27 +1479,49 @@ diff -uNr linux.vanilla/lemona/lemona_blades.h linux.patch/lemona/lemona_blades.
 +
 +struct lemona_zest;
 +
-+int	lemona_blade_integer(struct lemona_zest *zest,
-+			     bool isExt, int idx, int off,
-+			     void *fruit1, void *fruit2);
++/*
++ * from blades/generics.c
++ */
++int		lemona_blade_integer(struct lemona_zest *zest,
++							 int isExt, int idx, int off,
++							 void *fruit1, void *fruit2);
 +
-+int	lemona_blade_integer64(struct lemona_zest *zest,
-+			       bool isExt, int idx, int off,
-+			       void *fruit1, void *fruit2);
++int		lemona_blade_integer64(struct lemona_zest *zest,
++							   int isExt, int idx, int off,
++							   void *fruit1, void *fruit2);
++
++int		lemona_blade_long(struct lemona_zest *zest,
++						  int isExt, int idx, int off,
++						  void *fruit1, void *fruit2);
++
++int		lemona_blade_long_long(struct lemona_zest *zest,
++							   int isExt, int idx, int off,
++							   void *fruit1, void *fruit2);
 +
 +/* this is a dual blade */
-+int	lemona_blade_output_buffer(struct lemona_zest *zest,
-+				   bool isExt, int idx, int off,
-+				   void *fruit1, void* fruit2);
++int		lemona_blade_output_buffer(struct lemona_zest *zest,
++								   int isExt, int idx, int off,
++								   void *fruit1, void* fruit2);
 +
 +/* this is a dual blade */
-+int	lemona_blade_output_buffer64(struct lemona_zest *zest,
-+				     bool isExt, int idx, int off,
-+				     void *fruit1, void* fruit2);
++int		lemona_blade_output_buffer64(struct lemona_zest *zest,
++									 int isExt, int idx, int off,
++									 void *fruit1, void* fruit2);
++
++/*
++ * from blades/string.c
++ */
++int		lemona_blade_string_null(struct lemona_zest *zest,
++								 int isExt, int idx, int off,
++								 void __user *str, void *unused);
++int		lemona_blade_string_fd(struct lemona_zest *zest,
++							   int isExt, int idx, int off,
++							   void __user *str, void *unused);
++
 +#endif
 diff -uNr linux.vanilla/lemona/lemona.h linux.patch/lemona/lemona.h
 --- linux.vanilla/lemona/lemona.h	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/lemona.h	2008-10-31 13:37:34.000000000 +1100
++++ linux.patch/lemona/lemona.h	2008-11-03 19:56:57.000000000 +1100
 @@ -0,0 +1,137 @@
 +/*
 +** This file is part of Lemona.
@@ -1049,7 +1552,7 @@ diff -uNr linux.vanilla/lemona/lemona.h linux.patch/lemona/lemona.h
 +struct	lemona_zest {
 +  int			size;  	/* size taken by this zest and args sz/value */
 +
-+  bool			in;
++  int			in;
 +  struct timespec	time;	/* call start/end time (getnstimeofday) */
 +
 +  pid_t			pid;	/* actual pid */
@@ -1112,9 +1615,9 @@ diff -uNr linux.vanilla/lemona/lemona.h linux.patch/lemona/lemona.h
 + * @fruit1: The first value
 + * @fruit2: The second value
 + */
-+typedef int	(*bladefn)(struct lemona_zest *zest, bool isExt,
-+			   int idx, int off,
-+			   void *fruit1, void *fruit2);
++typedef int	(*bladefn)(struct lemona_zest *zest, int isExt,
++					   int idx, int off,
++					   void *fruit1, void *fruit2);
 +
 +struct	__lemona_mixer_handler {
 +  bool		dual;
@@ -1146,20 +1649,20 @@ diff -uNr linux.vanilla/lemona/lemona.h linux.patch/lemona/lemona.h
 +  struct lemona_net	net;
 +};
 +
-+typedef int	(*lemonalogfn)(int sysnr, bool in, int argnr, int extnr, ...);
++typedef int	(*lemonalogfn)(int sysnr, int in, int argnr, int extnr, ...);
 +
 +/*
 + * Prototypes
 + */
-+extern int		lemona_log(int sysnr, bool in,
-+				   int argnr, int extnr, ...);
++extern int		lemona_log(int sysnr, int in,
++						   int argnr, int extnr, ...);
 +
 +# endif /* __KERNEL __ */
 +
 +#endif
 diff -uNr linux.vanilla/lemona/lemona_net.h linux.patch/lemona/lemona_net.h
 --- linux.vanilla/lemona/lemona_net.h	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/lemona_net.h	2008-10-31 13:37:34.000000000 +1100
++++ linux.patch/lemona/lemona_net.h	2008-11-03 19:56:57.000000000 +1100
 @@ -0,0 +1,66 @@
 +/*
 +** This file is part of Lemona.
@@ -1227,9 +1730,62 @@ diff -uNr linux.vanilla/lemona/lemona_net.h linux.patch/lemona/lemona_net.h
 +# endif /* CONFIG_LEMONA_NET_LOG */
 +
 +#endif
+diff -uNr linux.vanilla/lemona/lemona_patch.h linux.patch/lemona/lemona_patch.h
+--- linux.vanilla/lemona/lemona_patch.h	1970-01-01 10:00:00.000000000 +1000
++++ linux.patch/lemona/lemona_patch.h	2008-11-03 19:56:57.000000000 +1100
+@@ -0,0 +1,49 @@
++/*
++** This file is part of Lemona.
++** Copyright (C) 2008 Kenfe-Mickaël Laventure
++**
++** The contents of this file are subject to the terms of either the
++** GNU General Public License Version 2 ("GPL") or the MIT License
++** (collectively, the "License"). You may not use this file except in
++** compliance with the License. You can obtain a copy of the License
++** at http://www.opensource.org/licenses/gpl-2.0.php and
++** http://www.opensource.org/licenses/mit-license.php or GPL.LICENSE
++** and MIT.LICENSE. See the License for the specific language
++** governing permissions and limitations under the License.
++*/
++
++/*
++ * File to be included in every kernel sources file to be patched.
++ */
++
++#ifndef _LEMONA_PATCH_H_
++# define _LEMONA_PATCH_H_
++
++# if defined(CONFIG_LEMONA) || defined(CONFIG_LEMONA_MODULE)
++#  include <linux/kallsyms.h>
++#  include <../lemona/lemona.h>
++
++/*
++ * add this define to avoid testing for CONFIG_LEMONA && CONFIG_LEMONA_MODULE
++ */
++# define LEMONA	1
++
++/*
++ * Variable
++ */
++extern atomic_t					lemona_activated;
++#  if defined(CONFIG_LEMONA_MODULE)
++static lemonalogfn				_lemona_log				= NULL;
++#   if defined(LEMONA_READ)
++static lemonarelayisoursfn		_lemona_relay_is_ours	= NULL;
++void inline lemona_get_fn(lemonalogfn *_lemona_log,
++						  lemonarelayisoursfn *_lemona_relay_is_ours)
++{
++  *_lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
++  *_lemona_relay_is_ours = (lemonarelayisoursfn)kallsyms_lookup_name("lemona_relay_is_ours");
++}
++#   endif /* LEMONA_READ */
++#  endif /* CONFIG_LEMONA_MODULE */
++# endif /* CONFIG_LEMONA || CONFIG_LEMONA_MODULE */
++
++#endif /* _LEMONA_PATCH_H_ */
 diff -uNr linux.vanilla/lemona/lemona_relay.h linux.patch/lemona/lemona_relay.h
 --- linux.vanilla/lemona/lemona_relay.h	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/lemona_relay.h	2008-10-31 13:37:34.000000000 +1100
++++ linux.patch/lemona/lemona_relay.h	2008-11-03 19:56:57.000000000 +1100
 @@ -0,0 +1,97 @@
 +/*
 +** This file is part of Lemona.
@@ -1330,8 +1886,8 @@ diff -uNr linux.vanilla/lemona/lemona_relay.h linux.patch/lemona/lemona_relay.h
 +#endif
 diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 --- linux.vanilla/lemona/logging.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/logging.c	2008-10-31 13:37:34.000000000 +1100
-@@ -0,0 +1,316 @@
++++ linux.patch/lemona/logging.c	2008-11-03 19:56:57.000000000 +1100
+@@ -0,0 +1,362 @@
 +/*
 +** This file is part of Lemona.
 +** Copyright (C) 2008 Kenfe-Mickaël Laventure
@@ -1354,8 +1910,8 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 +
 +#include "lemona.h"
 +
-+extern const struct lemona_mixer	lemona_mixers[];
-+extern const int			lemona_mixers_size;
++extern const struct lemona_mixer		lemona_mixers[];
++extern const int						lemona_mixers_size;
 +
 +#if defined (CONFIG_LEMONA_MODULE)
 +atomic_t				lemona_clients	= ATOMIC_INIT(0);
@@ -1366,14 +1922,27 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 +# define lemona_clients_dec(x)
 +#endif
 +
++/**
++ * lemona_zest_get_size - Compute the size needed by a zest
++ * @mixer: The mixer containing information on how to handle this zest values
++ * @in: Is this at the entry or exit of a call?
++ * @ap: Beginning of the arguments
++ *
++ * For each argument, the corresponding blade will be invoked with a
++ * NULL zest as parameter. This will hint the blade to simply return
++ * the size required to store the current argument value. All returned
++ * values are then added together along with the lemona_zest struct
++ * size and the space needed to hold the size of each value.
++ */
 +static int	lemona_zest_get_size(const struct lemona_mixer *mixer,
-+								 bool in, va_list ap)
++								 int in, va_list ap)
 +{
-+  int									i	= 0;
-+  int									tmp	= 0;
++  int									i		= 0;
++  int									tmp		= 0;
 +  int									size	= 0;
 +  int									bladesnr;
 +  const struct __lemona_mixer_handler	*handlers;
++  void									*arg1, *arg2;
 +
 +  if (unlikely(mixer == NULL))
 +    return (-EINVAL);
@@ -1396,22 +1965,26 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 +		  lemona_printk("lemona_zest_get_size: Invalid mixer blade:\n");
 +		  lemona_printk("\tsysnr: %i\n", mixer->sysnr);
 +		  lemona_printk("\tblade: %i\n", i);
-+		  lemona_printk("\tin: %s\n",in ? "true" : "false");
++		  lemona_printk("\tin: %s\n", in ? "true" : "false");
 +		  return (-EINVAL);
 +		}
++	  arg1 = va_arg(ap, void*);
 +      if (handlers[i].dual == true)
-+		tmp = handlers[i].blade(NULL, false, i, 0,
-+								va_arg(ap, void *), va_arg(ap, void *));
++		{
++		  arg2	= va_arg(ap, void*);
++		  tmp	= handlers[i].blade(NULL, false, i, 0, arg1, arg2);
++		}
 +      else
-+		tmp = handlers[i].blade(NULL, false, i, 0, va_arg(ap, void *), NULL);
-+      if (tmp == -1)
++		tmp		= handlers[i].blade(NULL, false, i, 0, arg1, NULL);
++      if (tmp < 0)
 +		{
 +		  lemona_printk("lemona_zest_get_size: "
 +						"Unable to determine argument size:\n");
 +		  lemona_printk("\tsysnr: %i\n", mixer->sysnr);
 +		  lemona_printk("\tblade: %i\n", i);
-+		  lemona_printk("\tin: %s\n",in ? "true" : "false");
-+		  return (-EINVAL);
++		  lemona_printk("\tin: %s\n", in ? "true" : "false");
++		  lemona_printk("\tret: %i\n", tmp);
++		  return (tmp);
 +		}
 +      size += tmp;
 +    }
@@ -1419,14 +1992,29 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 +  return (sizeof(struct lemona_zest) + (bladesnr * sizeof(int)) + size);
 +}
 +
++/**
++ * lemona_zest_fill - Fill a zest with the values pointed by ap
++ * @mixer: The mixer containing information on how to handle this zest values
++ * @in: Is this at the entry or exit of a call?
++ * @z: The zest to be filled (has been allocated by lemona_zest_create)
++ * @ap: Beginning of the arguments
++ *
++ * This will fill the zest with common info then invoke the differents
++ * blades to copy the needed arguments in the zest buffer.
++ *
++ * NOTE: the timestamp is only generated in saved at this point so
++ * far. It might be moved earlier in the code path later on.
++ */
 +static int	lemona_zest_fill(const struct lemona_mixer *mixer,
-+							 bool in, struct lemona_zest *z,
++							 int in, struct lemona_zest *z,
 +							 va_list ap)
 +{
 +  int									i;
 +  int									off		= 0;
 +  int									ret		= 0;
 +  const struct __lemona_mixer_handler	*handlers;
++  void									*arg1, *arg2;
++
 +
 +  /* we don't check our arguments, this should have already been done */
 +  getnstimeofday(&(z->time));
@@ -1471,14 +2059,18 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 +  off = (int)((char *)z->args - (char *)z);
 +  for (i = 0; i < z->argnr; i += handlers[i].dual ? 2 : 1)
 +    {
++	  arg1 = va_arg(ap, void*);
 +      if (handlers[i].dual == true)
-+		ret = handlers[i].blade(z, false, i, off,
-+								va_arg(ap, void *), va_arg(ap, void *));
++		{
++		  arg2	= va_arg(ap, void*);
++		  ret	= handlers[i].blade(z, false, i, off, arg1, arg2);
++		}
 +      else
-+		ret = handlers[i].blade(z, false, i, off, va_arg(ap, void *), NULL);
++		ret		= handlers[i].blade(z, false, i, off, arg1, NULL);
 +      if (ret < 0)
 +		{
-+		  lemona_printk("args: in: %i blade %i returned -1\n", in, i);
++		  lemona_printk("args (syscal %i) in: %i blade %i returned -1\n",
++						mixer->sysnr, in, i);
 +		  goto out;
 +		}
 +
@@ -1494,14 +2086,18 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 +  off		= (int)((char *)z->exts - (char *)z);
 +  for (i = 0; i < z->extnr; i += handlers[i].dual ? 2 : 1)
 +    {
-+      if (handlers[i].dual == true)
-+		ret = handlers[i].blade(z, true, i, off,
-+								va_arg(ap, void *), va_arg(ap, void *));
++	  arg1 = va_arg(ap, void*);
++      if (handlers[z->argnr + i].dual == true)
++		{
++		  arg2	= va_arg(ap, void*);
++		  ret	= handlers[z->argnr + i].blade(z, true, i, off, arg1, arg2);
++		}
 +      else
-+		ret = handlers[i].blade(z, true, i, off, va_arg(ap, void *), NULL);
++		ret		= handlers[z->argnr + i].blade(z, true, i, off, arg1, NULL);
 +      if (ret < 0)
 +		{
-+		  lemona_printk("exts: in: %i blade %i returned -1\n", in, i);
++		  lemona_printk("exts (syscal %i) in: %i blade %i returned %i\n",
++						mixer->sysnr, in, i, ret);
 +		  goto out;
 +		}
 +
@@ -1528,7 +2124,7 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 + * be computed straight after the syscall has been entered.
 + */
 +static struct lemona_zest *lemona_zest_create(const struct lemona_mixer *mixer,
-+											  bool in, int argnr, int extnr,
++											  int in, int argnr, int extnr,
 +											  va_list ap)
 +{
 +  int							zsz	= 0;
@@ -1554,7 +2150,11 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 +      if (z != NULL)
 +		z->size = zsz;
 +      else
-+		z = ERR_PTR(-ENOMEM);
++		{
++		  lemona_printk("(syscall %i) Unable to create zest with size: %i\n",
++						mixer->sysnr, zsz);
++		  z = ERR_PTR(-ENOMEM);
++		}
 +    }
 +  return (z);
 +}
@@ -1577,7 +2177,7 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 + * TODO: shall we pass the timespec struct here? Which mean it would
 + * be computed straight after the syscall has been entered.
 + */
-+int			lemona_log(int sysnr, bool in,
++int			lemona_log(int sysnr, int in,
 +					   int argnr, int extnr, ...)
 +{
 +  va_list		ap;
@@ -1594,9 +2194,10 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 +  else if (unlikely(lemona_mixers[sysnr].sysnr != sysnr
 +					&& lemona_mixers[sysnr].sysnr != -1)) /* uhuh... */
 +    {
-+      lemona_printk("Mixer array is corrupted: %i != %i\n",
-+		    sysnr,
-+		    lemona_mixers[sysnr].sysnr);
++      lemona_printk("Mixer array is corrupted: %i != %i (%i total)\n",
++					sysnr,
++					lemona_mixers[sysnr].sysnr,
++					lemona_mixers_size);
 +      lemona_clients_dec();
 +      return (-EINVAL);
 +    }
@@ -1612,7 +2213,8 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 +  z = lemona_zest_create(lemona_mixers + i, in, argnr, extnr, ap);
 +  if (IS_ERR(z))
 +    {
-+      ret = PTR_ERR(z);
++      ret		= PTR_ERR(z);
++	  z			= NULL;
 +      goto out; /* TODO: What should we do in this case? */
 +    }
 +
@@ -1650,7 +2252,7 @@ diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 +}
 diff -uNr linux.vanilla/lemona/Makefile linux.patch/lemona/Makefile
 --- linux.vanilla/lemona/Makefile	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/Makefile	2008-10-31 13:37:34.000000000 +1100
++++ linux.patch/lemona/Makefile	2008-11-03 19:56:57.000000000 +1100
 @@ -0,0 +1,78 @@
 +##
 +## This file is part of Lemona.
@@ -1670,13 +2272,13 @@ diff -uNr linux.vanilla/lemona/Makefile linux.patch/lemona/Makefile
 +# kernel build system and can use its language.
 +ifneq ($(KERNELRELEASE),)
 +
-+blades-objs		:= blades/generics.o
-+lemona-objs 		:= init.o mixers.o logging.o $(blades-objs)
++blades-objs				:= blades/generics.o blades/iovec.o blades/string.o
++lemona-objs				:= init.o mixers.o logging.o $(blades-objs)
 +obj-$(CONFIG_LEMONA)	+= lemona.o
 +
 +#if relay support is needed add the relevant files
 +	ifneq ($(CONFIG_LEMONA_RELAY),)
-+		lemona-objs	+= relay.o
++			lemona-objs	+= relay.o
 +	endif
 +
 +#if net support is needed add the relevant files
@@ -1732,7 +2334,7 @@ diff -uNr linux.vanilla/lemona/Makefile linux.patch/lemona/Makefile
 +endif
 diff -uNr linux.vanilla/lemona/MIT.LICENSE linux.patch/lemona/MIT.LICENSE
 --- linux.vanilla/lemona/MIT.LICENSE	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/MIT.LICENSE	2008-10-31 13:37:34.000000000 +1100
++++ linux.patch/lemona/MIT.LICENSE	2008-11-03 19:56:57.000000000 +1100
 @@ -0,0 +1,19 @@
 +Copyright (c) 2008 Kenfe-Mickaël Laventure, Laurent Malvert
 +
@@ -1755,8 +2357,8 @@ diff -uNr linux.vanilla/lemona/MIT.LICENSE linux.patch/lemona/MIT.LICENSE
 +THE SOFTWARE.
 diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 --- linux.vanilla/lemona/mixers.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/mixers.c	2008-10-31 13:37:34.000000000 +1100
-@@ -0,0 +1,5618 @@
++++ linux.patch/lemona/mixers.c	2008-11-03 19:56:57.000000000 +1100
+@@ -0,0 +1,5661 @@
 +/*
 +** This file is part of Lemona.
 +** Copyright (C) 2008 Kenfe-Mickaël Laventure
@@ -1782,14 +2384,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -1799,14 +2401,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -1816,14 +2418,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -1833,15 +2435,18 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= 2,
 +      .extnr	= 0,
 +      .handlers	= {
-+	{ .dual	= false	, .blade = lemona_blade_integer		},
-+	{ .dual	= false	, .blade = lemona_blade_integer		},
++		/* fd */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
++		/* count */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
 +      }
 +    },
 +    .out	= {
 +      .argnr	= 2,
 +      .extnr	= 0,
 +      .handlers	= {
-+	{ .dual = true	, .blade = lemona_blade_output_buffer64	},
++		/* buf & ret (in this order) */
++		{ .dual = true	, .blade = lemona_blade_output_buffer	},
 +      },
 +    }
 +  },
@@ -1851,49 +2456,62 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= 3,
 +      .extnr	= 0,
 +      .handlers	= {
-+	{ .dual	= false	, .blade = lemona_blade_integer		},
-+	{ .dual	= true	, .blade = lemona_blade_output_buffer	},
++		/* fd */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
++		/* buf & count (in this order) */
++		{ .dual	= true	, .blade = lemona_blade_output_buffer	},
 +      }
 +    },
 +    .out	= {
 +      .argnr	= 1,
 +      .extnr	= 0,
 +      .handlers	= {
-+	{ .dual = false	, .blade = lemona_blade_integer		},
++		/* return value */
++		{ .dual = false	, .blade = lemona_blade_integer			},
 +      },
 +    }
 +  },
 +  {
 +    .sysnr	= __NR_open,
 +    .in		= {
-+      .argnr	= -1,
-+      .extnr	= -1,
++      .argnr	= 3,
++      .extnr	= 0,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		/* filename (user null terminated string) */
++		{ .dual	= false	, .blade = lemona_blade_string_null		},
++		/* flags */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
++		/* mode */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
 +      }
 +    },
 +    .out	= {
-+      .argnr	= -1,
-+      .extnr	= -1,
++      .argnr	= 1,
++      .extnr	= 1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		/* ret */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
++		/* get resolved path from fd (i.e. ret) */
++		{ .dual = false	, .blade = lemona_blade_string_fd		},
 +      },
 +    }
 +  },
 +  {
 +    .sysnr	= __NR_close,
 +    .in		= {
-+      .argnr	= -1,
-+      .extnr	= -1,
++      .argnr	= 1,
++      .extnr	= 0,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		/* fd */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
 +      }
 +    },
 +    .out	= {
-+      .argnr	= -1,
-+      .extnr	= -1,
++      .argnr	= 1,
++      .extnr	= 0,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		/* ret */
++		{ .dual = false	, .blade = lemona_blade_integer			},
 +      },
 +    }
 +  },
@@ -1903,14 +2521,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -1920,14 +2538,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -1937,14 +2555,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -1954,14 +2572,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -1971,14 +2589,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -1988,14 +2606,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2005,14 +2623,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2022,14 +2640,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2039,14 +2657,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2056,14 +2674,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2073,14 +2691,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2090,31 +2708,37 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
 +  {
 +    .sysnr	= __NR_lseek,
 +    .in		= {
-+      .argnr	= -1,
-+      .extnr	= -1,
++      .argnr	= 3,
++      .extnr	= 0,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		/* fd */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
++		/* offset */
++		{ .dual	= false	, .blade = lemona_blade_long			},
++		/* whence */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
 +      }
 +    },
 +    .out	= {
-+      .argnr	= -1,
-+      .extnr	= -1,
++      .argnr	= 1,
++      .extnr	= 0,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		/* ret */
++		{ .dual	= false	, .blade = lemona_blade_long			},
 +      },
 +    }
 +  },
@@ -2124,14 +2748,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2141,14 +2765,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2158,14 +2782,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2175,14 +2799,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2192,14 +2816,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2209,14 +2833,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2226,14 +2850,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2243,14 +2867,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2260,14 +2884,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2277,14 +2901,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2294,14 +2918,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2311,14 +2935,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2328,14 +2952,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2345,14 +2969,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2362,14 +2986,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2379,14 +3003,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2396,14 +3020,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2413,14 +3037,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2430,14 +3054,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2447,14 +3071,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2464,14 +3088,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2481,14 +3105,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2498,14 +3122,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2515,14 +3139,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2532,14 +3156,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2549,14 +3173,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2566,14 +3190,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2583,14 +3207,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2600,14 +3224,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2617,14 +3241,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2634,14 +3258,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2651,14 +3275,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2668,14 +3292,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2685,14 +3309,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2702,14 +3326,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2719,14 +3343,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2736,14 +3360,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2753,14 +3377,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2770,14 +3394,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2787,14 +3411,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2804,14 +3428,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2821,14 +3445,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2838,14 +3462,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2855,14 +3479,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2872,14 +3496,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2889,14 +3513,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2906,14 +3530,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2923,14 +3547,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2940,14 +3564,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2957,14 +3581,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2974,14 +3598,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -2991,14 +3615,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3008,14 +3632,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3025,14 +3649,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3042,14 +3666,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3059,14 +3683,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3076,14 +3700,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3093,14 +3717,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3110,14 +3734,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3127,14 +3751,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3144,14 +3768,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3161,14 +3785,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3178,14 +3802,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3195,14 +3819,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3212,14 +3836,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3229,14 +3853,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3246,14 +3870,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3263,14 +3887,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3280,14 +3904,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3297,14 +3921,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3314,14 +3938,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3331,14 +3955,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3348,14 +3972,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3365,14 +3989,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3382,14 +4006,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3399,14 +4023,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3416,14 +4040,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3433,14 +4057,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3450,14 +4074,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3467,14 +4091,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3484,14 +4108,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3501,14 +4125,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3518,14 +4142,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3535,14 +4159,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3552,14 +4176,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3569,14 +4193,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3586,14 +4210,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3603,14 +4227,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3620,14 +4244,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3637,14 +4261,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3654,14 +4278,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3671,14 +4295,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3688,14 +4312,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3705,14 +4329,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3722,14 +4346,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3739,14 +4363,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3756,14 +4380,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3773,14 +4397,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3790,14 +4414,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3807,14 +4431,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3824,14 +4448,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3841,14 +4465,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3858,14 +4482,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3875,14 +4499,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3892,14 +4516,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3909,14 +4533,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3926,14 +4550,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3943,14 +4567,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3960,14 +4584,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3977,14 +4601,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3994,14 +4618,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4011,14 +4635,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4028,14 +4652,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4045,14 +4669,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4062,14 +4686,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4079,14 +4703,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4096,14 +4720,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4113,14 +4737,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4130,14 +4754,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4147,31 +4771,45 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
 +  {
 +    .sysnr	= __NR__llseek,
 +    .in		= {
-+      .argnr	= -1,
-+      .extnr	= -1,
++      .argnr	= 4,
++      .extnr	= 0,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		/* fd */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
++		/* offset_hight */
++		{ .dual	= false	, .blade = lemona_blade_long			},
++		/* offset_low */
++		{ .dual	= false	, .blade = lemona_blade_long			},
++		/*
++		  We do not log the value of the incoming buffer 'result'.
++		*/
++		/* whence */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
 +      }
 +    },
 +    .out	= {
-+      .argnr	= -1,
-+      .extnr	= -1,
++      .argnr	= 1,
++      .extnr	= 0,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		/*
++		  if < 0 the value will be an errno otherwise it is the value
++		  which has been stored in the user 'result' buffer.
++		*/
++		{ .dual = false	, .blade = lemona_blade_long_long		},
 +      },
 +    }
 +  },
@@ -4181,14 +4819,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4198,14 +4836,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4215,14 +4853,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4232,14 +4870,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4249,14 +4887,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4266,14 +4904,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4283,14 +4921,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4300,14 +4938,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4317,14 +4955,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4334,14 +4972,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4351,14 +4989,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4368,14 +5006,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4385,14 +5023,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4402,14 +5040,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4419,14 +5057,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4436,14 +5074,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4453,14 +5091,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4470,14 +5108,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4487,14 +5125,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4504,14 +5142,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4521,14 +5159,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4538,14 +5176,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4555,14 +5193,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4572,14 +5210,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4589,14 +5227,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4606,14 +5244,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4623,14 +5261,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4640,14 +5278,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4657,14 +5295,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4674,14 +5312,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4691,14 +5329,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4708,14 +5346,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4725,14 +5363,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4742,14 +5380,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4759,14 +5397,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4776,14 +5414,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4793,14 +5431,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4810,14 +5448,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4827,14 +5465,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4844,16 +5482,23 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= 3,
 +      .extnr	= 0,
 +      .handlers	= {
-+	{ .dual	= false	, .blade = lemona_blade_integer		},
-+	{ .dual	= false	, .blade = lemona_blade_integer		},
-+	{ .dual	= false	, .blade = lemona_blade_integer64	},
++		/* fd */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
++
++		/* buf is logged on exit */
++
++		/* count */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
++		/* offset */
++		{ .dual	= false	, .blade = lemona_blade_integer64		},
 +      }
 +    },
 +    .out	= {
 +      .argnr	= 2,
 +      .extnr	= 0,
 +      .handlers	= {
-+	{ .dual	= true	, .blade = lemona_blade_output_buffer64	},
++		/* buf & ret (in this order) */
++		{ .dual	= true	, .blade = lemona_blade_output_buffer	},
 +      },
 +    }
 +  },
@@ -4863,16 +5508,20 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= 4,
 +      .extnr	= 0,
 +      .handlers	= {
-+	{ .dual	= false	, .blade = lemona_blade_integer		},
-+	{ .dual	= true	, .blade = lemona_blade_output_buffer	},
-+	{ .dual	= false	, .blade = lemona_blade_integer64	},
++		/* fd */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
++		/* buf & count (in this order) */
++		{ .dual	= true	, .blade = lemona_blade_output_buffer	},
++		/* offset */
++		{ .dual	= false	, .blade = lemona_blade_integer64		},
 +      }
 +    },
 +    .out	= {
 +      .argnr	= 1,
 +      .extnr	= 0,
 +      .handlers	= {
-+	{ .dual = false	, .blade = lemona_blade_integer64	},
++		/* ret */
++		{ .dual = false	, .blade = lemona_blade_integer64	},
 +      },
 +    }
 +  },
@@ -4882,14 +5531,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4899,14 +5548,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4916,14 +5565,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4933,14 +5582,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4950,14 +5599,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4967,14 +5616,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -4984,14 +5633,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5001,14 +5650,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5018,14 +5667,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5035,14 +5684,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5052,14 +5701,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5069,14 +5718,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5086,14 +5735,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5103,14 +5752,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5120,14 +5769,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5137,14 +5786,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5154,14 +5803,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5171,14 +5820,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5188,14 +5837,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5205,14 +5854,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5222,14 +5871,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5239,14 +5888,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5256,14 +5905,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5273,14 +5922,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5290,14 +5939,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5307,14 +5956,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5324,14 +5973,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5341,14 +5990,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5358,14 +6007,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5375,14 +6024,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5392,14 +6041,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5409,14 +6058,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5426,14 +6075,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5443,14 +6092,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5460,14 +6109,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5477,14 +6126,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5494,48 +6143,31 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
 +  {
-+    .sysnr	= __NR_madvise,
++    .sysnr	= __NR_madvise, /* __NR_madvise1 as the same number */
 +    .in		= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
-+      },
-+    }
-+  },
-+  {
-+    .sysnr	= __NR_madvise1,
-+    .in		= {
-+      .argnr	= -1,
-+      .extnr	= -1,
-+      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
-+      }
-+    },
-+    .out	= {
-+      .argnr	= -1,
-+      .extnr	= -1,
-+      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5545,14 +6177,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5562,14 +6194,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5581,14 +6213,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5600,14 +6232,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5618,14 +6250,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5635,14 +6267,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5652,14 +6284,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5669,14 +6301,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5686,14 +6318,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5703,14 +6335,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5720,14 +6352,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5737,14 +6369,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5754,14 +6386,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5771,14 +6403,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5788,14 +6420,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5805,14 +6437,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5822,14 +6454,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5839,14 +6471,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5856,14 +6488,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5873,14 +6505,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5890,14 +6522,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5907,14 +6539,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5924,14 +6556,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5941,14 +6573,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5958,14 +6590,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5975,14 +6607,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -5992,14 +6624,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6009,14 +6641,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6026,14 +6658,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6043,14 +6675,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6060,14 +6692,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6080,14 +6712,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6098,14 +6730,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6115,14 +6747,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6132,14 +6764,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6149,14 +6781,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6166,14 +6798,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6183,14 +6815,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6200,14 +6832,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6217,14 +6849,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6234,14 +6866,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6251,14 +6883,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6268,14 +6900,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6285,14 +6917,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6302,14 +6934,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6319,14 +6951,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6336,14 +6968,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6353,14 +6985,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6370,14 +7002,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6387,14 +7019,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6404,14 +7036,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6421,14 +7053,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6438,14 +7070,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6455,14 +7087,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6472,14 +7104,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6489,14 +7121,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6506,14 +7138,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6523,14 +7155,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6540,14 +7172,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6557,14 +7189,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6574,14 +7206,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6591,14 +7223,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6608,14 +7240,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6625,14 +7257,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6642,33 +7274,36 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
 +
-+  /* for some reason __NR_sys_setaltroot is commented in 2.6.26.3 */
++  /*
++	for some reason __NR_sys_setaltroot is commented in 2.6.26.3
++	this should be syscall number 285
++  */
 +  {
 +    .sysnr	= -1,
 +    .in		= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6679,14 +7314,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6696,14 +7331,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6713,14 +7348,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6730,14 +7365,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6747,14 +7382,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6764,14 +7399,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6781,14 +7416,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6798,14 +7433,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6815,31 +7450,41 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
 +  {
 +    .sysnr	= __NR_openat,
 +    .in		= {
-+      .argnr	= -1,
-+      .extnr	= -1,
++      .argnr	= 4,
++      .extnr	= 0,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		/* dfd */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
++		/* filename (user null terminated string) */
++		{ .dual	= false	, .blade = lemona_blade_string_null		},
++		/* flags */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
++		/* mode */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
 +      }
 +    },
 +    .out	= {
-+      .argnr	= -1,
-+      .extnr	= -1,
++      .argnr	= 1,
++      .extnr	= 1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		/* ret */
++		{ .dual	= false	, .blade = lemona_blade_integer			},
++		/* get resolved path from fd (i.e. ret) */
++		{ .dual = false	, .blade = lemona_blade_string_fd		},
 +      },
 +    }
 +  },
@@ -6849,14 +7494,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6866,14 +7511,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6883,14 +7528,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6900,14 +7545,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6917,14 +7562,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6934,14 +7579,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6951,14 +7596,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6968,14 +7613,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -6985,14 +7630,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7002,14 +7647,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7019,14 +7664,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7036,14 +7681,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7053,14 +7698,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7070,14 +7715,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7087,14 +7732,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7104,14 +7749,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7121,14 +7766,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7138,14 +7783,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7155,14 +7800,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7172,14 +7817,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7189,14 +7834,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7206,14 +7851,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7223,14 +7868,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7240,14 +7885,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7257,14 +7902,14 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7274,48 +7919,48 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
-+/*   { */
-+/*     .sysnr	= __NR_timerfd_create, */
-+/*     .in		= { */
-+/*       .argnr	= -1, */
-+/*       .extnr	= -1, */
-+/*       .handlers	= { */
-+/* 	{ .dual	= true, .blade = NULL }, */
-+/*       } */
-+/*     }, */
-+/*     .out	= { */
-+/*       .argnr	= -1, */
-+/*       .extnr	= -1, */
-+/*       .handlers	= { */
-+/* 	{ .dual = false, .blade = NULL }, */
-+/*       }, */
-+/*     } */
-+/*   }, */
++  {
++	.sysnr	= __NR_timerfd_create,
++	.in		= {
++	  .argnr	= -1,
++	  .extnr	= -1,
++	  .handlers	= {
++		{ .dual	= true, .blade = NULL },
++	  }
++	},
++	.out	= {
++	  .argnr	= -1,
++	  .extnr	= -1,
++	  .handlers	= {
++		{ .dual = false, .blade = NULL },
++	  },
++	}
++  },
 +  {
 +    .sysnr	= __NR_eventfd,
 +    .in		= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -7325,51 +7970,51 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual	= true, .blade = NULL },
++		{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= -1,
 +      .extnr	= -1,
 +      .handlers	= {
-+	{ .dual = false, .blade = NULL },
++		{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
-+/*   { */
-+/*     .sysnr	= __NR_timerfd_settime, */
-+/*     .in		= { */
-+/*       .argnr	= -1, */
-+/*       .extnr	= -1, */
-+/*       .handlers	= { */
-+/* 	{ .dual	= true, .blade = NULL }, */
-+/*       } */
-+/*     }, */
-+/*     .out	= { */
-+/*       .argnr	= -1, */
-+/*       .extnr	= -1, */
-+/*       .handlers	= { */
-+/* 	{ .dual = false, .blade = NULL }, */
-+/*       }, */
-+/*     } */
-+/*   }, */
-+/*   { */
-+/*     .sysnr	= __NR_timerfd_gettime, */
-+/*     .in		= { */
-+/*       .argnr	= -1, */
-+/*       .extnr	= -1, */
-+/*       .handlers	= { */
-+/* 	{ .dual	= true, .blade = NULL }, */
-+/*       } */
-+/*     }, */
-+/*     .out	= { */
-+/*       .argnr	= -1, */
-+/*       .extnr	= -1, */
-+/*       .handlers	= { */
-+/* 	{ .dual = false, .blade = NULL }, */
-+/*       }, */
-+/*     } */
-+/*   }, */
++  {
++	.sysnr	= __NR_timerfd_settime,
++	.in		= {
++	  .argnr	= -1,
++	  .extnr	= -1,
++	  .handlers	= {
++		{ .dual	= true, .blade = NULL },
++	  }
++	},
++	.out	= {
++	  .argnr	= -1,
++	  .extnr	= -1,
++	  .handlers	= {
++		{ .dual = false, .blade = NULL },
++	  },
++	}
++  },
++  {
++	.sysnr	= __NR_timerfd_gettime,
++	.in		= {
++	  .argnr	= -1,
++	  .extnr	= -1,
++	  .handlers	= {
++		{ .dual	= true, .blade = NULL },
++	  }
++	},
++	.out	= {
++	  .argnr	= -1,
++	  .extnr	= -1,
++	  .handlers	= {
++		{ .dual = false, .blade = NULL },
++	  },
++	}
++  },
 +};
 +
 +const int	lemona_mixers_size = sizeof(lemona_mixers)
@@ -7377,7 +8022,7 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 +
 diff -uNr linux.vanilla/lemona/net.c linux.patch/lemona/net.c
 --- linux.vanilla/lemona/net.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/net.c	2008-10-31 13:37:34.000000000 +1100
++++ linux.patch/lemona/net.c	2008-11-03 19:56:57.000000000 +1100
 @@ -0,0 +1,129 @@
 +/*
 +** This file is part of Lemona.
@@ -7510,8 +8155,8 @@ diff -uNr linux.vanilla/lemona/net.c linux.patch/lemona/net.c
 +}
 diff -uNr linux.vanilla/lemona/README linux.patch/lemona/README
 --- linux.vanilla/lemona/README	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/README	2008-10-31 13:37:34.000000000 +1100
-@@ -0,0 +1,117 @@
++++ linux.patch/lemona/README	2008-11-03 19:56:57.000000000 +1100
+@@ -0,0 +1,132 @@
 +Lemona Good To Know Stuff
 +================================================
 +
@@ -7629,9 +8274,24 @@ diff -uNr linux.vanilla/lemona/README linux.patch/lemona/README
 +    change (maybe you forgot to delete a backup file?)
 +
 +
++================================================
++Debugging using KGDB (VirtualBox)
++================================================
++
++ - Compile Kernel with Debug Info
++ - Configure host pipe in VirtualBox
++ - add following boot option
++	kgdboc=ttyS0,115200 kgbwait
++ - # socat -d -d /path_to_pipe/com_1 PTY:
++		2008/11/01 12:00:16 socat[14779] N successfully connected via
++		2008/11/01 12:00:16 socat[14779] N PTY is /dev/pts/7
++		2008/11/01 12:00:16 socat[14779] N starting data transfer loop with FDs [3,3] and [4,4]
++ - gdb vmlinux
++		set remotebaud 115200
++		target remote /dev/pts/7
 diff -uNr linux.vanilla/lemona/relay.c linux.patch/lemona/relay.c
 --- linux.vanilla/lemona/relay.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.patch/lemona/relay.c	2008-10-31 13:37:34.000000000 +1100
++++ linux.patch/lemona/relay.c	2008-11-03 19:56:57.000000000 +1100
 @@ -0,0 +1,159 @@
 +/*
 +** This file is part of Lemona.
@@ -7794,7 +8454,7 @@ diff -uNr linux.vanilla/lemona/relay.c linux.patch/lemona/relay.c
 +}
 diff -uNr linux.vanilla/Makefile linux.patch/Makefile
 --- linux.vanilla/Makefile	2008-09-27 17:26:00.000000000 +1000
-+++ linux.patch/Makefile	2008-10-22 21:31:37.000000000 +1100
++++ linux.patch/Makefile	2008-11-03 19:56:01.000000000 +1100
 @@ -454,6 +454,7 @@
  net-y		:= net/
  libs-y		:= lib/
@@ -7831,7 +8491,7 @@ diff -uNr linux.vanilla/Makefile linux.patch/Makefile
  export KBUILD_VMLINUX_OBJS := $(vmlinux-all)
 diff -uNr linux.vanilla/mm/mmap.c linux.patch/mm/mmap.c
 --- linux.vanilla/mm/mmap.c	2008-09-27 17:26:16.000000000 +1000
-+++ linux.patch/mm/mmap.c	2008-10-31 13:25:18.000000000 +1100
++++ linux.patch/mm/mmap.c	2008-11-03 19:55:43.000000000 +1100
 @@ -1130,8 +1130,8 @@
  	 */
  	if (!file && !(vm_flags & VM_SHARED) &&

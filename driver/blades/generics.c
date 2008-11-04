@@ -17,8 +17,17 @@
 #include "../lemona.h"
 
 
+/**
+ * lemona_blade_integer - add a 32 bits integer value to a zest
+ * @zest: The zest to be filled
+ * @isExt: Is this part of the extended arguments?
+ * @idx: Index of the value in the zest
+ * @off: Offset relative to the zest at which to copy the value
+ * @fruit1: The value to be copied (32 bits)
+ * @fruit2: Unused
+ */
 int		lemona_blade_integer(struct lemona_zest *zest,
-							 bool isExt, int idx, int off,
+							 int isExt, int idx, int off,
 							 void *fruit1, void *fruit2)
 {
   int	val = *((int *)fruit1);
@@ -36,8 +45,17 @@ int		lemona_blade_integer(struct lemona_zest *zest,
   return (sizeof(val));
 }
 
+/**
+ * lemona_blade_integer64 - add a 64 bits integer value to a zest
+ * @zest: The zest to be filled
+ * @isExt: Is this part of the extended arguments?
+ * @idx: Index of the value in the zest
+ * @off: Offset relative to the zest at which to copy the value
+ * @fruit1: The value to be copied (64 bits)
+ * @fruit2: Unused
+ */
 int		lemona_blade_integer64(struct lemona_zest *zest,
-							   bool isExt, int idx, int off,
+							   int isExt, int idx, int off,
 							   void *fruit1, void *fruit2)
 {
   u64	val = *((u64 *)fruit1);
@@ -55,14 +73,68 @@ int		lemona_blade_integer64(struct lemona_zest *zest,
   return (sizeof(val));
 }
 
-/* this is a dual blade */
-int		lemona_blade_output_buffer(struct lemona_zest *zest,
-								   bool isExt, int idx, int off,
-								   void *fruit1, void* fruit2)
+int		lemona_blade_long(struct lemona_zest *zest,
+						  int isExt, int idx, int off,
+						  void *fruit1, void *fruit2)
 {
-  size_t		size	= *((int *)fruit1);
+  long	val = *((long *)fruit1);
+  int	*sz;
+
+  /* shall we compute the size or fill the zest ? */
+  if (zest == NULL)
+    return (sizeof(val));
+
+  /* fill the zest */
+  sz = isExt == false ? zest->argsz : zest->extsz;
+  sz[idx] = sizeof(val);
+  *((int *)((char *)zest + off)) = val;
+
+  return (sizeof(val));
+}
+
+
+/*
+ * TODO: make this an alias to lemona_blade_integer64
+ */
+int		lemona_blade_long_long(struct lemona_zest *zest,
+							   int isExt, int idx, int off,
+							   void *fruit1, void *fruit2)
+{
+  long long		val = *((long long *)fruit1);
   int			*sz;
-  unsigned long	uncopied;
+
+  /* shall we compute the size or fill the zest ? */
+  if (zest == NULL)
+    return (sizeof(val));
+
+  /* fill the zest */
+  sz = isExt == false ? zest->argsz : zest->extsz;
+  sz[idx] = sizeof(val);
+  *((int *)((char *)zest + off)) = val;
+
+  return (sizeof(val));
+}
+
+/**
+ * lemona_blade_output_buffer - add the size and buffer content to a zest
+ * @zest: The zest to be filled
+ * @isExt: Is this part of the extended arguments?
+ * @idx: Starting index of the arguments
+ * @off: Offset relative to the zest from which to copy the data
+ * @buf: The buffer addresse (need to be an userspace address)
+ * @len: Size of the buffer (32 bits). If < 0, it corresponds to an ERRNO
+ *
+ * If size is negative, the return value should be sizeof(ssize_t)
+ *
+ * NOTE: As you would have guessed this is a dual blade.
+ */
+int		lemona_blade_output_buffer(struct lemona_zest *zest,
+								   int isExt, int idx, int off,
+								   void __user *buf, void *len)
+{
+  ssize_t		size	= *((int *)len);
+  int			*sz;
+  unsigned long	uncopied = size;
 
   /* shall we compute the size or fill the zest ? */
   if (zest == NULL)
@@ -79,25 +151,38 @@ int		lemona_blade_output_buffer(struct lemona_zest *zest,
       sz[idx + 1] = size;
 
       uncopied = copy_from_user((char *)zest + off + sizeof(size),
-								fruit2, size);
+								buf, size);
+
       if (uncopied)
 		{
-		  lemona_printk("Copied %i instead of %i\n", size - uncopied, size);
+		  lemona_printk("(syscall %i) "
+						"output_buffer: %p/%p copied %i instead of %i\n",
+						zest->sysnr, buf, len,
+						(int)(size - uncopied), (int)size);
 		  return (-1);
 		}
     }
   return (sizeof(size) + (size >= 0 ? size : 0));
 }
 
-/* this is a dual blade */
-/*
-for an unknown reason, argument order seem to be inversed by va_arg()...
-*/
+/**
+ * lemona_blade_output_buffer64 - add the size and buffer content to a zest
+ * @zest: The zest to be filled
+ * @isExt: Is this part of the extended arguments?
+ * @idx: Starting index of the arguments
+ * @off: Offset relative to the zest from which to copy the data
+ * @buf: The buffer addresse (need to be an userspace address)
+ * @len: Size of the buffer (64 bits). If < 0, it corresponds to an ERRNO
+ *
+ * If size is negative, the return value should be sizeof(s64).
+ *
+ * NOTE: As you would have guessed this is a dual blade.
+ */
 int	lemona_blade_output_buffer64(struct lemona_zest *zest,
-								 bool isExt, int idx, int off,
-								 void *fruit2, void* fruit1)
+								 int isExt, int idx, int off,
+								 void *buf, void *len)
 {
-  u64			size	= *((u64 *)fruit1);
+  s64			size	= *((u64 *)len);
   int			*sz;
   unsigned long	uncopied;
 
@@ -116,16 +201,9 @@ int	lemona_blade_output_buffer64(struct lemona_zest *zest,
       sz[idx + 1] = size;
 
       uncopied = copy_from_user((char *)zest + off + sizeof(size),
-				fruit2, size);
+				buf, size);
       if (uncopied)
-		{
-		  lemona_printk("Access: %i Addr: %p/%p Copied %i instead of %i\n",
-						access_ok(VERIFY_READ, fruit2, size),
-						fruit1,
-						fruit2,
-						(int)size - uncopied, (int)size);
-		  return (-1);
-		}
+		return (-1);
     }
   return (sizeof(size) + (size >= 0 ? size : 0));
 }

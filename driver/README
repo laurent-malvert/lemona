@@ -115,3 +115,18 @@ Now, generating the patch is quite easy:
     change (maybe you forgot to delete a backup file?)
 
 
+================================================
+Debugging using KGDB (VirtualBox)
+================================================
+
+ - Compile Kernel with Debug Info
+ - Configure host pipe in VirtualBox
+ - add following boot option
+	kgdboc=ttyS0,115200 kgbwait
+ - # socat -d -d /path_to_pipe/com_1 PTY:
+		2008/11/01 12:00:16 socat[14779] N successfully connected via
+		2008/11/01 12:00:16 socat[14779] N PTY is /dev/pts/7
+		2008/11/01 12:00:16 socat[14779] N starting data transfer loop with FDs [3,3] and [4,4]
+ - gdb vmlinux
+		set remotebaud 115200
+		target remote /dev/pts/7
