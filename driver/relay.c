@@ -46,29 +46,29 @@ static int		lemona_relay_subbuf_start(struct rchan_buf *buf,
 }
 
 static struct dentry	*lemona_relay_create_buf_file(const char *filename,
-													  struct dentry *parent,
-													  int mode,
-													  struct rchan_buf *buf,
-													  int *is_global)
+						      struct dentry *parent,
+						      int mode,
+						      struct rchan_buf *buf,
+						      int *is_global)
 {
-  struct dentry					*d;
-  struct lemona_relay_file		*f;
+  struct dentry			*d;
+  struct lemona_relay_file	*f;
 
   d = debugfs_create_file(filename, mode, parent,
-						  buf, &relay_file_operations);
+			  buf, &relay_file_operations);
   if (d != NULL)
     {
       f = kmalloc(sizeof(*f), GFP_KERNEL);
       if (f == NULL)
-		{
-		  debugfs_remove(d);
-		  d = NULL;
-		}
+	{
+	  debugfs_remove(d);
+	  d = NULL;
+	}
       else
-		{
-		  f->d = d;
-		  list_add_tail(&(f->next), &(juice->relay.files));
-		}
+	{
+	  f->d = d;
+	  list_add_tail(&(f->next), &(juice->relay.files));
+	}
     }
   return (d);
 }
@@ -80,9 +80,9 @@ static int		lemona_relay_remove_buf_file(struct dentry *dentry)
   list_for_each_entry(f, &(juice->relay.files), next) {
     if (f->d == dentry)
       {
-		list_del(&(f->next));
-		kfree(f);
-		break;
+	list_del(&(f->next));
+	kfree(f);
+	break;
       }
   }
   debugfs_remove(dentry);
@@ -103,25 +103,25 @@ int __init		lemona_relay_init(void)
     {
       juice->dfs_dir = debugfs_create_dir(debugfs_dir_name, NULL);
       if (juice->dfs_dir == NULL)
-		{
-		  lemona_printk("debugfs_create_dir: failed\n");
-		  err = IS_ERR(juice->dfs_dir) ? PTR_ERR(juice->dfs_dir) : -ENOMEM;
-		  goto err;
-		}
+	{
+	  lemona_printk("debugfs_create_dir: failed\n");
+	  err = IS_ERR(juice->dfs_dir) ? PTR_ERR(juice->dfs_dir) : -ENOMEM;
+	  goto err;
+	}
       /*
-		need to be done before relay_open, since relay open will call
-		our lemona_relay_subbuf_start handler which use the list
-	  */
+	need to be done before relay_open, since relay open will call
+	our lemona_relay_subbuf_start handler which use the list
+      */
       INIT_LIST_HEAD(&(juice->relay.files));
       juice->rchan = relay_open(LEMONA_RELAY_CHANNEL_NAME, juice->dfs_dir,
-								relay_subbuf_sz, relay_subbuf_nr,
-								&relay_callbacks, NULL);
+				relay_subbuf_sz, relay_subbuf_nr,
+				&relay_callbacks, NULL);
       if (juice->rchan == NULL)
-		{
-		  lemona_printk("relay_open: failed\n");
-		  err = IS_ERR(juice->rchan) ? PTR_ERR(juice->rchan) : -ENOMEM;
-		  goto err;
-		}
+	{
+	  lemona_printk("relay_open: failed\n");
+	  err = IS_ERR(juice->rchan) ? PTR_ERR(juice->rchan) : -ENOMEM;
+	  goto err;
+	}
     }
   return (err);
 

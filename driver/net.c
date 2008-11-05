@@ -39,7 +39,7 @@ static inline int	lemona_net_serv_get(void)
 
 int				lemona_net_init(bool init)
 {
-  int			ret	= 0;
+  int		ret	= 0;
   struct socket	*sock	= NULL;
 
   if (init == true)
@@ -54,10 +54,10 @@ int				lemona_net_init(bool init)
   mutex_lock(&(juice->net.lock));
 
   if (juice->net.sock != NULL
-	  || (juice->net.sock == NULL
-		  && !(ret = time_after(jiffies, juice->net.timeout))
-		  && init == false))
-	goto out;
+      || (juice->net.sock == NULL
+	  && !(ret = time_after(jiffies, juice->net.timeout))
+	  && init == false))
+    goto out;
 
   ret = sock_create_kern(AF_INET, SOCK_STREAM, IPPROTO_TCP, &sock);
   if (ret < 0)
@@ -76,7 +76,7 @@ int				lemona_net_init(bool init)
       goto out;
     }
   lemona_printk("We are now connected to server %s:%d\n",
-				net_log_addr, net_log_port);
+		net_log_addr, net_log_port);
  out:
   if (ret != 0)
     {
@@ -100,19 +100,19 @@ void			lemona_net_log(struct lemona_zest *zest)
     {
       int			ret;
       struct kvec		kvec = {
-		.iov_base		= zest,
-		.iov_len		= zest->size
+	.iov_base		= zest,
+	.iov_len		= zest->size
       };
       struct msghdr		hdr = { 0 };
 
       ret = kernel_sendmsg(juice->net.sock, &hdr, &kvec, 1, kvec.iov_len);
       if (ret < 0)
-		{
-		  lemona_printk("kernel_sendmsg: unable to send message: %i\n", ret);
-		  lemona_net_cleanup();
-		  /* this is the time after which we will be able to try again */
-		  juice->net.timeout	= jiffies + (NET_LOG_RETRY * HZ);
-		}
+	{
+	  lemona_printk("kernel_sendmsg: unable to send message: %i\n", ret);
+	  lemona_net_cleanup();
+	  /* this is the time after which we will be able to try again */
+	  juice->net.timeout	= jiffies + (NET_LOG_RETRY * HZ);
+	}
     }
 }
 

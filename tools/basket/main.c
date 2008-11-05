@@ -281,7 +281,6 @@ static void				start(void)
 		  ret = select(fd + 1, &readfds, NULL, NULL, NULL);
 		  if (ret == -1)
 			{
-			  fprintf(stderr, "??select error: %s\n", strerror(errno));
 			  if (errno == EINTR)
 				continue;
 			  fprintf(stderr, "fatal select error: %s\n", strerror(errno));

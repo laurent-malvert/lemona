@@ -23,14 +23,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -40,14 +40,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -57,14 +57,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -74,18 +74,18 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= 2,
       .extnr	= 0,
       .handlers	= {
-		/* fd */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
-		/* count */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* fd */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* count */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
       }
     },
     .out	= {
       .argnr	= 2,
       .extnr	= 0,
       .handlers	= {
-		/* buf & ret (in this order) */
-		{ .dual = true	, .blade = lemona_blade_output_buffer	},
+	/* buf & ret (in this order) */
+	{ .dual = true	, .blade = lemona_blade_output_buffer	},
       },
     }
   },
@@ -95,18 +95,18 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= 3,
       .extnr	= 0,
       .handlers	= {
-		/* fd */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
-		/* buf & count (in this order) */
-		{ .dual	= true	, .blade = lemona_blade_output_buffer	},
+	/* fd */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* buf & count (in this order) */
+	{ .dual	= true	, .blade = lemona_blade_output_buffer	},
       }
     },
     .out	= {
       .argnr	= 1,
       .extnr	= 0,
       .handlers	= {
-		/* return value */
-		{ .dual = false	, .blade = lemona_blade_integer			},
+	/* return value */
+	{ .dual = false	, .blade = lemona_blade_integer			},
       },
     }
   },
@@ -116,22 +116,22 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= 3,
       .extnr	= 0,
       .handlers	= {
-		/* filename (user null terminated string) */
-		{ .dual	= false	, .blade = lemona_blade_string_null		},
-		/* flags */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
-		/* mode */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* filename (user null terminated string) */
+	{ .dual	= false	, .blade = lemona_blade_string_null		},
+	/* flags */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* mode */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
       }
     },
     .out	= {
       .argnr	= 1,
       .extnr	= 1,
       .handlers	= {
-		/* ret */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
-		/* get resolved path from fd (i.e. ret) */
-		{ .dual = false	, .blade = lemona_blade_string_fd		},
+	/* ret */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* get resolved path from fd (i.e. ret) */
+	{ .dual = false	, .blade = lemona_blade_string_fd		},
       },
     }
   },
@@ -141,16 +141,16 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= 1,
       .extnr	= 0,
       .handlers	= {
-		/* fd */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* fd */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
       }
     },
     .out	= {
       .argnr	= 1,
       .extnr	= 0,
       .handlers	= {
-		/* ret */
-		{ .dual = false	, .blade = lemona_blade_integer			},
+	/* ret */
+	{ .dual = false	, .blade = lemona_blade_integer			},
       },
     }
   },
@@ -160,14 +160,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -177,14 +177,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -194,14 +194,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -211,14 +211,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -228,14 +228,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -245,14 +245,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -262,14 +262,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -279,14 +279,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -296,14 +296,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -313,14 +313,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -330,14 +330,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -347,14 +347,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -364,20 +364,20 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= 3,
       .extnr	= 0,
       .handlers	= {
-		/* fd */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
-		/* offset */
-		{ .dual	= false	, .blade = lemona_blade_long			},
-		/* whence */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* fd */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* offset */
+	{ .dual	= false	, .blade = lemona_blade_long			},
+	/* whence */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
       }
     },
     .out	= {
       .argnr	= 1,
       .extnr	= 0,
       .handlers	= {
-		/* ret */
-		{ .dual	= false	, .blade = lemona_blade_long			},
+	/* ret */
+	{ .dual	= false	, .blade = lemona_blade_long			},
       },
     }
   },
@@ -387,14 +387,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -404,14 +404,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -421,14 +421,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -438,14 +438,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -455,14 +455,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -472,14 +472,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -489,14 +489,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -506,14 +506,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -523,14 +523,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -540,14 +540,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -557,14 +557,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -574,14 +574,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -591,14 +591,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -608,14 +608,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -625,14 +625,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -642,14 +642,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -659,14 +659,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -676,14 +676,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -693,14 +693,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -710,14 +710,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -727,14 +727,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -744,14 +744,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -761,14 +761,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -778,14 +778,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -795,14 +795,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -812,14 +812,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -829,14 +829,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -846,14 +846,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -863,14 +863,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -880,14 +880,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -897,14 +897,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -914,14 +914,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -931,14 +931,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -948,14 +948,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -965,14 +965,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -982,14 +982,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -999,14 +999,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1016,14 +1016,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1033,14 +1033,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1050,14 +1050,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1067,14 +1067,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1084,14 +1084,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1101,14 +1101,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1118,14 +1118,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1135,14 +1135,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1152,14 +1152,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1169,14 +1169,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1186,14 +1186,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1203,14 +1203,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1220,14 +1220,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1237,14 +1237,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1254,14 +1254,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1271,14 +1271,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1288,14 +1288,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1305,14 +1305,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1322,14 +1322,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1339,14 +1339,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1356,14 +1356,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1373,14 +1373,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1390,14 +1390,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1407,14 +1407,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1424,14 +1424,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1441,14 +1441,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1458,14 +1458,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1475,14 +1475,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1492,14 +1492,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1509,14 +1509,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1526,14 +1526,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1543,14 +1543,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1560,14 +1560,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1577,14 +1577,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1594,14 +1594,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1611,14 +1611,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1628,14 +1628,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1645,14 +1645,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1662,14 +1662,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1679,14 +1679,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1696,14 +1696,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1713,14 +1713,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1730,14 +1730,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1747,14 +1747,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1764,14 +1764,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1781,14 +1781,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1798,14 +1798,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1815,14 +1815,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1832,14 +1832,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1849,14 +1849,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1866,14 +1866,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1883,14 +1883,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1900,14 +1900,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1917,14 +1917,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1934,14 +1934,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1951,14 +1951,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1968,14 +1968,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -1985,14 +1985,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2002,14 +2002,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2019,14 +2019,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2036,14 +2036,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2053,14 +2053,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2070,14 +2070,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2087,14 +2087,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2104,14 +2104,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2121,14 +2121,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2138,14 +2138,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2155,14 +2155,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2172,14 +2172,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2189,14 +2189,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2206,14 +2206,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2223,14 +2223,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2240,14 +2240,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2257,14 +2257,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2274,14 +2274,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2291,14 +2291,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2308,14 +2308,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2325,14 +2325,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2342,14 +2342,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2359,14 +2359,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2376,14 +2376,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2393,14 +2393,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2410,14 +2410,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2427,28 +2427,28 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= 4,
       .extnr	= 0,
       .handlers	= {
-		/* fd */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
-		/* offset_hight */
-		{ .dual	= false	, .blade = lemona_blade_long			},
-		/* offset_low */
-		{ .dual	= false	, .blade = lemona_blade_long			},
-		/*
-		  We do not log the value of the incoming buffer 'result'.
-		*/
-		/* whence */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* fd */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* offset_hight */
+	{ .dual	= false	, .blade = lemona_blade_long			},
+	/* offset_low */
+	{ .dual	= false	, .blade = lemona_blade_long			},
+	/*
+	  We do not log the value of the incoming buffer 'result'.
+	*/
+	/* whence */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
       }
     },
     .out	= {
       .argnr	= 1,
       .extnr	= 0,
       .handlers	= {
-		/*
-		  if < 0 the value will be an errno otherwise it is the value
-		  which has been stored in the user 'result' buffer.
-		*/
-		{ .dual = false	, .blade = lemona_blade_long_long		},
+	/*
+	  if < 0 the value will be an errno otherwise it is the value
+	  which has been stored in the user 'result' buffer.
+	*/
+	{ .dual = false	, .blade = lemona_blade_long_long		},
       },
     }
   },
@@ -2458,14 +2458,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2475,14 +2475,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2492,14 +2492,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2509,14 +2509,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2526,14 +2526,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2543,14 +2543,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2560,14 +2560,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2577,14 +2577,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2594,14 +2594,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2611,14 +2611,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2628,14 +2628,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2645,14 +2645,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2662,14 +2662,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2679,14 +2679,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2696,14 +2696,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2713,14 +2713,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2730,14 +2730,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2747,14 +2747,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2764,14 +2764,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2781,14 +2781,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2798,14 +2798,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2815,14 +2815,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2832,14 +2832,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2849,14 +2849,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2866,14 +2866,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2883,14 +2883,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2900,14 +2900,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2917,14 +2917,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2934,14 +2934,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2951,14 +2951,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2968,14 +2968,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -2985,14 +2985,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3002,14 +3002,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3019,14 +3019,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3036,14 +3036,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3053,14 +3053,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3070,14 +3070,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3087,14 +3087,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3104,14 +3104,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3121,23 +3121,23 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= 3,
       .extnr	= 0,
       .handlers	= {
-		/* fd */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* fd */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
 
-		/* buf is logged on exit */
+	/* buf is logged on exit */
 
-		/* count */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
-		/* offset */
-		{ .dual	= false	, .blade = lemona_blade_integer64		},
+	/* count */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* offset */
+	{ .dual	= false	, .blade = lemona_blade_integer64		},
       }
     },
     .out	= {
       .argnr	= 2,
       .extnr	= 0,
       .handlers	= {
-		/* buf & ret (in this order) */
-		{ .dual	= true	, .blade = lemona_blade_output_buffer	},
+	/* buf & ret (in this order) */
+	{ .dual	= true	, .blade = lemona_blade_output_buffer	},
       },
     }
   },
@@ -3147,20 +3147,20 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= 4,
       .extnr	= 0,
       .handlers	= {
-		/* fd */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
-		/* buf & count (in this order) */
-		{ .dual	= true	, .blade = lemona_blade_output_buffer	},
-		/* offset */
-		{ .dual	= false	, .blade = lemona_blade_integer64		},
+	/* fd */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* buf & count (in this order) */
+	{ .dual	= true	, .blade = lemona_blade_output_buffer	},
+	/* offset */
+	{ .dual	= false	, .blade = lemona_blade_integer64		},
       }
     },
     .out	= {
       .argnr	= 1,
       .extnr	= 0,
       .handlers	= {
-		/* ret */
-		{ .dual = false	, .blade = lemona_blade_integer64	},
+	/* ret */
+	{ .dual = false	, .blade = lemona_blade_integer64	},
       },
     }
   },
@@ -3170,14 +3170,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3187,14 +3187,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3204,14 +3204,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3221,14 +3221,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3238,14 +3238,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3255,14 +3255,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3272,14 +3272,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3289,14 +3289,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3306,14 +3306,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3323,14 +3323,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3340,14 +3340,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3357,14 +3357,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3374,14 +3374,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3391,14 +3391,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3408,14 +3408,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3425,14 +3425,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3442,14 +3442,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3459,14 +3459,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3476,14 +3476,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3493,14 +3493,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3510,14 +3510,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3527,14 +3527,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3544,14 +3544,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3561,14 +3561,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3578,14 +3578,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3595,14 +3595,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3612,14 +3612,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3629,14 +3629,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3646,14 +3646,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3663,14 +3663,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3680,14 +3680,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3697,14 +3697,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3714,14 +3714,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3731,14 +3731,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3748,14 +3748,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3765,14 +3765,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3782,14 +3782,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3799,14 +3799,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3816,14 +3816,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3833,14 +3833,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3852,14 +3852,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3871,14 +3871,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3889,14 +3889,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3906,14 +3906,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3923,14 +3923,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3940,14 +3940,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3957,14 +3957,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3974,14 +3974,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -3991,14 +3991,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4008,14 +4008,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4025,14 +4025,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4042,14 +4042,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4059,14 +4059,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4076,14 +4076,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4093,14 +4093,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4110,14 +4110,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4127,14 +4127,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4144,14 +4144,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4161,14 +4161,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4178,14 +4178,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4195,14 +4195,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4212,14 +4212,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4229,14 +4229,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4246,14 +4246,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4263,14 +4263,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4280,14 +4280,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4297,14 +4297,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4314,14 +4314,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4331,14 +4331,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4351,14 +4351,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4369,14 +4369,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4386,14 +4386,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4403,14 +4403,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4420,14 +4420,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4437,14 +4437,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4454,14 +4454,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4471,14 +4471,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4488,14 +4488,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4505,14 +4505,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4522,14 +4522,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4539,14 +4539,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4556,14 +4556,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4573,14 +4573,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4590,14 +4590,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4607,14 +4607,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4624,14 +4624,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4641,14 +4641,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4658,14 +4658,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4675,14 +4675,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4692,14 +4692,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4709,14 +4709,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4726,14 +4726,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4743,14 +4743,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4760,14 +4760,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4777,14 +4777,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4794,14 +4794,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4811,14 +4811,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4828,14 +4828,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4845,14 +4845,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4862,14 +4862,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4879,14 +4879,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4896,14 +4896,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4913,21 +4913,21 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
 
   /*
-	for some reason __NR_sys_setaltroot is commented in 2.6.26.3
-	this should be syscall number 285
+    for some reason __NR_sys_setaltroot is commented in 2.6.26.3
+    this should be syscall number 285
   */
   {
     .sysnr	= -1,
@@ -4935,14 +4935,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4953,14 +4953,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4970,14 +4970,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -4987,14 +4987,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5004,14 +5004,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5021,14 +5021,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5038,14 +5038,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5055,14 +5055,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5072,14 +5072,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5089,14 +5089,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5106,24 +5106,24 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= 4,
       .extnr	= 0,
       .handlers	= {
-		/* dfd */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
-		/* filename (user null terminated string) */
-		{ .dual	= false	, .blade = lemona_blade_string_null		},
-		/* flags */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
-		/* mode */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* dfd */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* filename (user null terminated string) */
+	{ .dual	= false	, .blade = lemona_blade_string_null		},
+	/* flags */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* mode */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
       }
     },
     .out	= {
       .argnr	= 1,
       .extnr	= 1,
       .handlers	= {
-		/* ret */
-		{ .dual	= false	, .blade = lemona_blade_integer			},
-		/* get resolved path from fd (i.e. ret) */
-		{ .dual = false	, .blade = lemona_blade_string_fd		},
+	/* ret */
+	{ .dual	= false	, .blade = lemona_blade_integer			},
+	/* get resolved path from fd (i.e. ret) */
+	{ .dual = false	, .blade = lemona_blade_string_fd		},
       },
     }
   },
@@ -5133,14 +5133,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5150,14 +5150,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5167,14 +5167,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5184,14 +5184,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5201,14 +5201,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5218,14 +5218,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5235,14 +5235,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5252,14 +5252,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5269,14 +5269,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5286,14 +5286,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5303,14 +5303,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5320,14 +5320,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5337,14 +5337,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5354,14 +5354,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5371,14 +5371,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5388,14 +5388,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5405,14 +5405,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5422,14 +5422,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5439,14 +5439,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5456,14 +5456,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5473,14 +5473,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5490,14 +5490,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5507,14 +5507,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5524,14 +5524,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5541,14 +5541,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5558,33 +5558,33 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
   {
-	.sysnr	= __NR_timerfd_create,
-	.in		= {
-	  .argnr	= -1,
-	  .extnr	= -1,
-	  .handlers	= {
-		{ .dual	= true, .blade = NULL },
-	  }
-	},
-	.out	= {
-	  .argnr	= -1,
-	  .extnr	= -1,
-	  .handlers	= {
-		{ .dual = false, .blade = NULL },
-	  },
-	}
+    .sysnr	= __NR_timerfd_create,
+    .in		= {
+      .argnr	= -1,
+      .extnr	= -1,
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
+    },
+    .out	= {
+      .argnr	= -1,
+      .extnr	= -1,
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
     .sysnr	= __NR_eventfd,
@@ -5592,14 +5592,14 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
@@ -5609,50 +5609,50 @@ const struct lemona_mixer	lemona_mixers[]= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual	= true, .blade = NULL },
+	{ .dual	= true, .blade = NULL },
       }
     },
     .out	= {
       .argnr	= -1,
       .extnr	= -1,
       .handlers	= {
-		{ .dual = false, .blade = NULL },
+	{ .dual = false, .blade = NULL },
       },
     }
   },
   {
-	.sysnr	= __NR_timerfd_settime,
-	.in		= {
-	  .argnr	= -1,
-	  .extnr	= -1,
-	  .handlers	= {
-		{ .dual	= true, .blade = NULL },
-	  }
-	},
-	.out	= {
-	  .argnr	= -1,
-	  .extnr	= -1,
-	  .handlers	= {
-		{ .dual = false, .blade = NULL },
-	  },
-	}
+    .sysnr	= __NR_timerfd_settime,
+    .in		= {
+      .argnr	= -1,
+      .extnr	= -1,
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
+    },
+    .out	= {
+      .argnr	= -1,
+      .extnr	= -1,
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
   {
-	.sysnr	= __NR_timerfd_gettime,
-	.in		= {
-	  .argnr	= -1,
-	  .extnr	= -1,
-	  .handlers	= {
-		{ .dual	= true, .blade = NULL },
-	  }
-	},
-	.out	= {
-	  .argnr	= -1,
-	  .extnr	= -1,
-	  .handlers	= {
-		{ .dual = false, .blade = NULL },
-	  },
-	}
+    .sysnr	= __NR_timerfd_gettime,
+    .in		= {
+      .argnr	= -1,
+      .extnr	= -1,
+      .handlers	= {
+	{ .dual	= true, .blade = NULL },
+      }
+    },
+    .out	= {
+      .argnr	= -1,
+      .extnr	= -1,
+      .handlers	= {
+	{ .dual = false, .blade = NULL },
+      },
+    }
   },
 };
 

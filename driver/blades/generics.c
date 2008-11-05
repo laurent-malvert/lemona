@@ -27,8 +27,8 @@
  * @fruit2: Unused
  */
 int		lemona_blade_integer(struct lemona_zest *zest,
-							 int isExt, int idx, int off,
-							 void *fruit1, void *fruit2)
+				     int isExt, int idx, int off,
+				     void *fruit1, void *fruit2)
 {
   int	val = *((int *)fruit1);
   int	*sz;
@@ -55,8 +55,8 @@ int		lemona_blade_integer(struct lemona_zest *zest,
  * @fruit2: Unused
  */
 int		lemona_blade_integer64(struct lemona_zest *zest,
-							   int isExt, int idx, int off,
-							   void *fruit1, void *fruit2)
+				       int isExt, int idx, int off,
+				       void *fruit1, void *fruit2)
 {
   u64	val = *((u64 *)fruit1);
   int	*sz;
@@ -74,8 +74,8 @@ int		lemona_blade_integer64(struct lemona_zest *zest,
 }
 
 int		lemona_blade_long(struct lemona_zest *zest,
-						  int isExt, int idx, int off,
-						  void *fruit1, void *fruit2)
+				  int isExt, int idx, int off,
+				  void *fruit1, void *fruit2)
 {
   long	val = *((long *)fruit1);
   int	*sz;
@@ -97,8 +97,8 @@ int		lemona_blade_long(struct lemona_zest *zest,
  * TODO: make this an alias to lemona_blade_integer64
  */
 int		lemona_blade_long_long(struct lemona_zest *zest,
-							   int isExt, int idx, int off,
-							   void *fruit1, void *fruit2)
+				       int isExt, int idx, int off,
+				       void *fruit1, void *fruit2)
 {
   long long		val = *((long long *)fruit1);
   int			*sz;
@@ -129,11 +129,11 @@ int		lemona_blade_long_long(struct lemona_zest *zest,
  * NOTE: As you would have guessed this is a dual blade.
  */
 int		lemona_blade_output_buffer(struct lemona_zest *zest,
-								   int isExt, int idx, int off,
-								   void __user *buf, void *len)
+					   int isExt, int idx, int off,
+					   void __user *buf, void *len)
 {
-  ssize_t		size	= *((int *)len);
-  int			*sz;
+  ssize_t	size	= *((int *)len);
+  int		*sz;
   unsigned long	uncopied = size;
 
   /* shall we compute the size or fill the zest ? */
@@ -151,16 +151,16 @@ int		lemona_blade_output_buffer(struct lemona_zest *zest,
       sz[idx + 1] = size;
 
       uncopied = copy_from_user((char *)zest + off + sizeof(size),
-								buf, size);
+				buf, size);
 
       if (uncopied)
-		{
-		  lemona_printk("(syscall %i) "
-						"output_buffer: %p/%p copied %i instead of %i\n",
-						zest->sysnr, buf, len,
-						(int)(size - uncopied), (int)size);
-		  return (-1);
-		}
+	{
+	  lemona_printk("(syscall %i) "
+			"output_buffer: %p/%p copied %i instead of %i\n",
+			zest->sysnr, buf, len,
+			(int)(size - uncopied), (int)size);
+	  return (-1);
+	}
     }
   return (sizeof(size) + (size >= 0 ? size : 0));
 }
@@ -179,11 +179,11 @@ int		lemona_blade_output_buffer(struct lemona_zest *zest,
  * NOTE: As you would have guessed this is a dual blade.
  */
 int	lemona_blade_output_buffer64(struct lemona_zest *zest,
-								 int isExt, int idx, int off,
-								 void *buf, void *len)
+				     int isExt, int idx, int off,
+				     void *buf, void *len)
 {
-  s64			size	= *((u64 *)len);
-  int			*sz;
+  s64		size	= *((u64 *)len);
+  int		*sz;
   unsigned long	uncopied;
 
   /* shall we compute the size or fill the zest ? */
@@ -203,7 +203,7 @@ int	lemona_blade_output_buffer64(struct lemona_zest *zest,
       uncopied = copy_from_user((char *)zest + off + sizeof(size),
 				buf, size);
       if (uncopied)
-		return (-1);
+	return (-1);
     }
   return (sizeof(size) + (size >= 0 ? size : 0));
 }
