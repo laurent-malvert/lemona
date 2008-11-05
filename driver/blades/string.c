@@ -12,6 +12,9 @@
 ** governing permissions and limitations under the License.
 */
 
+#include <linux/fs.h>			/* struct file */
+#include <linux/slab.h>			/* kzalloc */
+#include <linux/limits.h>		/* PATH_MAX */
 #include <linux/file.h>			/* struct file, fget_light, fput_light */
 #include <linux/uaccess.h>		/* strncopy_from_user */
 

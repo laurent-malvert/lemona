@@ -1,0 +1,7 @@
+This is just a quick & dirty server to test Lemona. When I'll have
+more time, I'll write a Makefile (or even use CMake, why not) and I'll
+clean the code, and add some simple but useful functionnalities.
+
+Meanwhile, to compile:
+ gcc -std=c99 -Wall -lpthread -o basket main.c
+
