@@ -103,7 +103,7 @@ struct	__lemona_mixer_handler {
 struct	__lemona_mixer {
   int				argnr;
   int				extnr;
-  struct __lemona_mixer_handler	handlers[4];
+  struct __lemona_mixer_handler	handlers[6];
 };
 
 /*

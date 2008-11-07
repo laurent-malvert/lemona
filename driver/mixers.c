@@ -191,16 +191,21 @@ const struct lemona_mixer	lemona_mixers[]= {
   {
     .sysnr	= __NR_link,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 2,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+		/* oldname */
+		{ .dual	= true, .blade = lemona_blade_string_null },
+		/* newname */
+		{ .dual	= true, .blade = lemona_blade_string_null },
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
+		/* retval */
+		{ .dual = false, .blade = lemona_blade_long },
 	{ .dual = false, .blade = NULL },
       },
     }
@@ -208,17 +213,19 @@ const struct lemona_mixer	lemona_mixers[]= {
   {
     .sysnr	= __NR_unlink,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+		/* pathname */
+		{ .dual	= false, .blade = lemona_blade_string_null },
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+		/* retval */
+		{ .dual = false, .blade = lemona_blade_long },
       },
     }
   },
@@ -276,17 +283,23 @@ const struct lemona_mixer	lemona_mixers[]= {
   {
     .sysnr	= __NR_mknod,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 3,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+		/* filename */
+		{ .dual	= true, .blade = lemona_blade_string_null },
+		/* mode */
+		{ .dual	= true, .blade = lemona_blade_integer },
+		/* dev */
+		{ .dual	= true, .blade = lemona_blade_long },
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+		/* retval */
+		{ .dual = false, .blade = lemona_blade_long },
       },
     }
   },
@@ -690,51 +703,61 @@ const struct lemona_mixer	lemona_mixers[]= {
   {
     .sysnr	= __NR_rename,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 2,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+	/* oldname */
+	{ .dual	= true, .blade = lemona_blade_string_null },
+	/* newname */
+	{ .dual	= true, .blade = lemona_blade_string_null },
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+	/* retval */
+	{ .dual = false, .blade = lemona_blade_long },
       },
     }
   },
   {
     .sysnr	= __NR_mkdir,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 2,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+		/* path_name */
+		{ .dual	= false	, .blade = lemona_blade_string_null	},
+		/* mode */
+		{ .dual	= false	, .blade = lemona_blade_integer		}
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+		/* retval */
+		{ .dual	= false	, .blade = lemona_blade_long	},
       },
     }
   },
   {
     .sysnr	= __NR_rmdir,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+		/* retval */
+		{ .dual	= false	, .blade = lemona_blade_string_null	},
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+		/* retval */
+		{ .dual	= false	, .blade = lemona_blade_long	},
       },
     }
   },
@@ -1455,17 +1478,21 @@ const struct lemona_mixer	lemona_mixers[]= {
   {
     .sysnr	= __NR_symlink,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 2,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+		/* oldname */
+		{ .dual	= false	, .blade = lemona_blade_string_null	},
+		/* newname */
+		{ .dual	= false	, .blade = lemona_blade_string_null	},
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+		/* retval */
+		{ .dual	= false	, .blade = lemona_blade_long	},
       },
     }
   },
@@ -5130,34 +5157,48 @@ const struct lemona_mixer	lemona_mixers[]= {
   {
     .sysnr	= __NR_mkdirat,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 3,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+		/* dfd */
+		{ .dual	= false, .blade = lemona_blade_integer },
+		/* pathname */
+		{ .dual	= false, .blade = lemona_blade_string_null },
+		/* mode */
+		{ .dual	= false, .blade = lemona_blade_integer },
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+		/* retval */
+		{ .dual = false, .blade = lemona_blade_long },
       },
     }
   },
   {
     .sysnr	= __NR_mknodat,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 4,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+		/* dfd */
+		{ .dual	= false, .blade = lemona_blade_integer },
+		/* filename */
+		{ .dual	= false, .blade = lemona_blade_string_null },
+		/* mode */
+		{ .dual	= false, .blade = lemona_blade_integer },
+		/* dev */
+		{ .dual	= false, .blade = lemona_blade_long },
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+		/* retval */
+		{ .dual = false, .blade = lemona_blade_long },
       },
     }
   },
@@ -5215,68 +5256,98 @@ const struct lemona_mixer	lemona_mixers[]= {
   {
     .sysnr	= __NR_unlinkat,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 3,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+		/* dfd */
+		{ .dual = false, .blade = lemona_blade_integer },
+		/* pathname */
+		{ .dual = false, .blade = lemona_blade_string_null },
+		/* flag */
+		{ .dual = false, .blade = lemona_blade_integer },
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+		/* retval */
+		{ .dual = false, .blade = lemona_blade_long },
       },
     }
   },
   {
     .sysnr	= __NR_renameat,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 4,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+		/* olddfd */
+		{ .dual = false, .blade = lemona_blade_integer },
+		/* oldname */
+		{ .dual = false, .blade = lemona_blade_string_null },
+		/* newdfd */
+		{ .dual = false, .blade = lemona_blade_integer },
+		/*  */
+		{ .dual = false, .blade = lemona_blade_string_null },
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+		/* error */
+		{ .dual = false, .blade = lemona_blade_long },
       },
     }
   },
   {
     .sysnr	= __NR_linkat,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 5,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+		/* olddfd */
+		{ .dual = false, .blade = lemona_blade_integer },
+		/* oldname */
+		{ .dual = false, .blade = lemona_blade_string_null },
+		/* newdfd */
+		{ .dual = false, .blade = lemona_blade_integer },
+		/* newname */
+		{ .dual = false, .blade = lemona_blade_string_null },
+		/* flags */
+		{ .dual = false, .blade = lemona_blade_integer },
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+		/* retval */
+		{ .dual = false, .blade = lemona_blade_long },
       },
     }
   },
   {
     .sysnr	= __NR_symlinkat,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 3,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+		/* oldname */
+		{ .dual = false, .blade = lemona_blade_string_null },
+		/* newfd */
+		{ .dual = false, .blade = lemona_blade_integer },
+		/* newname */
+		{ .dual = false, .blade = lemona_blade_string_null },
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+		/* retval */
+		{ .dual = false, .blade = lemona_blade_long },
       },
     }
   },

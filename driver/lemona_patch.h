@@ -32,8 +32,32 @@
  * Variable
  */
 extern atomic_t			lemona_activated;
+
+#  define lemona_block_start			\
+  if (atomic_read(&lemona_activated) != 0)	\
+    {
+
+
+#  define lemona_log_in(sysnr, argnr, extnr, ...)	__lemona_log(sysnr, true, argnr, extnr, ## __VA_ARGS__)
+#  define lemona_log_out(sysnr, argnr, extnr, ...)	__lemona_log(sysnr, false, argnr, extnr, ## __VA_ARGS__)
+
 #  if defined(CONFIG_LEMONA_MODULE)
+
 static lemonalogfn		_lemona_log		= NULL;
+
+#   define lemona_block_end			\
+    }						\
+  else						\
+    {						\
+      _lemona_log = NULL;			\
+    }
+
+#define __lemona_log(sysnr, in, argnr, extnr, ...)	{		\
+  if (_lemona_log == NULL)						\
+    _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");	\
+  _lemona_log(sysnr, in, argnr, extnr, ## __VA_ARGS__);		        \
+}
+
 #   if defined(LEMONA_READ)
 static lemonarelayisoursfn	_lemona_relay_is_ours	= NULL;
 
@@ -44,6 +68,14 @@ void inline lemona_get_fn(lemonalogfn *_lemona_log,
   *_lemona_relay_is_ours = (lemonarelayisoursfn)kallsyms_lookup_name("lemona_relay_is_ours");
 }
 #   endif /* LEMONA_READ */
+#  elif /* CONFIG_LEMONA */
+
+#  define lemona_block_end			\
+    }
+
+
+#   define __lemona_log(sysnr, in, argnr, extnr, ...)	lemona_log(sysnr, in, argnr, extnr, ## __VA_ARGS__)
+
 #  endif /* CONFIG_LEMONA_MODULE */
 # endif /* CONFIG_LEMONA || CONFIG_LEMONA_MODULE */
 
