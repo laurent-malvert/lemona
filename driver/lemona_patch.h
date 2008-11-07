@@ -31,13 +31,14 @@
 /*
  * Variable
  */
-extern atomic_t					lemona_activated;
+extern atomic_t			lemona_activated;
 #  if defined(CONFIG_LEMONA_MODULE)
-static lemonalogfn				_lemona_log				= NULL;
+static lemonalogfn		_lemona_log		= NULL;
 #   if defined(LEMONA_READ)
-static lemonarelayisoursfn		_lemona_relay_is_ours	= NULL;
+static lemonarelayisoursfn	_lemona_relay_is_ours	= NULL;
+
 void inline lemona_get_fn(lemonalogfn *_lemona_log,
-						  lemonarelayisoursfn *_lemona_relay_is_ours)
+			  lemonarelayisoursfn *_lemona_relay_is_ours)
 {
   *_lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
   *_lemona_relay_is_ours = (lemonarelayisoursfn)kallsyms_lookup_name("lemona_relay_is_ours");

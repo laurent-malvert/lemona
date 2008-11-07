@@ -32,312 +32,352 @@
 
 
 
-#define SRV_PORT		4242
-#define SRV_ADDRESS		"10.0.42.1"
+#define SRV_PORT	4242
+#define SRV_ADDRESS	"10.0.42.1"
 
-int						current_file_nr	= 0;
+int			current_file_nr	= 0;
 
 struct basket {
-  pthread_mutex_t		lock;
-  char					file[PATH_MAX]; /* file name */
-  void					*buf; /* Mapping */
+  pthread_mutex_t	lock;
+  char			file[PATH_MAX]; /* file name */
+  //  void			*buf; /* Mapping */
+  int			fd;
 };
 
-#define MAX_BASKET		6
+#define MAX_BASKET	6
  /* must be a multiple of sysconf(_SC_PAGE_SIZE) */
-#define FILE_SZ			20 * 1024 * 1024
-#define BUF_SZ			4096
+#define FILE_SZ		20 * 1024 * 1024
+#define BUF_SZ		4096
 
-void					basket_destroy(struct basket* basket)
+void	basket_destroy(struct basket* basket)
 {
   if (basket == NULL)
 	return;
 
-  if (basket->buf != NULL)
-	munmap(basket->buf, FILE_SZ);
+  if (basket->fd != -1)
+    close(basket->fd);
   pthread_mutex_unlock(&(basket->lock));
   pthread_mutex_destroy(&(basket->lock));
 }
 
-int						preallocate_file(struct basket *basket)
+int	preallocate_file(struct basket *basket)
 {
-  int					fd;
-  int					ret = 0;
+  int	fd;
+  int	ret = 0;
 
-  if (basket->buf != NULL)
-	return (0); /* already preallocated */
+  if (basket->fd != -1)
+    return (0); /* already preallocated */
 
   /* preallocate and mmap baskets */
   snprintf(basket->file, PATH_MAX, "%05d", current_file_nr);
   fd = open(basket->file, O_CREAT | O_RDWR, 0777);
   if (fd == -1)
-	{
-	  fprintf(stderr, "mmap failed for %s: %s\n",
-			  basket->file, strerror(ret));
-	  return (errno);
-	}
+    {
+      fprintf(stderr, "mmap failed for %s: %s\n",
+	      basket->file, strerror(ret));
+      return (errno);
+    }
 
   /* grow the file, for some reason fallocate doesn't exist on my linux box */
   ret = lseek(fd, FILE_SZ - 1, SEEK_SET);
   if (ret == (off_t) -1)
-	{
-	  fprintf(stderr, "lseek failed on %s: %s\n",
-			  basket->file, strerror(errno));
-	  close(fd);
-	  unlink(basket->file);
-	  return (errno);
-	}
+    {
+      fprintf(stderr, "lseek failed on %s: %s\n",
+	      basket->file, strerror(errno));
+      close(fd);
+      unlink(basket->file);
+      return (errno);
+    }
 
   if ((ret = write(fd, "", 1)) != 1)
-	{
-	  fprintf(stderr, "Unable to grow file %s size: %s\n",
-			  basket->file, strerror(errno));
-	  close(fd);
-	  unlink(basket->file);
-	  return (errno);
-	}
+    {
+      fprintf(stderr, "Unable to grow file %s size: %s\n",
+	      basket->file, strerror(errno));
+      close(fd);
+      unlink(basket->file);
+      return (errno);
+    }
 
-  basket->buf = mmap(NULL, FILE_SZ, PROT_WRITE, MAP_SHARED, fd, 0);
-  if (basket->buf == MAP_FAILED)
-	{
-	  fprintf(stderr, "Unable to mmap file %s: %s\n",
-			  basket->file, strerror(errno));
-	  close(fd);
-	  unlink(basket->file);
-	  return (errno);
-	}
+  ret = lseek(fd, 0, SEEK_SET);
+  if (ret == (off_t) -1)
+    {
+      fprintf(stderr, "lseek to offset 0 failed on %s: %s\n",
+	      basket->file, strerror(errno));
+      close(fd);
+      unlink(basket->file);
+      return (errno);
+    }
+
+  basket->fd = fd;
   ++current_file_nr;
-  close(fd);
   return (0);
 }
 
-int						basket_init(struct basket *basket)
+int	basket_init(struct basket *basket)
 {
-  int					ret = 0;
+  int	ret = 0;
 
   if (basket == NULL)
-	return (EINVAL);
+    return (EINVAL);
 
   memset(basket, 0, sizeof(*basket));
+  basket->fd = -1;
 
   /* initialize and acquire the mutex */
   if ((ret = pthread_mutex_init(&(basket->lock), NULL)) != 0)
-	return (ret); /* TODO: send an error message to the log */
+    return (ret); /* TODO: send an error message to the log */
   if ((ret = pthread_mutex_lock(&(basket->lock))) != 0)
-	pthread_mutex_destroy(&(basket->lock));   /* TODO: send an error message to the log */
+    pthread_mutex_destroy(&(basket->lock));   /* TODO: send an error message to the log */
 
-  preallocate_file(basket);
+  ret = preallocate_file(basket);
   pthread_mutex_unlock(&(basket->lock));
   return (ret);
 }
 
-int						init_socket(void)
+int	init_socket(void)
 {
-  int					ret;
-  int					sock;
+  int	ret;
+  int	sock;
   struct sockaddr_in	sin;
 
   sock = socket(AF_INET, SOCK_STREAM, 0);
   if (sock == -1)
-	{
-	  fprintf(stderr, "Unable to create socket: %s\n", strerror(errno));
-	  return (sock);
-	}
+    {
+      fprintf(stderr, "Unable to create socket: %s\n", strerror(errno));
+      return (sock);
+    }
 
   ret = 1;
   setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, &ret, sizeof(ret));
   ret = 0;
-/*   setsockopt(sock, SOL_SOCKET, (void *)SO_REUSEPORT, (void *)1); */
+  /*   setsockopt(sock, SOL_SOCKET, (void *)SO_REUSEPORT, (void *)1); */
 
   memset(&sin, 0, sizeof(sin));
-  sin.sin_family		= AF_INET;
-  sin.sin_port			= htons(SRV_PORT);
+  sin.sin_family	= AF_INET;
+  sin.sin_port		= htons(SRV_PORT);
   sin.sin_addr.s_addr	= inet_addr(SRV_ADDRESS);
   ret = bind(sock, (struct sockaddr *)&sin, sizeof(sin));
   if (ret == -1)
-	{
-	  fprintf(stderr, "Unable to bind to %s:%d: %s\n",
-			  SRV_ADDRESS, SRV_PORT, strerror(errno));
-	  close(sock);
-	  return (ret);
-	}
+    {
+      fprintf(stderr, "Unable to bind to %s:%d: %s\n",
+	      SRV_ADDRESS, SRV_PORT, strerror(errno));
+      close(sock);
+      return (ret);
+    }
 
   ret = listen(sock, 1); /* we're only expecting one client ;) */
   if (ret == -1)
-	{
-	  fprintf(stderr, "Unable to set backlog: %s\n", strerror(errno));
-	  close(sock);
-	  return (ret);
-	}
+    {
+      fprintf(stderr, "Unable to set backlog: %s\n", strerror(errno));
+      close(sock);
+      return (ret);
+    }
   return (sock);
 }
 
 
-static int				init_baskets(struct basket *baskets)
+static int	init_baskets(struct basket *baskets)
 {
-  int					i;
+  int		i;
 
   for (i = 0; i < MAX_BASKET; ++i)
-	{
-	  if (basket_init(baskets + i) != 0)
-		break;
-	}
+    {
+      if (basket_init(baskets + i) != 0)
+	break;
+    }
 
   if (i != MAX_BASKET)
-	{
-	  for (int j = i; j >= 0; --j)
-		basket_destroy(baskets + i);
-	}
+    {
+      for (int j = i; j >= 0; --j)
+	basket_destroy(baskets + i);
+    }
   return (i != MAX_BASKET);
 }
 
-void					*renew_files(void *arg)
+void		*renew_files(void *arg)
 {
-  int					i;
-  int					ret;
-  struct basket			*baskets = (struct basket *)arg;
+  int		i;
+  int		ret;
+  struct basket	*baskets = (struct basket *)arg;
 
   while (1)
+    {
+      for (i = 0; i < MAX_BASKET; ++i)
 	{
-	  for (i = 0; i < MAX_BASKET; ++i)
-		{
-		  if (pthread_mutex_lock(&(baskets[i].lock)) != 0)
-			{
-			  fprintf(stderr, "BUG: unable to wait for lock!\n");
-			  exit(1);
-			}
+	  if (pthread_mutex_lock(&(baskets[i].lock)) != 0)
+	    {
+	      fprintf(stderr, "BUG: unable to wait for lock!\n");
+	      exit(1);
+	    }
 
-		  while ((ret = preallocate_file(baskets + i)) == ENOSPC)
-			sleep(5);
+	  while ((ret = preallocate_file(baskets + i)) == ENOSPC)
+	    sleep(5);
 
-		  /* something is wrong... quit right now, might be a bug */
-		  if (ret != 0)
-			exit(2); /* TODO: well we should actually try to cleanup... */
+	  /* something is wrong... quit right now, might be a bug */
+	  if (ret != 0)
+	    exit(2); /* TODO: well we should actually try to cleanup... */
 
-		  pthread_mutex_unlock(&(baskets[i].lock));
-		}
+	  pthread_mutex_unlock(&(baskets[i].lock));
 	}
+    }
 }
 
-static void				start(void)
+static void		start(void)
 {
-  int					fd;
-  int					ret;
-  pthread_t				tid;
-  int					sock;
-  struct basket			baskets[MAX_BASKET];
+  int			fd;
+  int			ret;
+  pthread_t		tid;
+  int			sock;
+  struct basket		baskets[MAX_BASKET];
   struct sockaddr_in	sin;
-  struct hostent		*host;
-  fd_set				readfds;
-  char					buf[BUF_SZ];
-  int					cur_basket;
-  int					off;
-  int					to_copy;
+  struct hostent	*host;
+  fd_set		readfds;
+  char			buf[BUF_SZ];
+  int			cur_basket;
+  int			off;
+  int			to_copy;
 
   if ((sock = init_socket()) == -1)
-	return;
+    return;
 
   if (init_baskets((struct basket *)&baskets) != 0)
-	{
-	  close(sock);
-	  return;
-	}
+    {
+      close(sock);
+      return;
+    }
 
   ret = pthread_create(&tid, NULL, renew_files, &baskets);
   if (ret != 0)
-	{
-	  fprintf(stderr, "Unable to create preallocate thread: %s\n",
-			  strerror(ret));
-	  goto out;
-	}
+    {
+      fprintf(stderr, "Unable to create preallocate thread: %s\n",
+	      strerror(ret));
+      goto out;
+    }
 
   off = 0;
   cur_basket = 0;
   while (1)
+    {
+      while (1)
 	{
 	  pthread_mutex_lock(&(baskets[cur_basket].lock));
-
-	  memset(&sin, 0, sizeof(sin));
-	  to_copy = sizeof(sin);
-	  fd = accept(sock, (struct sockaddr *)&sin, (socklen_t *)&to_copy);
-	  if (fd == -1)
-		{
-		  if  (errno == ECONNABORTED || errno == EINTR)
-			continue;
-		  fprintf(stderr, "error while accepting connection: %s\n",
-				  strerror(errno));
-		  pthread_mutex_unlock(&(baskets[cur_basket].lock));
-		  break;
-		}
-
-	  host = gethostbyaddr(&(sin.sin_addr), sizeof(sin.sin_addr), AF_INET);
-	  fprintf(stdout, "Received a connection from %s\n",
-			  host ? host->h_name : "Unknown");
-
-	  while (1)
-		{
-		  FD_ZERO(&readfds);
-		  FD_SET(fd, &readfds);
-		  ret = select(fd + 1, &readfds, NULL, NULL, NULL);
-		  if (ret == -1)
-			{
-			  if (errno == EINTR)
-				continue;
-			  fprintf(stderr, "fatal select error: %s\n", strerror(errno));
-			  pthread_mutex_unlock(&(baskets[cur_basket].lock));
-			  goto out;
-			}
-
-		  if (FD_ISSET(fd, &readfds) == 0)
-			continue;
-
-		  ret = recv(fd, buf, BUF_SZ, 0);
-		  if (ret == -1)
-			{
-			  fprintf(stderr, "Connection to client lost: %s\n",
-					  strerror(errno));
-			  close(fd);
-			  pthread_mutex_unlock(&(baskets[cur_basket].lock));
-			  break;
-			}
-		  if (ret == 0)
-			{
-			  fprintf(stdout, "Client closed the connection\n");
-			  close(fd);
-			  pthread_mutex_unlock(&(baskets[cur_basket].lock));
-			  break;
-			}
-
-		  /* copy the data to the file */
-
-		  if (off + ret > FILE_SZ)
-			to_copy = FILE_SZ - off;
-		  else
-			to_copy = ret;
-
-		  strncpy(baskets[cur_basket].buf + off, buf, to_copy);
-		  off += to_copy;
-
-		  /* switch file if needed */
-		  if (to_copy != ret)
-			{
-			  munmap(baskets[cur_basket].buf, FILE_SZ);
-			  baskets[cur_basket].buf = NULL;
-			  pthread_mutex_unlock(&(baskets[cur_basket].lock));
-
-			  ++cur_basket;
-			  if (cur_basket == MAX_BASKET)
-				cur_basket = 0;
-
-			  pthread_mutex_lock(&(baskets[cur_basket].lock));
-			  strncpy(baskets[cur_basket].buf, buf + to_copy, ret - to_copy);
-			  off = ret - to_copy;
-			}
-		}
+	  if (baskets[cur_basket].fd == -1)
+	    sleep(1);
+	  else
+	    break;
+	  pthread_mutex_unlock(&(baskets[cur_basket].lock));
 	}
+
+      fprintf(stdout, "Waiting for connections...\n");
+      memset(&sin, 0, sizeof(sin));
+      to_copy = sizeof(sin);
+      fd = accept(sock, (struct sockaddr *)&sin, (socklen_t *)&to_copy);
+      if (fd == -1)
+	{
+	  if  (errno == ECONNABORTED || errno == EINTR)
+	    continue;
+	  fprintf(stderr, "error while accepting connection: %s\n",
+		  strerror(errno));
+	  pthread_mutex_unlock(&(baskets[cur_basket].lock));
+	  break;
+	}
+
+      host = gethostbyaddr(&(sin.sin_addr), sizeof(sin.sin_addr), AF_INET);
+      fprintf(stdout, "Received a connection from %s\n",
+	      host ? host->h_name : "Unknown");
+
+      while (1)
+	{
+	  FD_ZERO(&readfds);
+	  FD_SET(fd, &readfds);
+	  ret = select(fd + 1, &readfds, NULL, NULL, NULL);
+	  if (ret == -1)
+	    {
+	      fprintf(stderr, "fatal select error: %s\n", strerror(errno));
+	      close(baskets[cur_basket].fd);
+	      baskets[cur_basket].fd = -1;
+	      pthread_mutex_unlock(&(baskets[cur_basket].lock));
+
+	      /*
+		better start a new file just in case
+		TODO: move current files to a backup directory
+	       */
+	      ++cur_basket;
+	      if (cur_basket == MAX_BASKET)
+		cur_basket = 0;
+
+	      break;
+	    }
+
+	  if (FD_ISSET(fd, &readfds) == 0)
+	    continue;
+
+	  ret = recv(fd, buf, BUF_SZ, 0);
+	  if (ret == -1)
+	    {
+	      fprintf(stderr, "Connection to client lost: %s\n",
+		      strerror(errno));
+	      close(fd);
+	      baskets[cur_basket].fd = -1;
+	      pthread_mutex_unlock(&(baskets[cur_basket].lock));
+
+	      /*
+		better start a new file just in case
+		TODO: move current files to a backup directory
+	       */
+	      ++cur_basket;
+	      if (cur_basket == MAX_BASKET)
+		cur_basket = 0;
+
+	      break;
+	    }
+	  if (ret == 0)
+	    {
+	      fprintf(stdout, "Client closed the connection\n");
+	      close(fd);
+	      baskets[cur_basket].fd = -1;
+	      pthread_mutex_unlock(&(baskets[cur_basket].lock));
+
+	      /*
+		better start a new file just in case
+		TODO: move current files to a backup directory
+	       */
+	      ++cur_basket;
+	      if (cur_basket == MAX_BASKET)
+		cur_basket = 0;
+
+	      break;
+	    }
+
+	  /* copy the data to the file */
+	  if (off + ret > FILE_SZ)
+	    to_copy = FILE_SZ - off;
+	  else
+	    to_copy = ret;
+
+	  write(baskets[cur_basket].fd, buf, to_copy);
+	  off += to_copy;
+
+	  /* switch file if needed */
+	  if (to_copy != ret)
+	    {
+	      close(baskets[cur_basket].fd);
+	      baskets[cur_basket].fd = -1;
+	      pthread_mutex_unlock(&(baskets[cur_basket].lock));
+
+	      ++cur_basket;
+	      if (cur_basket == MAX_BASKET)
+		cur_basket = 0;
+
+	      pthread_mutex_lock(&(baskets[cur_basket].lock));
+	      write(baskets[cur_basket].fd, buf, ret - to_copy);
+	      off = ret - to_copy;
+	    }
+	}
+    }
  out:
   for (int i = 0; i < MAX_BASKET; ++i)
-	basket_destroy(baskets + i);
+    basket_destroy(baskets + i);
   close(sock);
 }
 

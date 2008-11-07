@@ -46,9 +46,9 @@ int				lemona_net_init(bool init)
     {
       mutex_init(&(juice->net.lock));
 
-      juice->net.sin.sin_family			= AF_INET;
+      juice->net.sin.sin_family		= AF_INET;
       juice->net.sin.sin_addr.s_addr	= lemona_net_serv_get();
-      juice->net.sin.sin_port			= htons(net_log_port);
+      juice->net.sin.sin_port		= htons(net_log_port);
     }
 
   mutex_lock(&(juice->net.lock));
@@ -99,20 +99,29 @@ void			lemona_net_log(struct lemona_zest *zest)
   if (juice->net.sock)
     {
       int			ret;
+      int			sent;
       struct kvec		kvec = {
 	.iov_base		= zest,
 	.iov_len		= zest->size
       };
       struct msghdr		hdr = { 0 };
 
-      ret = kernel_sendmsg(juice->net.sock, &hdr, &kvec, 1, kvec.iov_len);
-      if (ret < 0)
+      hdr.msg_flags = MSG_NOSIGNAL;
+      mutex_lock(&(juice->net.lock));
+      for (sent = 0; sent != zest->size; sent += ret)
 	{
-	  lemona_printk("kernel_sendmsg: unable to send message: %i\n", ret);
-	  lemona_net_cleanup();
-	  /* this is the time after which we will be able to try again */
-	  juice->net.timeout	= jiffies + (NET_LOG_RETRY * HZ);
+	  ret = kernel_sendmsg(juice->net.sock, &hdr, &kvec, 1, kvec.iov_len);
+	  if (ret < 0)
+	    {
+	      lemona_printk("kernel_sendmsg: unable to send message: %i\n",
+			    ret);
+	      lemona_net_cleanup();
+	      /* this is the time after which we will be able to try again */
+	      juice->net.timeout	= jiffies + (NET_LOG_RETRY * HZ);
+	      break;
+	    }
 	}
+      mutex_unlock(&(juice->net.lock));
     }
 }
 

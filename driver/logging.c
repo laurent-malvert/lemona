@@ -47,8 +47,8 @@ atomic_t				lemona_clients	= ATOMIC_INIT(0);
 static int	lemona_zest_get_size(const struct lemona_mixer *mixer,
 				     int in, va_list ap)
 {
-  int					i		= 0;
-  int					tmp		= 0;
+  int					i	= 0;
+  int					tmp	= 0;
   int					size	= 0;
   int					bladesnr;
   const struct __lemona_mixer_handler	*handlers;
@@ -125,6 +125,7 @@ static int	lemona_zest_fill(const struct lemona_mixer *mixer,
   const struct __lemona_mixer_handler	*handlers;
   void					*arg1, *arg2;
 
+  strncpy(z->magic, "ZeSt", 4);
 
   /* we don't check our arguments, this should have already been done */
   getnstimeofday(&(z->time));
@@ -183,8 +184,6 @@ static int	lemona_zest_fill(const struct lemona_mixer *mixer,
 			mixer->sysnr, in, i);
 	  goto out;
 	}
-
-      z->argsz[i]	= ret;
       off		= off + ret;
     }
 
@@ -210,8 +209,6 @@ static int	lemona_zest_fill(const struct lemona_mixer *mixer,
 			mixer->sysnr, in, i, ret);
 	  goto out;
 	}
-
-      z->argsz[i]	= ret;
       off		= off + ret;
     }
 

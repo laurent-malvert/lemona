@@ -33,32 +33,32 @@
  * Is speed better than wasted space in zest?
  */
 int		lemona_blade_string_null(struct lemona_zest *zest,
-								 int isExt, int idx, int off,
-								 void __user *str, void *unused)
+					 int isExt, int idx, int off,
+					 void __user *str, void *unused)
 {
-  long	len;
-  int	*sz;
+  long		len;
+  int		*sz;
 
   /* shall we compute the size or fill the zest ? */
   if (zest == NULL)
-	{
-	  char	*buf;
+    {
+      char	*buf;
 
-	  buf = kzalloc(PATH_MAX, GFP_KERNEL);
-	  if (buf == NULL)
-		return (-ENOMEM);
+      buf = kzalloc(PATH_MAX, GFP_KERNEL);
+      if (buf == NULL)
+	return (-ENOMEM);
 
-	  len = strncpy_from_user(buf, str, PATH_MAX);
-	  kfree(buf);
-	  return (len);
-	}
+      len = strncpy_from_user(buf, str, PATH_MAX);
+      kfree(buf);
+      return (len + 1); /* add place for \0 since strncpy copy it too */
+    }
 
   /* fill the zest */
   sz = isExt == false ? zest->argsz : zest->extsz;
   /* copy and get size */
   len = strncpy_from_user((char *)zest + off, str, PATH_MAX);
-  sz[idx] = len;
-  return (len);
+  sz[idx] = len + 1; /* don't forget the \0, since it is copied too */
+  return (len + 1);
 }
 
 /**
@@ -73,49 +73,49 @@ int		lemona_blade_string_null(struct lemona_zest *zest,
  * TODO: do we need to lock the dentry while going through it?
  */
 int		lemona_blade_string_fd(struct lemona_zest *zest,
-							   int isExt, int idx, int off,
-							   void *pfd, void *unused)
+				       int isExt, int idx, int off,
+				       void *pfd, void *unused)
 {
-  long			fd		= *((long *)pfd);
-  int			size	= 0;
+  long		fd		= *((long *)pfd);
+  int		size	= 0;
   struct file	*file;
   struct dentry	*dentry;
-  int			fput_needed;
-  char			*dest;
-  int			*sz;
+  int		fput_needed;
+  char		*dest;
+  int		*sz;
 
   /* if the fd is invalid no need to go further */
   if (fd < 0 || (file = fget_light(fd, &fput_needed)) == NULL)
-	return (size);
+    return (size);
 
   dentry = file->f_dentry;
 
   /* shall we compute the size or fill the zest ? */
   if (zest == NULL)
+    {
+      while (dentry != dentry->d_parent)
 	{
-	  while (dentry != dentry->d_parent)
-		{
-		  /* add space for '/' separator */
-		  size			+= (int)dentry->d_name.len + (size ? 1 : 0);
-		  dentry		= dentry->d_parent;
-		}
-
-	  fput_light(file, fput_needed);
-	  return (size + 1); /* add '/' (i.e. root path) */
+	  /* add space for '/' separator */
+	  size			+= (int)dentry->d_name.len + (size ? 1 : 0);
+	  dentry		= dentry->d_parent;
 	}
+
+      fput_light(file, fput_needed);
+      return (size + 1); /* add '/' (i.e. root path) */
+    }
 
   /* fill the zest */
   sz	= isExt == false ? zest->argsz : zest->extsz;
   dest	= (char *)zest + off;
   while (dentry != dentry->d_parent)
-	{
-	  /* add '/' separator if needed */
-	  if (size)
-		dest[size++]		= '/';
-	  strncpy(dest + size, dentry->d_name.name, dentry->d_name.len);
-	  size				+= (int)dentry->d_name.len;
-	  dentry			= dentry->d_parent;
-	}
+    {
+      /* add '/' separator if needed */
+      if (size)
+	dest[size++]		= '/';
+      strncpy(dest + size, dentry->d_name.name, dentry->d_name.len);
+      size				+= (int)dentry->d_name.len;
+      dentry			= dentry->d_parent;
+    }
   /* add '/' (i.e. root path) */
   dest[size++]	= '/';
   sz[idx]		= size;

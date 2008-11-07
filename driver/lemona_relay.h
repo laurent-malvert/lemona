@@ -92,6 +92,8 @@ struct lemona_relay { };
 #  define lemona_relay_log(z)	0
 #  define lemona_relay_is_ours(d) false
 
+typedef bool (*lemonarelayisoursfn)(void *);
+
 # endif /* CONFIG_LEMONA_RELAY */
 
 #endif

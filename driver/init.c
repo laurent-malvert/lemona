@@ -12,6 +12,7 @@
 ** governing permissions and limitations under the License.
 */
 
+#include <linux/sched.h>	/* schedule */
 #include <linux/init.h>		/* module_* */
 #include <linux/module.h>	/* MODULE_LICENSE */
 #include <linux/utsrelease.h>	/* UTS_RELEASE */
@@ -37,11 +38,12 @@ static void				lemona_cleanup(void)
   lemona_net_cleanup();
   if (juice)
     kfree(juice);
+  juice = NULL;
 }
 
 static int __init		lemona_init(void)
 {
-  long					err = 0;
+  long				err = 0;
   extern atomic_t		lemona_activated;
 
   lemona_printk("Initialization for kernel tree " UTS_RELEASE "...\n");

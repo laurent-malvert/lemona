@@ -132,7 +132,7 @@ int		lemona_blade_output_buffer(struct lemona_zest *zest,
 					   int isExt, int idx, int off,
 					   void __user *buf, void *len)
 {
-  ssize_t	size	= *((int *)len);
+  ssize_t	size	= *((ssize_t *)len);
   int		*sz;
   unsigned long	uncopied = size;
 
@@ -143,7 +143,7 @@ int		lemona_blade_output_buffer(struct lemona_zest *zest,
   /* fill the zest */
   sz = isExt == false ? zest->argsz : zest->extsz;
   sz[idx] = sizeof(size);
-  *((int *)((char *)zest + off)) = size;
+  *((ssize_t *)((char *)zest + off)) = size;
 
   /* try to copy only if we actually got something to copy */
   if (size > 0)

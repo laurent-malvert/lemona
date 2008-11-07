@@ -25,6 +25,7 @@
  * Every single log entry is represented by a zest.
  */
 struct	lemona_zest {
+  char			magic[4];
   int			size;  	/* size taken by this zest and args sz/value */
 
   int			in;
