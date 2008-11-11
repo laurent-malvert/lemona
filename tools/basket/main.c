@@ -46,7 +46,7 @@ struct basket {
 
 #define MAX_BASKET	6
  /* must be a multiple of sysconf(_SC_PAGE_SIZE) */
-#define FILE_SZ		20 * 1024 * 1024
+#define FILE_SZ		50 * 1024 * 1024
 #define BUF_SZ		4096
 
 void	basket_destroy(struct basket* basket)
@@ -236,6 +236,7 @@ static void		start(void)
   int			cur_basket;
   int			off;
   int			to_copy;
+  int			new_file = 1;
 
   if ((sock = init_socket()) == -1)
     return;
@@ -288,6 +289,13 @@ static void		start(void)
 
       while (1)
 	{
+	  if (new_file)
+	    {
+	      fprintf(stdout, "Switching to file %s\n",
+		      baskets[cur_basket].file);
+	      new_file = 0;
+	    }
+
 	  FD_ZERO(&readfds);
 	  FD_SET(fd, &readfds);
 	  ret = select(fd + 1, &readfds, NULL, NULL, NULL);
@@ -305,6 +313,8 @@ static void		start(void)
 	      ++cur_basket;
 	      if (cur_basket == MAX_BASKET)
 		cur_basket = 0;
+	      off = 0;
+	      new_file = 1;
 
 	      break;
 	    }
@@ -328,6 +338,8 @@ static void		start(void)
 	      ++cur_basket;
 	      if (cur_basket == MAX_BASKET)
 		cur_basket = 0;
+	      off = 0;
+	      new_file = 1;
 
 	      break;
 	    }
@@ -345,6 +357,8 @@ static void		start(void)
 	      ++cur_basket;
 	      if (cur_basket == MAX_BASKET)
 		cur_basket = 0;
+	      off = 0;
+	      new_file = 1;
 
 	      break;
 	    }
@@ -372,6 +386,7 @@ static void		start(void)
 	      pthread_mutex_lock(&(baskets[cur_basket].lock));
 	      write(baskets[cur_basket].fd, buf, ret - to_copy);
 	      off = ret - to_copy;
+	      new_file = 1;
 	    }
 	}
     }

@@ -30,7 +30,7 @@ extern atomic_t			lemona_clients;
 # define lemona_clients_wait()
 #endif
 
-struct lemona			*juice			= NULL;
+struct lemona			*juice	= NULL;
 
 static void			lemona_cleanup(void)
 {
@@ -56,7 +56,7 @@ static int __init		lemona_init(void)
   err = lemona_relay_init();
   if (err)
     goto err;
-  err = lemona_net_init(true);
+  err = lemona_net_init();
   if (err < 0)
     goto err;
   lemona_printk("Done.\n");

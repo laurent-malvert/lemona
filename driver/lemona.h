@@ -25,8 +25,13 @@
  * Every single log entry is represented by a zest.
  */
 struct	lemona_zest {
-  char			magic[4];
+  /*
+    need always to be the first member. This facilitate parsing when a
+    zest can find itself cut in two
+   */
   int			size;  	/* size taken by this zest and args sz/value */
+
+  char			magic[4];
 
   int			in;
   struct timespec	time;	/* call start/end time (getnstimeofday) */

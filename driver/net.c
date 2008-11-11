@@ -12,8 +12,12 @@
 ** governing permissions and limitations under the License.
 */
 
+#include <linux/inetdevice.h>
+#include <linux/notifier.h> /* struct notifier_block */
 #include <linux/jiffies.h> /* jiffies, time_after, HZ */
 #include <linux/module.h> /* module_param */
+
+#include <linux/in.h> /* INADDR_LOOPBACK */
 
 #include "lemona.h"
 
@@ -22,9 +26,20 @@ static int		net_log_port	= CONFIG_LEMONA_NET_LOG_PORT;
 module_param(net_log_addr, charp, S_IRUGO);
 module_param(net_log_port, int, S_IRUGO);
 
+static int		lemona_net_activated = 0;
+
 extern struct lemona	*juice;
 
-static void	__lemona_net_cleanup(void);
+static int		__lemona_net_init(void);
+static void		__lemona_net_cleanup(void);
+
+static int		lemona_net_inetaddr_notifier(struct notifier_block *,
+						     unsigned long,
+						     void *);
+
+static struct notifier_block	lemona_net_inetaddr_nb = {
+  .notifier_call	= lemona_net_inetaddr_notifier,
+};
 
 static inline int	lemona_net_serv_get(void)
 {
@@ -37,26 +52,34 @@ static inline int	lemona_net_serv_get(void)
   return (htonl((a << 24) | (b << 16) | (c << 8) | d));
 }
 
-int				lemona_net_init(bool init)
+static int		lemona_net_inetaddr_notifier(struct notifier_block *nb,
+						     unsigned long val,
+						     void * data)
 {
-  int		ret	= 0;
-  struct socket	*sock	= NULL;
+/*   struct in_ifaddr	*addr = (struct in_ifaddr *)data; */
 
-  if (init == true)
-    {
-      mutex_init(&(juice->net.lock));
+  if (!lemona_net_activated)
+    return (NOTIFY_DONE);
 
-      juice->net.sin.sin_family		= AF_INET;
-      juice->net.sin.sin_addr.s_addr	= lemona_net_serv_get();
-      juice->net.sin.sin_port		= htons(net_log_port);
-    }
+  /* if interface is going down... */
+  if (val == NETDEV_DOWN)
+    lemona_net_cleanup();
 
-  mutex_lock(&(juice->net.lock));
+  /*
+    TODO: Found a way to only cleanup when reboot/halt function are called
+    to avoid overhead of releasing and reopening the socket for nothing
+   */
+  return (NOTIFY_DONE);
+}
+
+static int		__lemona_net_init(void)
+{
+  int			ret	= 0;
+  struct socket		*sock	= NULL;
 
   if (juice->net.sock != NULL
       || (juice->net.sock == NULL
-	  && !(ret = time_after(jiffies, juice->net.timeout))
-	  && init == false))
+	  && !(ret = time_after(jiffies, juice->net.timeout))))
     goto out;
 
   ret = sock_create_kern(AF_INET, SOCK_STREAM, IPPROTO_TCP, &sock);
@@ -83,8 +106,34 @@ int				lemona_net_init(bool init)
       juice->net.timeout	= jiffies + (NET_LOG_RETRY * HZ);
       __lemona_net_cleanup();
     }
+  return (ret);
+}
+
+int			lemona_net_init(void)
+{
+  int		ret	= 0;
+
+  mutex_init(&(juice->net.lock));
+
+  juice->net.sin.sin_family		= AF_INET;
+  juice->net.sin.sin_addr.s_addr	= lemona_net_serv_get();
+  juice->net.sin.sin_port		= htons(net_log_port);
+
+  ret = register_inetaddr_notifier(&lemona_net_inetaddr_nb);
+  if (ret != 0)
+    {
+      lemona_printk("Unable to register notifier for inetaddr changes. "
+		    "Net module will be deactivated\n");
+      return (0);
+    }
+
+  mutex_lock(&(juice->net.lock));
+  /* ensure timeout don't block us */
+  juice->net.timeout	= jiffies - (NET_LOG_RETRY * HZ);
+  __lemona_net_init();
+  lemona_net_activated = 1;
   mutex_unlock(&(juice->net.lock));
-  return (init ? 0 : ret);
+  return (0);
 }
 
 /*
@@ -93,8 +142,15 @@ int				lemona_net_init(bool init)
  */
 void			lemona_net_log(struct lemona_zest *zest)
 {
-  if (lemona_net_init(false) != 0)
-    return; /* couldn't get a socket working */
+  if (!lemona_net_activated)
+    return;
+
+  mutex_lock(&(juice->net.lock));
+  if (__lemona_net_init() != 0)
+    {
+      mutex_unlock(&(juice->net.lock));
+      return; /* couldn't get a socket working */
+    }
 
   if (juice->net.sock)
     {
@@ -102,13 +158,13 @@ void			lemona_net_log(struct lemona_zest *zest)
       int			sent;
       struct kvec		kvec = {
 	.iov_base		= zest,
-	.iov_len		= zest->size
+	/* Zest are aligned on sizeof(int) */
+	.iov_len		= zest->size + (zest->size % sizeof(int))
       };
       struct msghdr		hdr = { 0 };
 
       hdr.msg_flags = MSG_NOSIGNAL;
-      mutex_lock(&(juice->net.lock));
-      for (sent = 0; sent != zest->size; sent += ret)
+      for (sent = 0; sent != kvec.iov_len; sent += ret)
 	{
 	  ret = kernel_sendmsg(juice->net.sock, &hdr, &kvec, 1, kvec.iov_len);
 	  if (ret < 0)
@@ -121,11 +177,11 @@ void			lemona_net_log(struct lemona_zest *zest)
 	      break;
 	    }
 	}
-      mutex_unlock(&(juice->net.lock));
     }
+  mutex_unlock(&(juice->net.lock));
 }
 
-static void	__lemona_net_cleanup(void)
+static void		__lemona_net_cleanup(void)
 {
   if (!juice->net.sock)
     return;
@@ -133,7 +189,7 @@ static void	__lemona_net_cleanup(void)
   juice->net.sock	= NULL;
 }
 
-void	lemona_net_cleanup(void)
+void			lemona_net_cleanup(void)
 {
   mutex_lock(&(juice->net.lock));
   __lemona_net_cleanup();

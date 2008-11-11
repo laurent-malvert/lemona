@@ -49,7 +49,7 @@ struct lemona_net {
   struct socket		*sock;
 };
 
-int	lemona_net_init(bool init);
+int	lemona_net_init(void);
 void	lemona_net_log(struct lemona_zest *zest);
 void	lemona_net_cleanup(void);
 
@@ -57,7 +57,7 @@ void	lemona_net_cleanup(void);
 
 struct lemona_net { };
 
-# define lemona_net_init(x)	0
+# define lemona_net_init()	0
 # define lemona_net_log(x)
 # define lemona_net_cleanup()
 

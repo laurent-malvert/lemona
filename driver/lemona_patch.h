@@ -68,7 +68,7 @@ void inline lemona_get_fn(lemonalogfn *_lemona_log,
   *_lemona_relay_is_ours = (lemonarelayisoursfn)kallsyms_lookup_name("lemona_relay_is_ours");
 }
 #   endif /* LEMONA_READ */
-#  elif /* CONFIG_LEMONA */
+#  else /* CONFIG_LEMONA */
 
 #  define lemona_block_end			\
     }

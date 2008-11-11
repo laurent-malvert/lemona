@@ -253,9 +253,10 @@ static struct lemona_zest *lemona_zest_create(const struct lemona_mixer *mixer,
   zsz = lemona_zest_get_size(mixer, in, ap);
   if (zsz > 0)
     {
-      z = kzalloc(zsz, GFP_KERNEL);
+      /* aligned the allocation */
+      z = kzalloc(zsz + (zsz % sizeof(int)), GFP_KERNEL);
       if (z != NULL)
-	z->size = zsz;
+	z->size		= zsz;
       else
 	{
 	  lemona_printk("(syscall %i) Unable to create zest with size: %i\n",

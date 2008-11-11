@@ -1,109 +1,93 @@
 #!/usr/bin/env python
 
+from __future__ import with_statement
+from datetime   import timedelta
+from Zest       import *
+from cStringIO  import StringIO
+
 import re, os, sys
 
-from datetime   import timedelta
-from struct     import unpack, calcsize
 
-class Zest:
-    "A Simple Zest of Lemon(a)"
-    Zest_Properties = (
-        [ "magic"       , "4s"  , calcsize("4s") ],
-        [ "size"        , "i"   , calcsize("i")  ],
-        [ "inout"  	, "i"	, calcsize("i")  ],
-        [ "sec"    	, "l"	, calcsize("l")  ],
-        [ "usec"   	, "l"	, calcsize("l")  ],
-        [ "pid"    	, "i"	, calcsize("i")  ],
-        [ "tgid"   	, "i"	, calcsize("i")  ],
-        [ "uid"    	, "i"	, calcsize("i")  ], #unsigned short
-        [ "euid"   	, "i"	, calcsize("i")  ],
-        [ "fsuid"  	, "i"	, calcsize("i")  ],
-        [ "gid"    	, "i"	, calcsize("i")  ],
-        [ "egid"   	, "i"  	, calcsize("i")  ],
-        [ "fsgid"  	, "i"  	, calcsize("i")  ],
-        [ "sysnr"  	, "i"  	, calcsize("i")  ],
-        [ "argnr"  	, "i"  	, calcsize("i")  ],
-        [ "pad"    	, "2P" 	, calcsize("2P") ], #void * / argsz, args
-        [ "extnr"  	, "i"  	, calcsize("i")  ],
-        [ "pad"    	, "2P"  , calcsize("2P") ], #void * / extsz, exts
-        )
-    Zest_Properties_Size = calcsize("4s 2i 2l 2i 6i 2i 2P i 2P");
+def usage():
+    print >> sys.stderr, "usage: picker <directories|files>"
+    exit(2)
 
-    def __init__(self, f):
-        parsed_sz = 0
-        #get C struct values
-        for arg, fmt, sz in self.Zest_Properties:
-            buf = f.read(sz)
-            if len(buf) != sz:
-                print "Invalid File!!! %d <=> %d (%d)" % (len(buf),
-                                                          sz, f.tell())
-                return None
-            if arg != "pad":
-                val = unpack(fmt, buf)[0]
-                self.setattr(arg, val)
+def main():
+    #do we have our working directory/file?
+    if len(sys.argv) == 1:
+        usage()
 
-        #get args size
-        self.setattr("argsz", [])
-        for i in range(self.argnr):
-            parsed_sz += calcsize("i");
-            val = unpack("i", f.read(calcsize("i")))[0]
-            self.argsz.append(val)
+    #list of files to work on
+    files       = []
 
-        #get args
-        self.setattr("args", [])
-        for sz in self.argsz:
-            parsed_sz += calcsize(str(sz) + "s");
-            val = unpack(str(sz) + "s", f.read(sz))[0]
-            self.args.append(val)
+    #if it's a directory list it contents to find on what to work on
+    for path in sys.argv[1:]:
+        if os.path.isdir(path):
+            dir             = path
+            dirFiles        = sorted(os.listdir(dir))
+            for f in dirFiles:
+                if re.match("^\d+$", f) != None:
+                    if dir[len(dir) - 1] == "/":
+                        files.append(dir + f)
+                    else:
+                        files.append(dir + "/" + f)
+        else:
+            files.append(path)
 
-        #get exts size
-        self.setattr("extsz", [])
-        for i in range(self.extnr):
-            parsed_sz += calcsize("i");
-            val = unpack("i", f.read(calcsize("i")))[0]
-            self.extsz.append(val)
+    #do we find something to work on?
+    if len(files) == 0:
+        print >> sys.stderr, "Sorry, I didn't find anything relevant to me!"
+        exit(3)
 
-        #get exts
-        self.setattr("exts", [])
-        for sz in self.extsz:
-            parsed_sz += calcsize(str(sz) + "s");
-            val = unpack(str(sz) + "s", f.read(sz))[0]
-            self.exts.append(val)
+    #following vars help us keeping track of truncated zest
+    missing     = 0
+    left        = StringIO()
 
-        if self.size - parsed_sz != self.Zest_Properties_Size:
-            print self
-            raise NameError("Corrupted file!")
+    #Yes? Good, go on
+    for file in files:
+        try:
+            fileSize    = os.path.getsize(file)
+            print ">>>Examining File", file
+            with open(file, "rb") as f:
+                pos     = 0;
+                while pos != fileSize:
+                    print "\t>>Parsing new entry at %s:%d" % (file, pos)
+                    try:
+                        if missing != 0:
+                            print "\t\t>Concatening with previous half", missing
+                            left.write(f.read(missing))
+                            left.seek(0, os.SEEK_SET)
+                            z           = Zest(left)
+                            missing     = 0;
+                            left.truncate(0);
+                        else:
+                            z   = Zest(f)
+                        pos = f.tell()
+                        #TODO, pass the zest to a backend
+                        #(e.g. console, database)
+                        print z
+                    except ZestTruncatedFile, e:
+                        missing = e.missing
+                        f.seek(pos, os.SEEK_SET)
+                        left.write(f.read())
+                        print "\t\t>Truncated Zest, Read: %d Missing: %d"\
+                            % (left.tell(), missing)
+                        break
+                    except ZestNullSizeError:
+                        break   # No more entry in this file
+                    except ZestInvalidFormat:
+                        print >> sys.stdout, "Invalid file format!"
+                        break
+                    finally:
+                        print "\t<<Done"
+            print "<<<Done", file
+        except (IOError, OSError), inst:
+            print >> sys.stderr, "Error:", inst
+        except Exception, inst:
+            print >> sys.stderr, "Error:", inst
 
-    def __str__(self):
-        return str(self.__dict__)
+#scripting
+if __name__ == "__main__":
+    main()
+    exit(0)
 
-    def setattr(self, key, val):
-        self.__dict__[key] = val
-
-# scripting
-
-PATH = "../basket/"
-
-files   = []
-dirlist = sorted(os.listdir(PATH))
-
-for f in dirlist:
-    if re.match("^\d+$", f) != None:
-        files.append(f)
-
-print "Preparing to examin files", files
-
-zests = []
-
-#for filename in files:
-filename = files[0]
-path        = PATH + filename
-sz          = os.path.getsize(path)
-pos         = 0
-f           = open(path, "rb")
-while pos < sz:
-    print "====PARSING NEW ZEST (Off: %d)====" % pos
-    z       = Zest(f)
-    pos     = pos + z.size
-    print z
-f.close()

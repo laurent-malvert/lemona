@@ -143,7 +143,8 @@ bool			lemona_relay_is_ours(const struct dentry *dentry)
 
 int			lemona_relay_log(const struct lemona_zest *zest)
 {
-  relay_write(juice->rchan, zest, zest->size);
+  /* Zest are aligned on sizeof(int) */
+  relay_write(juice->rchan, zest, zest->size + (zest->size % sizeof(int)));
   return (0);
 }
 
