@@ -1,6 +1,6 @@
 /*
 ** This file is part of Lemona.
-** Copyright (C) 2008 Kenfe-Mickaël Laventure
+** Copyright (C) 2008 Kenfe-Mickaël Laventure, Laurent Malvert
 **
 ** The contents of this file are subject to the terms of either the
 ** GNU General Public License Version 2 ("GPL") or the MIT License
@@ -77,6 +77,15 @@ void inline lemona_get_fn(lemonalogfn *_lemona_log,
 #   define __lemona_log(sysnr, in, argnr, extnr, ...)	lemona_log(sysnr, in, argnr, extnr, ## __VA_ARGS__)
 
 #  endif /* CONFIG_LEMONA_MODULE */
+
+# else /* CONFIG_LEMONA || CONFIG_LEMONA_MODULE */
+
+#  define lemona_block_start
+#  define lemona_block_end
+
+#  define lemona_log_in(sysnr, argnr, extnr, ...)
+#  define lemona_log_out(sysnr, argnr, extnr, ...)
+
 # endif /* CONFIG_LEMONA || CONFIG_LEMONA_MODULE */
 
 #endif /* _LEMONA_PATCH_H_ */

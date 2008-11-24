@@ -43,7 +43,8 @@ static void			lemona_cleanup(void)
 
 static int __init		lemona_init(void)
 {
-  long				err = 0;
+  long				err		= 0;
+  int				backends	= 0;
   extern atomic_t		lemona_activated;
 
   lemona_printk("Initialization for kernel tree " UTS_RELEASE "...\n");
@@ -54,10 +55,13 @@ static int __init		lemona_init(void)
       goto err;
     }
   err = lemona_relay_init();
-  if (err)
-    goto err;
+  if (err == 0)
+    ++backends;
   err = lemona_net_init();
-  if (err < 0)
+  if (err == 0)
+    ++backends;
+
+  if (backends == 0)
     goto err;
   lemona_printk("Done.\n");
   atomic_set(&lemona_activated, 1);

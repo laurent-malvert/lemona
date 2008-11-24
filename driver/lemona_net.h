@@ -43,6 +43,7 @@
 
 struct lemona_net {
   struct mutex		lock;
+/*   spinlock_t		lock; */
   unsigned long		timeout;
 
   struct sockaddr_in	sin;
@@ -57,7 +58,7 @@ void	lemona_net_cleanup(void);
 
 struct lemona_net { };
 
-# define lemona_net_init()	0
+# define lemona_net_init()	-1
 # define lemona_net_log(x)
 # define lemona_net_cleanup()
 

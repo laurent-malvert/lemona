@@ -21,39 +21,39 @@ struct lemona_zest;
  * from blades/generics.c
  */
 int		lemona_blade_integer(struct lemona_zest *zest,
-							 int isExt, int idx, int off,
-							 void *fruit1, void *fruit2);
+				     int isExt, int idx, int off,
+				     void *fruit1, void *fruit2);
 
 int		lemona_blade_integer64(struct lemona_zest *zest,
-							   int isExt, int idx, int off,
-							   void *fruit1, void *fruit2);
+				       int isExt, int idx, int off,
+				       void *fruit1, void *fruit2);
 
 int		lemona_blade_long(struct lemona_zest *zest,
-						  int isExt, int idx, int off,
-						  void *fruit1, void *fruit2);
+				  int isExt, int idx, int off,
+				  void *fruit1, void *fruit2);
 
 int		lemona_blade_long_long(struct lemona_zest *zest,
-							   int isExt, int idx, int off,
-							   void *fruit1, void *fruit2);
+				       int isExt, int idx, int off,
+				       void *fruit1, void *fruit2);
 
 /* this is a dual blade */
 int		lemona_blade_output_buffer(struct lemona_zest *zest,
-								   int isExt, int idx, int off,
-								   void *fruit1, void* fruit2);
+					   int isExt, int idx, int off,
+					   void *fruit1, void* fruit2);
 
 /* this is a dual blade */
 int		lemona_blade_output_buffer64(struct lemona_zest *zest,
-									 int isExt, int idx, int off,
-									 void *fruit1, void* fruit2);
+					     int isExt, int idx, int off,
+					     void *fruit1, void* fruit2);
 
 /*
  * from blades/string.c
  */
 int		lemona_blade_string_null(struct lemona_zest *zest,
-								 int isExt, int idx, int off,
-								 void __user *str, void *unused);
+					 int isExt, int idx, int off,
+					 void __user *str, void *unused);
 int		lemona_blade_string_fd(struct lemona_zest *zest,
-							   int isExt, int idx, int off,
-							   void __user *str, void *unused);
+				       int isExt, int idx, int off,
+				       void __user *str, void *unused);
 
 #endif

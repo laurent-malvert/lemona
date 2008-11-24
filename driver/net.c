@@ -18,6 +18,10 @@
 #include <linux/module.h> /* module_param */
 
 #include <linux/in.h> /* INADDR_LOOPBACK */
+#include <linux/net.h> /* struct socket */
+#include <net/sock.h> /* struct sock */
+
+#include <linux/spinlock.h>
 
 #include "lemona.h"
 
@@ -98,6 +102,7 @@ static int		__lemona_net_init(void)
       lemona_printk("Unable to connect to server: %i\n", ret);
       goto out;
     }
+  sock->sk->sk_rcvtimeo	= 2 * HZ;
   lemona_printk("We are now connected to server %s:%d\n",
 		net_log_addr, net_log_port);
  out:
@@ -154,28 +159,40 @@ void			lemona_net_log(struct lemona_zest *zest)
 
   if (juice->net.sock)
     {
-      int			ret;
-      int			sent;
-      struct kvec		kvec = {
-	.iov_base		= zest,
+      int		ret;
+      struct kvec	kvec = {
+	.iov_base	= zest,
 	/* Zest are aligned on sizeof(int) */
-	.iov_len		= zest->size + (zest->size % sizeof(int))
+	.iov_len	= (zest->size / sizeof(int)
+			   + zest->size % sizeof(int)) * sizeof(int)
       };
-      struct msghdr		hdr = { 0 };
+      struct msghdr	hdr = {
+	.msg_flags	= /* MSG_DONTWAIT | */ MSG_NOSIGNAL
+      };
 
-      hdr.msg_flags = MSG_NOSIGNAL;
-      for (sent = 0; sent != kvec.iov_len; sent += ret)
+      /*
+       * TODO: if the interface used doesn't have an IP
+       * and the link is broken the whole system will freeze.
+       * I have no workaround so far for that. I don't even understand
+       * why the kernel let us connect in the first place...
+       */
+      while (kvec.iov_len > 0)
 	{
 	  ret = kernel_sendmsg(juice->net.sock, &hdr, &kvec, 1, kvec.iov_len);
-	  if (ret < 0)
+	  if (ret <= 0)
 	    {
-	      lemona_printk("kernel_sendmsg: unable to send message: %i\n",
-			    ret);
-	      lemona_net_cleanup();
+	      if (ret == -EAGAIN)
+		  continue;
+	      __lemona_net_cleanup();
+	      if (ret != 0)
+		lemona_printk("kernel_sendmsg: unable to send message: %i\n",
+			      ret);
 	      /* this is the time after which we will be able to try again */
 	      juice->net.timeout	= jiffies + (NET_LOG_RETRY * HZ);
 	      break;
 	    }
+	  kvec.iov_base	= (char *)zest + ret;
+	  kvec.iov_len	= kvec.iov_len - ret;
 	}
     }
   mutex_unlock(&(juice->net.lock));

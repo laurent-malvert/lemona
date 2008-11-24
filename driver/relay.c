@@ -141,11 +141,12 @@ bool			lemona_relay_is_ours(const struct dentry *dentry)
   return (false);
 }
 
-int			lemona_relay_log(const struct lemona_zest *zest)
+void			lemona_relay_log(const struct lemona_zest *zest)
 {
   /* Zest are aligned on sizeof(int) */
-  relay_write(juice->rchan, zest, zest->size + (zest->size % sizeof(int)));
-  return (0);
+  relay_write(juice->rchan, zest,
+	      (zest->size / sizeof(int)
+	       + zest->size % sizeof(int)) * sizeof(int));
 }
 
 void			lemona_relay_cleanup(void)

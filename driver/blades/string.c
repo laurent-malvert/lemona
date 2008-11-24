@@ -90,7 +90,7 @@ int		lemona_blade_string_fd(struct lemona_zest *zest,
 
   dentry = file->f_dentry;
 
-  /* shall we compute the size or fill the zest ? */
+  /* TODO: shall we compute the size or fill the zest ? */
   if (zest == NULL)
     {
       while (dentry != dentry->d_parent)

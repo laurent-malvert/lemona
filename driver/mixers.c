@@ -1,6 +1,6 @@
 /*
 ** This file is part of Lemona.
-** Copyright (C) 2008 Kenfe-Mickaël Laventure
+** Copyright (C) 2008 Kenfe-Mickaël Laventure, Laurent Malvert
 **
 ** The contents of this file are subject to the terms of either the
 ** GNU General Public License Version 2 ("GPL") or the MIT License

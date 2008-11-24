@@ -1,6 +1,6 @@
 /*
 ** This file is part of Lemona.
-** Copyright (C) 2008 Kenfe-Mickaël Laventure
+** Copyright (C) 2008 Kenfe-Mickaël Laventure, Laurent Malvert
 **
 ** The contents of this file are subject to the terms of either the
 ** GNU General Public License Version 2 ("GPL") or the MIT License
@@ -26,8 +26,8 @@
  */
 struct	lemona_zest {
   /*
-    need always to be the first member. This facilitate parsing when a
-    zest can find itself cut in two
+    need always to be the first member. This facilitate parsing since a
+    zest can find itself cut across two log files
    */
   int			size;  	/* size taken by this zest and args sz/value */
 
@@ -136,7 +136,7 @@ typedef int	(*lemonalogfn)(int sysnr, int in, int argnr, int extnr, ...);
  * Prototypes
  */
 extern int		lemona_log(int sysnr, int in,
-						   int argnr, int extnr, ...);
+				   int argnr, int extnr, ...);
 
 # endif /* __KERNEL __ */
 

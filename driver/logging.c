@@ -20,8 +20,8 @@
 
 #include "lemona.h"
 
-extern const struct lemona_mixer		lemona_mixers[];
-extern const int						lemona_mixers_size;
+extern const struct lemona_mixer	lemona_mixers[];
+extern const int			lemona_mixers_size;
 
 #if defined (CONFIG_LEMONA_MODULE)
 atomic_t				lemona_clients	= ATOMIC_INIT(0);
@@ -48,6 +48,7 @@ static int	lemona_zest_get_size(const struct lemona_mixer *mixer,
 				     int in, va_list ap)
 {
   int					i	= 0;
+  int					j	= 0;
   int					tmp	= 0;
   int					size	= 0;
   int					bladesnr;
@@ -68,7 +69,7 @@ static int	lemona_zest_get_size(const struct lemona_mixer *mixer,
       bladesnr	= mixer->out.argnr + mixer->out.extnr;
     }
   /* one blade for each arg then for each ext */
-  for (i = 0; i < bladesnr; i += handlers[i].dual ? 2 : 1)
+  for (i = 0, j = 0; j < bladesnr; j += handlers[i].dual ? 2 : 1, ++i)
     {
       if (handlers[i].blade == NULL)
 	{
@@ -120,6 +121,7 @@ static int	lemona_zest_fill(const struct lemona_mixer *mixer,
 				 va_list ap)
 {
   int					i;
+  int					j;
   int					off		= 0;
   int					ret		= 0;
   const struct __lemona_mixer_handler	*handlers;
@@ -168,7 +170,7 @@ static int	lemona_zest_fill(const struct lemona_mixer *mixer,
    * Lets put our args into our zest
    */
   off = (int)((char *)z->args - (char *)z);
-  for (i = 0; i < z->argnr; i += handlers[i].dual ? 2 : 1)
+  for (i = 0, j = 0; j < z->argnr; j += handlers[i].dual ? 2 : 1, ++i)
     {
       arg1 = va_arg(ap, void*);
       if (handlers[i].dual == true)
@@ -193,16 +195,17 @@ static int	lemona_zest_fill(const struct lemona_mixer *mixer,
   z->extsz	= (int *)((char *)z + off); /* just after the last arg value */
   z->exts	= z->extsz + z->extnr; /* located right after z->extsz */
   off		= (int)((char *)z->exts - (char *)z);
-  for (i = 0; i < z->extnr; i += handlers[i].dual ? 2 : 1)
+  /* don't reinit i, the idx is correct and take dual blades in account */
+  for (j = 0; j < z->extnr; j += handlers[i].dual ? 2 : 1, ++i)
     {
       arg1 = va_arg(ap, void*);
-      if (handlers[z->argnr + i].dual == true)
+      if (handlers[i].dual == true)
 	{
 	  arg2	= va_arg(ap, void*);
-	  ret	= handlers[z->argnr + i].blade(z, true, i, off, arg1, arg2);
+	  ret	= handlers[i].blade(z, true, i, off, arg1, arg2);
 	}
       else
-	ret	= handlers[z->argnr + i].blade(z, true, i, off, arg1, NULL);
+	ret	= handlers[i].blade(z, true, i, off, arg1, NULL);
       if (ret < 0)
 	{
 	  lemona_printk("exts (syscal %i) in: %i blade %i returned %i\n",
@@ -253,8 +256,11 @@ static struct lemona_zest *lemona_zest_create(const struct lemona_mixer *mixer,
   zsz = lemona_zest_get_size(mixer, in, ap);
   if (zsz > 0)
     {
+      int	alignedsz;
+
       /* aligned the allocation */
-      z = kzalloc(zsz + (zsz % sizeof(int)), GFP_KERNEL);
+      alignedsz	= (zsz / sizeof(int) + zsz % sizeof(int)) * sizeof(int);
+      z		= kzalloc(alignedsz, GFP_KERNEL);
       if (z != NULL)
 	z->size		= zsz;
       else
