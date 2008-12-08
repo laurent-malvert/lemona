@@ -81,7 +81,7 @@ void		lemona_relay_cleanup(void);
 void		lemona_relay_log(const struct lemona_zest *);
 
 typedef bool	(*lemonarelayisoursfn)(const struct dentry *dentry);
-bool		lemona_relay_is_ours(const struct dentry *dentry);
+bool		__lemona_relay_is_ours(const struct dentry *dentry);
 
 # else /*  CONFIG_LEMONA_RELAY */
 

@@ -1,52 +1,15 @@
-diff -uNr linux.vanilla/Makefile linux.lemona/Makefile
---- linux.vanilla/Makefile	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/Makefile	2008-11-05 20:12:50.000000000 +1100
-@@ -454,6 +454,7 @@
- net-y		:= net/
- libs-y		:= lib/
- core-y		:= usr/
-+lemona-y	:= lemona/
- endif # KBUILD_EXTMOD
- 
- ifeq ($(dot-config),1)
-@@ -611,7 +612,7 @@
- 
- vmlinux-dirs	:= $(patsubst %/,%,$(filter %/, $(init-y) $(init-m) \
- 		     $(core-y) $(core-m) $(drivers-y) $(drivers-m) \
--		     $(net-y) $(net-m) $(libs-y) $(libs-m)))
-+		     $(net-y) $(net-m) $(libs-y) $(libs-m) $(lemona-y)))
- 
- vmlinux-alldirs	:= $(sort $(vmlinux-dirs) $(patsubst %/,%,$(filter %/, \
- 		     $(init-n) $(init-) \
-@@ -625,6 +626,7 @@
- libs-y1		:= $(patsubst %/, %/lib.a, $(libs-y))
- libs-y2		:= $(patsubst %/, %/built-in.o, $(libs-y))
- libs-y		:= $(libs-y1) $(libs-y2)
-+lemona-y	:=  $(patsubst %/, %/built-in.o, $(lemona-y))
- 
- # Build vmlinux
- # ---------------------------------------------------------------------------
-@@ -654,7 +656,7 @@
- # System.map is generated to document addresses of all kernel symbols
- 
- vmlinux-init := $(head-y) $(init-y)
--vmlinux-main := $(core-y) $(libs-y) $(drivers-y) $(net-y)
-+vmlinux-main := $(core-y) $(libs-y) $(drivers-y) $(net-y) $(lemona-y)
- vmlinux-all  := $(vmlinux-init) $(vmlinux-main)
- vmlinux-lds  := arch/$(SRCARCH)/kernel/vmlinux.lds
- export KBUILD_VMLINUX_OBJS := $(vmlinux-all)
-diff -uNr linux.vanilla/arch/x86/Kconfig linux.lemona/arch/x86/Kconfig
---- linux.vanilla/arch/x86/Kconfig	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/arch/x86/Kconfig	2008-11-05 20:12:50.000000000 +1100
+diff -uNr linux.vanilla/arch/x86/Kconfig linux.patch/arch/x86/Kconfig
+--- linux.vanilla/arch/x86/Kconfig	2008-09-27 17:25:59.000000000 +1000
++++ linux.patch/arch/x86/Kconfig	2008-12-08 13:32:40.000000000 +1100
 @@ -1729,3 +1729,5 @@
  source "arch/x86/kvm/Kconfig"
  
  source "lib/Kconfig"
 +
 +source "lemona/Kconfig"
-diff -uNr linux.vanilla/arch/x86/mm/fault.c linux.lemona/arch/x86/mm/fault.c
---- linux.vanilla/arch/x86/mm/fault.c	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/arch/x86/mm/fault.c	2008-11-05 20:12:50.000000000 +1100
+diff -uNr linux.vanilla/arch/x86/mm/fault.c linux.patch/arch/x86/mm/fault.c
+--- linux.vanilla/arch/x86/mm/fault.c	2008-09-27 17:25:59.000000000 +1000
++++ linux.patch/arch/x86/mm/fault.c	2008-12-08 13:32:51.000000000 +1100
 @@ -723,6 +723,8 @@
  good_area:
  	si_code = SEGV_ACCERR;
@@ -64,20 +27,9 @@ diff -uNr linux.vanilla/arch/x86/mm/fault.c linux.lemona/arch/x86/mm/fault.c
  	return;
  
  /*
-diff -uNr linux.vanilla/fs/file_table.c linux.lemona/fs/file_table.c
---- linux.vanilla/fs/file_table.c	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/fs/file_table.c	2008-11-05 20:12:50.000000000 +1100
-@@ -337,6 +337,7 @@
- 
- 	return file;
- }
-+EXPORT_SYMBOL(fget_light);
- 
- 
- void put_filp(struct file *file)
-diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
---- linux.vanilla/fs/namei.c	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/fs/namei.c	2008-11-07 19:44:56.000000000 +1100
+diff -uNr linux.vanilla/fs/namei.c linux.patch/fs/namei.c
+--- linux.vanilla/fs/namei.c	2008-09-27 17:26:10.000000000 +1000
++++ linux.patch/fs/namei.c	2008-12-08 13:30:26.000000000 +1100
 @@ -34,6 +34,9 @@
  #include <asm/namei.h>
  #include <asm/uaccess.h>
@@ -112,7 +64,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  	error = do_path_lookup(dfd, tmp, LOOKUP_PARENT, &nd);
  	if (error)
  		goto out;
-@@ -2133,13 +2144,25 @@
+@@ -2133,7 +2144,10 @@
  	path_put(&nd.path);
  out:
  	putname(tmp);
@@ -124,23 +76,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  	return error;
  }
  
- asmlinkage long sys_mknod(const char __user *filename, int mode, unsigned dev)
- {
--	return sys_mknodat(AT_FDCWD, filename, mode, dev);
-+	long	retval;
-+
-+        lemona_block_start {
-+		lemona_log_in(__NR_mknod, 3, 0, filename, &mode, &dev);
-+        } lemona_block_end;
-+	retval = sys_mknodat(AT_FDCWD, filename, mode, dev);
-+        lemona_block_start {
-+		lemona_log_out(__NR_mknod, 1, 0, &retval);
-+        } lemona_block_end;
-+	return retval;
- }
- 
- int vfs_mkdir(struct inode *dir, struct dentry *dentry, int mode)
-@@ -2171,6 +2194,9 @@
+@@ -2171,6 +2185,9 @@
  	struct dentry *dentry;
  	struct nameidata nd;
  
@@ -150,7 +86,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  	tmp = getname(pathname);
  	error = PTR_ERR(tmp);
  	if (IS_ERR(tmp))
-@@ -2199,12 +2225,24 @@
+@@ -2199,12 +2216,15 @@
  out:
  	putname(tmp);
  out_err:
@@ -163,20 +99,11 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  asmlinkage long sys_mkdir(const char __user *pathname, int mode)
  {
 -	return sys_mkdirat(AT_FDCWD, pathname, mode);
-+        long	retval = 0;
-+
-+        lemona_block_start {
-+                lemona_log_in(__NR_mkdir, 2, 0, pathname, &mode);
-+        } lemona_block_end;
-+        retval = sys_mkdirat(AT_FDCWD, pathname, mode);
-+        lemona_block_start {
-+                lemona_log_out(__NR_mkdir, 1, 0, &retval);
-+        } lemona_block_end;
-+	return (retval);
++        return sys_mkdirat(AT_FDCWD, pathname, mode);
  }
  
  /*
-@@ -2316,7 +2354,16 @@
+@@ -2316,7 +2336,16 @@
  
  asmlinkage long sys_rmdir(const char __user *pathname)
  {
@@ -194,7 +121,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  }
  
  int vfs_unlink(struct inode *dir, struct dentry *dentry)
-@@ -2409,18 +2456,36 @@
+@@ -2409,13 +2438,22 @@
  
  asmlinkage long sys_unlinkat(int dfd, const char __user *pathname, int flag)
  {
@@ -218,22 +145,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  }
  
  asmlinkage long sys_unlink(const char __user *pathname)
- {
--	return do_unlinkat(AT_FDCWD, pathname);
-+	long retval	 = 0;
-+
-+	lemona_block_start {
-+	  lemona_log_in(__NR_unlink, 1, 0, pathname);
-+	} lemona_block_end;
-+	retval = do_unlinkat(AT_FDCWD, pathname);
-+	lemona_block_start {
-+	  lemona_log_out(__NR_unlink, 1, 0, &retval);
-+	} lemona_block_end;
-+	return retval;
- }
- 
- int vfs_symlink(struct inode *dir, struct dentry *dentry, const char *oldname, int mode)
-@@ -2453,14 +2518,19 @@
+@@ -2453,14 +2491,19 @@
  	struct dentry *dentry;
  	struct nameidata nd;
  
@@ -255,7 +167,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  	error = do_path_lookup(newdfd, to, LOOKUP_PARENT, &nd);
  	if (error)
  		goto out;
-@@ -2483,12 +2553,25 @@
+@@ -2483,12 +2526,25 @@
  	putname(to);
  out_putname:
  	putname(from);
@@ -282,7 +194,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  }
  
  int vfs_link(struct dentry *old_dentry, struct inode *dir, struct dentry *new_dentry)
-@@ -2547,12 +2630,21 @@
+@@ -2547,12 +2603,21 @@
  	int error;
  	char * to;
  
@@ -306,7 +218,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  
  	error = __user_walk_fd(olddfd, oldname,
  			       flags & AT_SYMLINK_FOLLOW ? LOOKUP_FOLLOW : 0,
-@@ -2584,13 +2676,25 @@
+@@ -2584,7 +2649,10 @@
  	path_put(&old_nd.path);
  exit:
  	putname(to);
@@ -318,28 +230,12 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  	return error;
  }
  
- asmlinkage long sys_link(const char __user *oldname, const char __user *newname)
- {
--	return sys_linkat(AT_FDCWD, oldname, AT_FDCWD, newname, 0);
-+	long retval	 = 0;
-+
-+	lemona_block_start {
-+	  lemona_log_in(__NR_link, 2, 0, oldname, newname);
-+	} lemona_block_end;
-+	retval = sys_linkat(AT_FDCWD, oldname, AT_FDCWD, newname, 0);
-+	lemona_block_start {
-+	  lemona_log_out(__NR_link, 1, 0, &retval);
-+	} lemona_block_end;
-+	return retval;
- }
- 
- /*
-@@ -2827,9 +2931,14 @@
+@@ -2827,9 +2895,14 @@
  	char * from;
  	char * to;
  
 +	lemona_block_start {
-+		lemona_log_in(__NR_renameat, 4, 0, olddfd, oldname, newdfd, newname);
++		lemona_log_in(__NR_renameat, 4, 0, &olddfd, oldname, &newdfd, newname);
 +	} lemona_block_end;
  	from = getname(oldname);
 -	if(IS_ERR(from))
@@ -351,7 +247,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  	to = getname(newname);
  	error = PTR_ERR(to);
  	if (!IS_ERR(to)) {
-@@ -2837,12 +2946,24 @@
+@@ -2837,6 +2910,10 @@
  		putname(to);
  	}
  	putname(from);
@@ -362,24 +258,9 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  	return error;
  }
  
- asmlinkage long sys_rename(const char __user *oldname, const char __user *newname)
- {
--	return sys_renameat(AT_FDCWD, oldname, AT_FDCWD, newname);
-+	long	retval;
-+
-+	lemona_block_start {
-+		lemona_log_in(__NR_renameat, 2, 0, oldname, newname);
-+	} lemona_block_end;
-+	retval = sys_renameat(AT_FDCWD, oldname, AT_FDCWD, newname);
-+	lemona_block_start {
-+		lemona_log_out(__NR_renameat, 1, 0, &retval);
-+	} lemona_block_end;
- }
- 
- int vfs_readlink(struct dentry *dentry, char __user *buffer, int buflen, const char *link)
-diff -uNr linux.vanilla/fs/open.c linux.lemona/fs/open.c
---- linux.vanilla/fs/open.c	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/fs/open.c	2008-11-05 20:12:50.000000000 +1100
+diff -uNr linux.vanilla/fs/open.c linux.patch/fs/open.c
+--- linux.vanilla/fs/open.c	2008-09-27 17:26:11.000000000 +1000
++++ linux.patch/fs/open.c	2008-12-08 13:30:20.000000000 +1100
 @@ -30,6 +30,8 @@
  #include <linux/audit.h>
  #include <linux/falloc.h>
@@ -389,23 +270,13 @@ diff -uNr linux.vanilla/fs/open.c linux.lemona/fs/open.c
  int vfs_statfs(struct dentry *dentry, struct kstatfs *buf)
  {
  	int retval = -ENODEV;
-@@ -1110,7 +1112,44 @@
+@@ -1110,7 +1112,24 @@
  	if (force_o_largefile())
  		flags |= O_LARGEFILE;
  
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_open, true, 3, 0, filename, &flags, &mode);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+		if (_lemona_log == NULL)
-+		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+		_lemona_log(__NR_open, true, 3, 0, filename, &flags, &mode);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_in(__NR_open, 3, 0, filename, &flags, &mode);
++	} lemona_block_end;
 +
  	ret = do_sys_open(AT_FDCWD, filename, flags, mode);
 +
@@ -414,87 +285,48 @@ diff -uNr linux.vanilla/fs/open.c linux.lemona/fs/open.c
 +	 *
 +	 * We pass ret twice:
 +	 *  - The first time to get the return value.
-+	 *  - The second time to get the resoled filename (if fd >= 0)
++	 *  - The second time to get the resolved filename (if fd >= 0)
 +	 *
 +	 */
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_open, false, 1, 1, &ret, &ret);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+		if (_lemona_log == NULL)
-+		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+		_lemona_log(__NR_open, false, 1, 1, &ret, &ret);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_out(__NR_open, 1, 1, &ret, &ret);
++	} lemona_block_end;
 +
  	/* avoid REGPARM breakage on x86: */
  	asmlinkage_protect(3, ret, filename, flags, mode);
  	return ret;
-@@ -1124,7 +1163,36 @@
+@@ -1124,7 +1143,17 @@
  	if (force_o_largefile())
  		flags |= O_LARGEFILE;
  
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_openat, true, 4, 0, &dfd, filename, &flags, &mode);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+		if (_lemona_log == NULL)
-+		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+		_lemona_log(__NR_openat, true, 4, 0, &dfd, filename, &flags, &mode);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_in(__NR_openat, 4, 0, &dfd, filename, &flags, &mode);
++	} lemona_block_end;
++
 +
  	ret = do_sys_open(dfd, filename, flags, mode);
 +
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_openat, false, 1, 1, &ret, &ret);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+		if (_lemona_log == NULL)
-+		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+		_lemona_log(__NR_openat, false, 1, 1, &ret, &ret);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_out(__NR_openat, 1, 1, &ret, &ret);
++	} lemona_block_end;
 +
  	/* avoid REGPARM breakage on x86: */
  	asmlinkage_protect(4, ret, dfd, filename, flags, mode);
  	return ret;
-@@ -1177,7 +1245,21 @@
+@@ -1177,7 +1206,11 @@
  	struct file * filp;
  	struct files_struct *files = current->files;
  	struct fdtable *fdt;
 -	int retval;
 +	int retval = -EBADF;
 +
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_close, true, 1, 0, &fd);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+		if (_lemona_log == NULL)
-+		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+		_lemona_log(__NR_close, true, 1, 0, &fd);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_in(__NR_close, 1, 0, &fd);
++	} lemona_block_end;
  
  	spin_lock(&files->file_lock);
  	fdt = files_fdtable(files);
-@@ -1199,11 +1281,25 @@
+@@ -1199,11 +1232,16 @@
  		     retval == -ERESTART_RESTARTBLOCK))
  		retval = -EINTR;
  
@@ -505,26 +337,17 @@ diff -uNr linux.vanilla/fs/open.c linux.lemona/fs/open.c
  	spin_unlock(&files->file_lock);
 -	return -EBADF;
 +out:
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_close, false, 1, 0, &retval);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+		if (_lemona_log == NULL)
-+		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+		_lemona_log(__NR_close, false, 1, 0, &retval);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_out(__NR_close, 1, 0, &retval);
++	} lemona_block_end;
++
 +	return retval;
  }
  
  EXPORT_SYMBOL(sys_close);
-diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
---- linux.vanilla/fs/read_write.c	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/fs/read_write.c	2008-11-05 21:34:56.000000000 +1100
+diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
+--- linux.vanilla/fs/read_write.c	2008-09-27 17:26:11.000000000 +1000
++++ linux.patch/fs/read_write.c	2008-12-08 13:30:11.000000000 +1100
 @@ -21,6 +21,9 @@
  #include <asm/uaccess.h>
  #include <asm/unistd.h>
@@ -535,7 +358,7 @@ diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
  const struct file_operations generic_ro_fops = {
  	.llseek		= generic_file_llseek,
  	.read		= do_sync_read,
-@@ -133,9 +136,27 @@
+@@ -133,9 +136,17 @@
  	off_t retval;
  	struct file * file;
  	int fput_needed;
@@ -545,45 +368,26 @@ diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
  
  	retval = -EBADF;
  	file = fget_light(fd, &fput_needed);
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_lseek, true, 3, 0, &fd, &offset, &origin);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+	    if (_lemona_log == NULL)
-+		  lemona_get_fn(&_lemona_log, &_lemona_relay_is_ours);
-+	    if (file == NULL
-+			|| (lemona_file = _lemona_relay_is_ours(file->f_dentry)))
-+		  _lemona_log(__NR_lseek, true, 3, 0, &fd, &offset, &origin);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  if (file == NULL
++	      || !(lemona_file = lemona_relay_is_ours(file->f_dentry)))
++	    lemona_log_in(__NR_lseek, 3, 0, &fd, &offset, &origin);
++	} lemona_block_end;
  	if (!file)
  		goto bad;
  
-@@ -148,6 +169,19 @@
+@@ -148,6 +159,10 @@
  	}
  	fput_light(file, fput_needed);
  bad:
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  lemona_log(__NR_lseek, false, 1, 0, &retval);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_lseek, false, 1, 0, &retval);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  if (lemona_file == false)
++	    lemona_log_out(__NR_lseek, false, 1, 0, &retval);
++	} lemona_block_end;
  	return retval;
  }
  
-@@ -160,9 +194,29 @@
+@@ -160,9 +175,20 @@
  	struct file * file;
  	loff_t offset;
  	int fput_needed;
@@ -593,48 +397,29 @@ diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
  
  	retval = -EBADF;
  	file = fget_light(fd, &fput_needed);
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR__llseek, true, 4, 0,
-+				 &fd, &offset_high, &offset_low, &origin);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+	    if (_lemona_log == NULL)
-+		  lemona_get_fn(&_lemona_log, &_lemona_relay_is_ours);
-+	    if (file == NULL
-+			|| (lemona_file = _lemona_relay_is_ours(file->f_dentry)))
-+		  _lemona_log(__NR__llseek, true, 4, 0,
-+					  &fd, &offset_high, &offset_low, &origin);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++
++	lemona_block_start {
++	  if (file == NULL
++	      || !(lemona_file = lemona_relay_is_ours(file->f_dentry)))
++	    lemona_log_in(__NR__llseek, 4, 0, &fd,
++			  &offset_high, &offset_low, &origin);
++	} lemona_block_end;
++
  	if (!file)
  		goto bad;
  
-@@ -182,6 +236,20 @@
+@@ -182,6 +208,10 @@
  out_putf:
  	fput_light(file, fput_needed);
  bad:
-+	offset = retval == 0 ? offset : retval; /* for LEMONA */
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  lemona_log(__NR__llseek, false, 1, 0, &offset);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR__llseek, false, 1, 0, &offset);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  offset = retval == 0 ? offset : retval; /* for LEMONA */
++	  lemona_log_out(__NR__llseek, 1, 0, &offset);
++	} lemona_block_end;
  	return retval;
  }
  #endif
-@@ -355,15 +423,49 @@
+@@ -355,15 +385,30 @@
  	struct file *file;
  	ssize_t ret = -EBADF;
  	int fput_needed;
@@ -643,23 +428,13 @@ diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
 +#endif
  
  	file = fget_light(fd, &fput_needed);
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0
-+	    && (file == NULL
-+			|| (lemona_file = lemona_relay_is_ours(file->f_dentry))))
-+	  lemona_log(__NR_read, true, 2, 0, &fd, &count);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      lemona_get_fn(&_lemona_log, &_lemona_relay_is_ours);
-+	    if (file == NULL
-+			|| (lemona_file = _lemona_relay_is_ours(file->f_dentry)))
-+		  _lemona_log(__NR_read, true, 2, 0, &fd, &count);
-+	  }
-+	else
-+	  _lemona_log			= NULL;
-+#endif
++
++	lemona_block_start {
++	  if (file == NULL
++	      || !(lemona_file = lemona_relay_is_ours(file->f_dentry)))
++	    lemona_log_in(__NR_read, 2, 0, &fd, &count);
++	} lemona_block_end;
++
  	if (file) {
  		loff_t pos = file_pos_read(file);
  		ret = vfs_read(file, buf, count, &pos);
@@ -668,64 +443,35 @@ diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
 +
  	}
  
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  lemona_log(__NR_read, false, 2, 0, buf, &ret);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_read, false, 2, 0, buf, &ret);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  if (lemona_file == false)
++	    lemona_log_out(__NR_read, false, 2, 0, buf, &ret);
++	} lemona_block_end;
  	return ret;
  }
  
-@@ -373,6 +475,20 @@
+@@ -373,6 +418,10 @@
  	ssize_t ret = -EBADF;
  	int fput_needed;
  
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_write, true, 3, 0, &fd, buf, &count);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+		_lemona_log(__NR_write, true, 3, 0, &fd, buf, &count);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_in(__NR_write, 3, 0, &fd, buf, &count);
++	} lemona_block_end;
 +
  	file = fget_light(fd, &fput_needed);
  	if (file) {
  		loff_t pos = file_pos_read(file);
-@@ -381,6 +497,19 @@
+@@ -381,6 +430,9 @@
  		fput_light(file, fput_needed);
  	}
  
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_write, false, 1, 0, &ret);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_write, false, 1, 0, &ret);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_out(__NR_write, 1, 0, &ret);
++	} lemona_block_end;
  	return ret;
  }
  
-@@ -390,18 +519,52 @@
+@@ -390,18 +442,33 @@
  	struct file *file;
  	ssize_t ret = -EBADF;
  	int fput_needed;
@@ -735,32 +481,21 @@ diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
  
 -	if (pos < 0)
 -		return -EINVAL;
--
++	if (pos >= 0) {
++		file = fget_light(fd, &fput_needed);
+ 
 -	file = fget_light(fd, &fput_needed);
 -	if (file) {
 -		ret = -ESPIPE;
 -		if (file->f_mode & FMODE_PREAD)
 -			ret = vfs_read(file, buf, count, &pos);
 -		fput_light(file, fput_needed);
-+	if (pos >= 0) {
-+		file = fget_light(fd, &fput_needed);
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0
-+	    && (file == NULL
-+		|| (lemona_file = lemona_relay_is_ours(file->f_dentry))))
-+	  lemona_log(__NR_pread64, true, 3, 0, &fd, &count, &pos);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      lemona_get_fn(&_lemona_log, &_lemona_relay_is_ours);
-+	    if (file == NULL
-+			|| (lemona_file = _lemona_relay_is_ours(file->f_dentry)))
-+	      _lemona_log(__NR_pread64, true, 3, 0, &fd, &count, &pos);
-+	  }
-+	else
-+	  _lemona_log			= NULL;
-+#endif
++		lemona_block_start {
++		  if (file == NULL
++		      || !(lemona_file = lemona_relay_is_ours(file->f_dentry)))
++		    lemona_log_in(__NR_pread64, 3, 0, &fd, &count, &pos);
++		} lemona_block_end;
++
 +		if (file) {
 +			ret = -ESPIPE;
 +			if (file->f_mode & FMODE_PREAD)
@@ -771,48 +506,30 @@ diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
 +	else
 +		ret = -EINVAL;
  
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  lemona_log(__NR_pread64, false, 2, 0, buf, &ret);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_pread64, false, 2, 0, buf, &ret);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  if (lemona_file == false)
++	    lemona_log_out(__NR_pread64, false, 2, 0, buf, &ret);
++	} lemona_block_end;
  	return ret;
  }
  
-@@ -412,17 +575,45 @@
+@@ -412,17 +479,25 @@
  	ssize_t ret = -EBADF;
  	int fput_needed;
  
 -	if (pos < 0)
 -		return -EINVAL;
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_pwrite64, true, 4, 0, &fd, buf, &count, &pos);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_pwrite64, true, 4, 0, &fd, buf, &count, &pos);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
- 
+-
 -	file = fget_light(fd, &fput_needed);
 -	if (file) {
 -		ret = -ESPIPE;
 -		if (file->f_mode & FMODE_PWRITE)  
 -			ret = vfs_write(file, buf, count, &pos);
 -		fput_light(file, fput_needed);
++	lemona_block_start {
++	  lemona_log_in(__NR_pwrite64, 4, 0, &fd, buf, &count, &pos);
++	} lemona_block_end;
++
 +	if (pos >= 0) {
 +		file = fget_light(fd, &fput_needed);
 +		if (file) {
@@ -825,25 +542,15 @@ diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
 +	else
 +		ret = -EINVAL;
  
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_pwrite64, false, 1, 0, &ret);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_pwrite64, false, 1, 0, &ret);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_out(__NR_pwrite64, 1, 0, &ret);
++	} lemona_block_end;
  	return ret;
  }
  
-diff -uNr linux.vanilla/init/main.c linux.lemona/init/main.c
---- linux.vanilla/init/main.c	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/init/main.c	2008-11-05 20:12:50.000000000 +1100
+diff -uNr linux.vanilla/init/main.c linux.patch/init/main.c
+--- linux.vanilla/init/main.c	2008-09-27 17:26:15.000000000 +1000
++++ linux.patch/init/main.c	2008-12-08 13:33:03.000000000 +1100
 @@ -107,6 +107,11 @@
  enum system_states system_state;
  EXPORT_SYMBOL(system_state);
@@ -888,9 +595,9 @@ diff -uNr linux.vanilla/init/main.c linux.lemona/init/main.c
  	current->signal->flags |= SIGNAL_UNKILLABLE;
  
  	if (ramdisk_execute_command) {
-diff -uNr linux.vanilla/kernel/sched.c linux.lemona/kernel/sched.c
---- linux.vanilla/kernel/sched.c	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/kernel/sched.c	2008-11-05 20:12:50.000000000 +1100
+diff -uNr linux.vanilla/kernel/sched.c linux.patch/kernel/sched.c
+--- linux.vanilla/kernel/sched.c	2008-09-27 17:26:16.000000000 +1000
++++ linux.patch/kernel/sched.c	2008-12-08 13:33:16.000000000 +1100
 @@ -4188,6 +4188,8 @@
  	next = pick_next_task(rq, prev);
  
@@ -900,9 +607,46 @@ diff -uNr linux.vanilla/kernel/sched.c linux.lemona/kernel/sched.c
  		sched_info_switch(prev, next);
  
  		rq->nr_switches++;
-diff -uNr linux.vanilla/mm/mmap.c linux.lemona/mm/mmap.c
---- linux.vanilla/mm/mmap.c	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/mm/mmap.c	2008-11-05 20:12:50.000000000 +1100
+diff -uNr linux.vanilla/Makefile linux.patch/Makefile
+--- linux.vanilla/Makefile	2008-09-27 17:26:00.000000000 +1000
++++ linux.patch/Makefile	2008-12-08 13:30:53.000000000 +1100
+@@ -454,6 +454,7 @@
+ net-y		:= net/
+ libs-y		:= lib/
+ core-y		:= usr/
++lemona-y	:= lemona/
+ endif # KBUILD_EXTMOD
+ 
+ ifeq ($(dot-config),1)
+@@ -611,7 +612,7 @@
+ 
+ vmlinux-dirs	:= $(patsubst %/,%,$(filter %/, $(init-y) $(init-m) \
+ 		     $(core-y) $(core-m) $(drivers-y) $(drivers-m) \
+-		     $(net-y) $(net-m) $(libs-y) $(libs-m)))
++		     $(net-y) $(net-m) $(libs-y) $(libs-m) $(lemona-y)))
+ 
+ vmlinux-alldirs	:= $(sort $(vmlinux-dirs) $(patsubst %/,%,$(filter %/, \
+ 		     $(init-n) $(init-) \
+@@ -625,6 +626,7 @@
+ libs-y1		:= $(patsubst %/, %/lib.a, $(libs-y))
+ libs-y2		:= $(patsubst %/, %/built-in.o, $(libs-y))
+ libs-y		:= $(libs-y1) $(libs-y2)
++lemona-y	:=  $(patsubst %/, %/built-in.o, $(lemona-y))
+ 
+ # Build vmlinux
+ # ---------------------------------------------------------------------------
+@@ -654,7 +656,7 @@
+ # System.map is generated to document addresses of all kernel symbols
+ 
+ vmlinux-init := $(head-y) $(init-y)
+-vmlinux-main := $(core-y) $(libs-y) $(drivers-y) $(net-y)
++vmlinux-main := $(core-y) $(libs-y) $(drivers-y) $(net-y) $(lemona-y)
+ vmlinux-all  := $(vmlinux-init) $(vmlinux-main)
+ vmlinux-lds  := arch/$(SRCARCH)/kernel/vmlinux.lds
+ export KBUILD_VMLINUX_OBJS := $(vmlinux-all)
+diff -uNr linux.vanilla/mm/mmap.c linux.patch/mm/mmap.c
+--- linux.vanilla/mm/mmap.c	2008-09-27 17:26:16.000000000 +1000
++++ linux.patch/mm/mmap.c	2008-12-08 13:33:25.000000000 +1100
 @@ -1130,8 +1130,8 @@
  	 */
  	if (!file && !(vm_flags & VM_SHARED) &&

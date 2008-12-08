@@ -130,7 +130,7 @@ int __init		lemona_relay_init(void)
   return (err);
 }
 
-bool			lemona_relay_is_ours(const struct dentry *dentry)
+bool			__lemona_relay_is_ours(const struct dentry *dentry)
 {
   struct lemona_relay_file	*f;
 

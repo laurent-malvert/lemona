@@ -26,7 +26,7 @@
 /*
  * add this define to avoid testing for CONFIG_LEMONA && CONFIG_LEMONA_MODULE
  */
-# define LEMONA	1
+#  define LEMONA	1
 
 /*
  * Variable
@@ -52,7 +52,7 @@ static lemonalogfn		_lemona_log		= NULL;
       _lemona_log = NULL;			\
     }
 
-#define __lemona_log(sysnr, in, argnr, extnr, ...)	{		\
+#   define __lemona_log(sysnr, in, argnr, extnr, ...)	{		\
   if (_lemona_log == NULL)						\
     _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");	\
   _lemona_log(sysnr, in, argnr, extnr, ## __VA_ARGS__);		        \
@@ -61,18 +61,23 @@ static lemonalogfn		_lemona_log		= NULL;
 #   if defined(LEMONA_READ)
 static lemonarelayisoursfn	_lemona_relay_is_ours	= NULL;
 
-void inline lemona_get_fn(lemonalogfn *_lemona_log,
-			  lemonarelayisoursfn *_lemona_relay_is_ours)
+#    if defined(CONFIG_LEMONA_RELAY)
+inline bool	lemona_relay_is_ours(const struct dentry* d)
 {
-  *_lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-  *_lemona_relay_is_ours = (lemonarelayisoursfn)kallsyms_lookup_name("lemona_relay_is_ours");
+  if (_lemona_relay_is_ours == NULL)
+    _lemona_relay_is_ours = (lemonarelayisoursfn)kallsyms_lookup_name("lemona_relay_is_ours");
+  return (_lemona_relay_is_ours(d));
 }
+#    endif /* CONFIG_LEMONA_RELAY */
 #   endif /* LEMONA_READ */
-#  else /* CONFIG_LEMONA */
+#  else /* CONFIG_LEMONA_MODULE (i.e. CONFIG_LEMONA defined) */
 
-#  define lemona_block_end			\
+#   define lemona_block_end			\
     }
 
+#   if defined(CONFIG_LEMONA_RELAY)
+#    define lemona_relay_is_ours(d) __lemona_relay_is_ours(d)
+#   endif
 
 #   define __lemona_log(sysnr, in, argnr, extnr, ...)	lemona_log(sysnr, in, argnr, extnr, ## __VA_ARGS__)
 

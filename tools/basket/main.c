@@ -44,9 +44,9 @@ struct basket {
   int			fd;
 };
 
-#define MAX_BASKET	6
+#define MAX_BASKET	5
  /* must be a multiple of sysconf(_SC_PAGE_SIZE) */
-#define FILE_SZ		50 * 1024 * 1024
+#define FILE_SZ		20 * 1024 * 1024
 #define BUF_SZ		4096
 
 void	basket_destroy(struct basket* basket)

@@ -1,52 +1,15 @@
-diff -uNr linux.vanilla/Makefile linux.lemona/Makefile
---- linux.vanilla/Makefile	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/Makefile	2008-11-05 20:12:50.000000000 +1100
-@@ -454,6 +454,7 @@
- net-y		:= net/
- libs-y		:= lib/
- core-y		:= usr/
-+lemona-y	:= lemona/
- endif # KBUILD_EXTMOD
- 
- ifeq ($(dot-config),1)
-@@ -611,7 +612,7 @@
- 
- vmlinux-dirs	:= $(patsubst %/,%,$(filter %/, $(init-y) $(init-m) \
- 		     $(core-y) $(core-m) $(drivers-y) $(drivers-m) \
--		     $(net-y) $(net-m) $(libs-y) $(libs-m)))
-+		     $(net-y) $(net-m) $(libs-y) $(libs-m) $(lemona-y)))
- 
- vmlinux-alldirs	:= $(sort $(vmlinux-dirs) $(patsubst %/,%,$(filter %/, \
- 		     $(init-n) $(init-) \
-@@ -625,6 +626,7 @@
- libs-y1		:= $(patsubst %/, %/lib.a, $(libs-y))
- libs-y2		:= $(patsubst %/, %/built-in.o, $(libs-y))
- libs-y		:= $(libs-y1) $(libs-y2)
-+lemona-y	:=  $(patsubst %/, %/built-in.o, $(lemona-y))
- 
- # Build vmlinux
- # ---------------------------------------------------------------------------
-@@ -654,7 +656,7 @@
- # System.map is generated to document addresses of all kernel symbols
- 
- vmlinux-init := $(head-y) $(init-y)
--vmlinux-main := $(core-y) $(libs-y) $(drivers-y) $(net-y)
-+vmlinux-main := $(core-y) $(libs-y) $(drivers-y) $(net-y) $(lemona-y)
- vmlinux-all  := $(vmlinux-init) $(vmlinux-main)
- vmlinux-lds  := arch/$(SRCARCH)/kernel/vmlinux.lds
- export KBUILD_VMLINUX_OBJS := $(vmlinux-all)
-diff -uNr linux.vanilla/arch/x86/Kconfig linux.lemona/arch/x86/Kconfig
---- linux.vanilla/arch/x86/Kconfig	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/arch/x86/Kconfig	2008-11-05 20:12:50.000000000 +1100
+diff -uNr linux.vanilla/arch/x86/Kconfig linux.patch/arch/x86/Kconfig
+--- linux.vanilla/arch/x86/Kconfig	2008-09-27 17:25:59.000000000 +1000
++++ linux.patch/arch/x86/Kconfig	2008-12-08 13:32:40.000000000 +1100
 @@ -1729,3 +1729,5 @@
  source "arch/x86/kvm/Kconfig"
  
  source "lib/Kconfig"
 +
 +source "lemona/Kconfig"
-diff -uNr linux.vanilla/arch/x86/mm/fault.c linux.lemona/arch/x86/mm/fault.c
---- linux.vanilla/arch/x86/mm/fault.c	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/arch/x86/mm/fault.c	2008-11-05 20:12:50.000000000 +1100
+diff -uNr linux.vanilla/arch/x86/mm/fault.c linux.patch/arch/x86/mm/fault.c
+--- linux.vanilla/arch/x86/mm/fault.c	2008-09-27 17:25:59.000000000 +1000
++++ linux.patch/arch/x86/mm/fault.c	2008-12-08 13:32:51.000000000 +1100
 @@ -723,6 +723,8 @@
  good_area:
  	si_code = SEGV_ACCERR;
@@ -64,20 +27,9 @@ diff -uNr linux.vanilla/arch/x86/mm/fault.c linux.lemona/arch/x86/mm/fault.c
  	return;
  
  /*
-diff -uNr linux.vanilla/fs/file_table.c linux.lemona/fs/file_table.c
---- linux.vanilla/fs/file_table.c	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/fs/file_table.c	2008-11-05 20:12:50.000000000 +1100
-@@ -337,6 +337,7 @@
- 
- 	return file;
- }
-+EXPORT_SYMBOL(fget_light);
- 
- 
- void put_filp(struct file *file)
-diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
---- linux.vanilla/fs/namei.c	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/fs/namei.c	2008-11-07 19:44:56.000000000 +1100
+diff -uNr linux.vanilla/fs/namei.c linux.patch/fs/namei.c
+--- linux.vanilla/fs/namei.c	2008-09-27 17:26:10.000000000 +1000
++++ linux.patch/fs/namei.c	2008-12-08 13:30:26.000000000 +1100
 @@ -34,6 +34,9 @@
  #include <asm/namei.h>
  #include <asm/uaccess.h>
@@ -112,7 +64,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  	error = do_path_lookup(dfd, tmp, LOOKUP_PARENT, &nd);
  	if (error)
  		goto out;
-@@ -2133,13 +2144,25 @@
+@@ -2133,7 +2144,10 @@
  	path_put(&nd.path);
  out:
  	putname(tmp);
@@ -124,23 +76,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  	return error;
  }
  
- asmlinkage long sys_mknod(const char __user *filename, int mode, unsigned dev)
- {
--	return sys_mknodat(AT_FDCWD, filename, mode, dev);
-+	long	retval;
-+
-+        lemona_block_start {
-+		lemona_log_in(__NR_mknod, 3, 0, filename, &mode, &dev);
-+        } lemona_block_end;
-+	retval = sys_mknodat(AT_FDCWD, filename, mode, dev);
-+        lemona_block_start {
-+		lemona_log_out(__NR_mknod, 1, 0, &retval);
-+        } lemona_block_end;
-+	return retval;
- }
- 
- int vfs_mkdir(struct inode *dir, struct dentry *dentry, int mode)
-@@ -2171,6 +2194,9 @@
+@@ -2171,6 +2185,9 @@
  	struct dentry *dentry;
  	struct nameidata nd;
  
@@ -150,7 +86,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  	tmp = getname(pathname);
  	error = PTR_ERR(tmp);
  	if (IS_ERR(tmp))
-@@ -2199,12 +2225,24 @@
+@@ -2199,12 +2216,15 @@
  out:
  	putname(tmp);
  out_err:
@@ -163,20 +99,11 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  asmlinkage long sys_mkdir(const char __user *pathname, int mode)
  {
 -	return sys_mkdirat(AT_FDCWD, pathname, mode);
-+        long	retval = 0;
-+
-+        lemona_block_start {
-+                lemona_log_in(__NR_mkdir, 2, 0, pathname, &mode);
-+        } lemona_block_end;
-+        retval = sys_mkdirat(AT_FDCWD, pathname, mode);
-+        lemona_block_start {
-+                lemona_log_out(__NR_mkdir, 1, 0, &retval);
-+        } lemona_block_end;
-+	return (retval);
++        return sys_mkdirat(AT_FDCWD, pathname, mode);
  }
  
  /*
-@@ -2316,7 +2354,16 @@
+@@ -2316,7 +2336,16 @@
  
  asmlinkage long sys_rmdir(const char __user *pathname)
  {
@@ -194,7 +121,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  }
  
  int vfs_unlink(struct inode *dir, struct dentry *dentry)
-@@ -2409,18 +2456,36 @@
+@@ -2409,13 +2438,22 @@
  
  asmlinkage long sys_unlinkat(int dfd, const char __user *pathname, int flag)
  {
@@ -218,22 +145,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  }
  
  asmlinkage long sys_unlink(const char __user *pathname)
- {
--	return do_unlinkat(AT_FDCWD, pathname);
-+	long retval	 = 0;
-+
-+	lemona_block_start {
-+	  lemona_log_in(__NR_unlink, 1, 0, pathname);
-+	} lemona_block_end;
-+	retval = do_unlinkat(AT_FDCWD, pathname);
-+	lemona_block_start {
-+	  lemona_log_out(__NR_unlink, 1, 0, &retval);
-+	} lemona_block_end;
-+	return retval;
- }
- 
- int vfs_symlink(struct inode *dir, struct dentry *dentry, const char *oldname, int mode)
-@@ -2453,14 +2518,19 @@
+@@ -2453,14 +2491,19 @@
  	struct dentry *dentry;
  	struct nameidata nd;
  
@@ -255,7 +167,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  	error = do_path_lookup(newdfd, to, LOOKUP_PARENT, &nd);
  	if (error)
  		goto out;
-@@ -2483,12 +2553,25 @@
+@@ -2483,12 +2526,25 @@
  	putname(to);
  out_putname:
  	putname(from);
@@ -282,7 +194,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  }
  
  int vfs_link(struct dentry *old_dentry, struct inode *dir, struct dentry *new_dentry)
-@@ -2547,12 +2630,21 @@
+@@ -2547,12 +2603,21 @@
  	int error;
  	char * to;
  
@@ -306,7 +218,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  
  	error = __user_walk_fd(olddfd, oldname,
  			       flags & AT_SYMLINK_FOLLOW ? LOOKUP_FOLLOW : 0,
-@@ -2584,13 +2676,25 @@
+@@ -2584,7 +2649,10 @@
  	path_put(&old_nd.path);
  exit:
  	putname(to);
@@ -318,28 +230,12 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  	return error;
  }
  
- asmlinkage long sys_link(const char __user *oldname, const char __user *newname)
- {
--	return sys_linkat(AT_FDCWD, oldname, AT_FDCWD, newname, 0);
-+	long retval	 = 0;
-+
-+	lemona_block_start {
-+	  lemona_log_in(__NR_link, 2, 0, oldname, newname);
-+	} lemona_block_end;
-+	retval = sys_linkat(AT_FDCWD, oldname, AT_FDCWD, newname, 0);
-+	lemona_block_start {
-+	  lemona_log_out(__NR_link, 1, 0, &retval);
-+	} lemona_block_end;
-+	return retval;
- }
- 
- /*
-@@ -2827,9 +2931,14 @@
+@@ -2827,9 +2895,14 @@
  	char * from;
  	char * to;
  
 +	lemona_block_start {
-+		lemona_log_in(__NR_renameat, 4, 0, olddfd, oldname, newdfd, newname);
++		lemona_log_in(__NR_renameat, 4, 0, &olddfd, oldname, &newdfd, newname);
 +	} lemona_block_end;
  	from = getname(oldname);
 -	if(IS_ERR(from))
@@ -351,7 +247,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  	to = getname(newname);
  	error = PTR_ERR(to);
  	if (!IS_ERR(to)) {
-@@ -2837,12 +2946,24 @@
+@@ -2837,6 +2910,10 @@
  		putname(to);
  	}
  	putname(from);
@@ -362,24 +258,9 @@ diff -uNr linux.vanilla/fs/namei.c linux.lemona/fs/namei.c
  	return error;
  }
  
- asmlinkage long sys_rename(const char __user *oldname, const char __user *newname)
- {
--	return sys_renameat(AT_FDCWD, oldname, AT_FDCWD, newname);
-+	long	retval;
-+
-+	lemona_block_start {
-+		lemona_log_in(__NR_renameat, 2, 0, oldname, newname);
-+	} lemona_block_end;
-+	retval = sys_renameat(AT_FDCWD, oldname, AT_FDCWD, newname);
-+	lemona_block_start {
-+		lemona_log_out(__NR_renameat, 1, 0, &retval);
-+	} lemona_block_end;
- }
- 
- int vfs_readlink(struct dentry *dentry, char __user *buffer, int buflen, const char *link)
-diff -uNr linux.vanilla/fs/open.c linux.lemona/fs/open.c
---- linux.vanilla/fs/open.c	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/fs/open.c	2008-11-05 20:12:50.000000000 +1100
+diff -uNr linux.vanilla/fs/open.c linux.patch/fs/open.c
+--- linux.vanilla/fs/open.c	2008-09-27 17:26:11.000000000 +1000
++++ linux.patch/fs/open.c	2008-12-08 13:30:20.000000000 +1100
 @@ -30,6 +30,8 @@
  #include <linux/audit.h>
  #include <linux/falloc.h>
@@ -389,23 +270,13 @@ diff -uNr linux.vanilla/fs/open.c linux.lemona/fs/open.c
  int vfs_statfs(struct dentry *dentry, struct kstatfs *buf)
  {
  	int retval = -ENODEV;
-@@ -1110,7 +1112,44 @@
+@@ -1110,7 +1112,24 @@
  	if (force_o_largefile())
  		flags |= O_LARGEFILE;
  
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_open, true, 3, 0, filename, &flags, &mode);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+		if (_lemona_log == NULL)
-+		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+		_lemona_log(__NR_open, true, 3, 0, filename, &flags, &mode);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_in(__NR_open, 3, 0, filename, &flags, &mode);
++	} lemona_block_end;
 +
  	ret = do_sys_open(AT_FDCWD, filename, flags, mode);
 +
@@ -414,87 +285,48 @@ diff -uNr linux.vanilla/fs/open.c linux.lemona/fs/open.c
 +	 *
 +	 * We pass ret twice:
 +	 *  - The first time to get the return value.
-+	 *  - The second time to get the resoled filename (if fd >= 0)
++	 *  - The second time to get the resolved filename (if fd >= 0)
 +	 *
 +	 */
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_open, false, 1, 1, &ret, &ret);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+		if (_lemona_log == NULL)
-+		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+		_lemona_log(__NR_open, false, 1, 1, &ret, &ret);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_out(__NR_open, 1, 1, &ret, &ret);
++	} lemona_block_end;
 +
  	/* avoid REGPARM breakage on x86: */
  	asmlinkage_protect(3, ret, filename, flags, mode);
  	return ret;
-@@ -1124,7 +1163,36 @@
+@@ -1124,7 +1143,17 @@
  	if (force_o_largefile())
  		flags |= O_LARGEFILE;
  
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_openat, true, 4, 0, &dfd, filename, &flags, &mode);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+		if (_lemona_log == NULL)
-+		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+		_lemona_log(__NR_openat, true, 4, 0, &dfd, filename, &flags, &mode);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_in(__NR_openat, 4, 0, &dfd, filename, &flags, &mode);
++	} lemona_block_end;
++
 +
  	ret = do_sys_open(dfd, filename, flags, mode);
 +
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_openat, false, 1, 1, &ret, &ret);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+		if (_lemona_log == NULL)
-+		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+		_lemona_log(__NR_openat, false, 1, 1, &ret, &ret);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_out(__NR_openat, 1, 1, &ret, &ret);
++	} lemona_block_end;
 +
  	/* avoid REGPARM breakage on x86: */
  	asmlinkage_protect(4, ret, dfd, filename, flags, mode);
  	return ret;
-@@ -1177,7 +1245,21 @@
+@@ -1177,7 +1206,11 @@
  	struct file * filp;
  	struct files_struct *files = current->files;
  	struct fdtable *fdt;
 -	int retval;
 +	int retval = -EBADF;
 +
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_close, true, 1, 0, &fd);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+		if (_lemona_log == NULL)
-+		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+		_lemona_log(__NR_close, true, 1, 0, &fd);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_in(__NR_close, 1, 0, &fd);
++	} lemona_block_end;
  
  	spin_lock(&files->file_lock);
  	fdt = files_fdtable(files);
-@@ -1199,11 +1281,25 @@
+@@ -1199,11 +1232,16 @@
  		     retval == -ERESTART_RESTARTBLOCK))
  		retval = -EINTR;
  
@@ -505,26 +337,17 @@ diff -uNr linux.vanilla/fs/open.c linux.lemona/fs/open.c
  	spin_unlock(&files->file_lock);
 -	return -EBADF;
 +out:
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_close, false, 1, 0, &retval);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+		if (_lemona_log == NULL)
-+		  _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+		_lemona_log(__NR_close, false, 1, 0, &retval);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_out(__NR_close, 1, 0, &retval);
++	} lemona_block_end;
++
 +	return retval;
  }
  
  EXPORT_SYMBOL(sys_close);
-diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
---- linux.vanilla/fs/read_write.c	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/fs/read_write.c	2008-11-05 21:34:56.000000000 +1100
+diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
+--- linux.vanilla/fs/read_write.c	2008-09-27 17:26:11.000000000 +1000
++++ linux.patch/fs/read_write.c	2008-12-08 13:30:11.000000000 +1100
 @@ -21,6 +21,9 @@
  #include <asm/uaccess.h>
  #include <asm/unistd.h>
@@ -535,7 +358,7 @@ diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
  const struct file_operations generic_ro_fops = {
  	.llseek		= generic_file_llseek,
  	.read		= do_sync_read,
-@@ -133,9 +136,27 @@
+@@ -133,9 +136,17 @@
  	off_t retval;
  	struct file * file;
  	int fput_needed;
@@ -545,45 +368,26 @@ diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
  
  	retval = -EBADF;
  	file = fget_light(fd, &fput_needed);
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_lseek, true, 3, 0, &fd, &offset, &origin);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+	    if (_lemona_log == NULL)
-+		  lemona_get_fn(&_lemona_log, &_lemona_relay_is_ours);
-+	    if (file == NULL
-+			|| (lemona_file = _lemona_relay_is_ours(file->f_dentry)))
-+		  _lemona_log(__NR_lseek, true, 3, 0, &fd, &offset, &origin);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  if (file == NULL
++	      || !(lemona_file = lemona_relay_is_ours(file->f_dentry)))
++	    lemona_log_in(__NR_lseek, 3, 0, &fd, &offset, &origin);
++	} lemona_block_end;
  	if (!file)
  		goto bad;
  
-@@ -148,6 +169,19 @@
+@@ -148,6 +159,10 @@
  	}
  	fput_light(file, fput_needed);
  bad:
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  lemona_log(__NR_lseek, false, 1, 0, &retval);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_lseek, false, 1, 0, &retval);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  if (lemona_file == false)
++	    lemona_log_out(__NR_lseek, false, 1, 0, &retval);
++	} lemona_block_end;
  	return retval;
  }
  
-@@ -160,9 +194,29 @@
+@@ -160,9 +175,20 @@
  	struct file * file;
  	loff_t offset;
  	int fput_needed;
@@ -593,48 +397,29 @@ diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
  
  	retval = -EBADF;
  	file = fget_light(fd, &fput_needed);
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR__llseek, true, 4, 0,
-+				 &fd, &offset_high, &offset_low, &origin);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+	    if (_lemona_log == NULL)
-+		  lemona_get_fn(&_lemona_log, &_lemona_relay_is_ours);
-+	    if (file == NULL
-+			|| (lemona_file = _lemona_relay_is_ours(file->f_dentry)))
-+		  _lemona_log(__NR__llseek, true, 4, 0,
-+					  &fd, &offset_high, &offset_low, &origin);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++
++	lemona_block_start {
++	  if (file == NULL
++	      || !(lemona_file = lemona_relay_is_ours(file->f_dentry)))
++	    lemona_log_in(__NR__llseek, 4, 0, &fd,
++			  &offset_high, &offset_low, &origin);
++	} lemona_block_end;
++
  	if (!file)
  		goto bad;
  
-@@ -182,6 +236,20 @@
+@@ -182,6 +208,10 @@
  out_putf:
  	fput_light(file, fput_needed);
  bad:
-+	offset = retval == 0 ? offset : retval; /* for LEMONA */
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  lemona_log(__NR__llseek, false, 1, 0, &offset);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR__llseek, false, 1, 0, &offset);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  offset = retval == 0 ? offset : retval; /* for LEMONA */
++	  lemona_log_out(__NR__llseek, 1, 0, &offset);
++	} lemona_block_end;
  	return retval;
  }
  #endif
-@@ -355,15 +423,49 @@
+@@ -355,15 +385,30 @@
  	struct file *file;
  	ssize_t ret = -EBADF;
  	int fput_needed;
@@ -643,23 +428,13 @@ diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
 +#endif
  
  	file = fget_light(fd, &fput_needed);
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0
-+	    && (file == NULL
-+			|| (lemona_file = lemona_relay_is_ours(file->f_dentry))))
-+	  lemona_log(__NR_read, true, 2, 0, &fd, &count);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      lemona_get_fn(&_lemona_log, &_lemona_relay_is_ours);
-+	    if (file == NULL
-+			|| (lemona_file = _lemona_relay_is_ours(file->f_dentry)))
-+		  _lemona_log(__NR_read, true, 2, 0, &fd, &count);
-+	  }
-+	else
-+	  _lemona_log			= NULL;
-+#endif
++
++	lemona_block_start {
++	  if (file == NULL
++	      || !(lemona_file = lemona_relay_is_ours(file->f_dentry)))
++	    lemona_log_in(__NR_read, 2, 0, &fd, &count);
++	} lemona_block_end;
++
  	if (file) {
  		loff_t pos = file_pos_read(file);
  		ret = vfs_read(file, buf, count, &pos);
@@ -668,64 +443,35 @@ diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
 +
  	}
  
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  lemona_log(__NR_read, false, 2, 0, buf, &ret);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_read, false, 2, 0, buf, &ret);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  if (lemona_file == false)
++	    lemona_log_out(__NR_read, false, 2, 0, buf, &ret);
++	} lemona_block_end;
  	return ret;
  }
  
-@@ -373,6 +475,20 @@
+@@ -373,6 +418,10 @@
  	ssize_t ret = -EBADF;
  	int fput_needed;
  
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_write, true, 3, 0, &fd, buf, &count);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+		_lemona_log(__NR_write, true, 3, 0, &fd, buf, &count);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_in(__NR_write, 3, 0, &fd, buf, &count);
++	} lemona_block_end;
 +
  	file = fget_light(fd, &fput_needed);
  	if (file) {
  		loff_t pos = file_pos_read(file);
-@@ -381,6 +497,19 @@
+@@ -381,6 +430,9 @@
  		fput_light(file, fput_needed);
  	}
  
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_write, false, 1, 0, &ret);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_write, false, 1, 0, &ret);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_out(__NR_write, 1, 0, &ret);
++	} lemona_block_end;
  	return ret;
  }
  
-@@ -390,18 +519,52 @@
+@@ -390,18 +442,33 @@
  	struct file *file;
  	ssize_t ret = -EBADF;
  	int fput_needed;
@@ -735,32 +481,21 @@ diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
  
 -	if (pos < 0)
 -		return -EINVAL;
--
++	if (pos >= 0) {
++		file = fget_light(fd, &fput_needed);
+ 
 -	file = fget_light(fd, &fput_needed);
 -	if (file) {
 -		ret = -ESPIPE;
 -		if (file->f_mode & FMODE_PREAD)
 -			ret = vfs_read(file, buf, count, &pos);
 -		fput_light(file, fput_needed);
-+	if (pos >= 0) {
-+		file = fget_light(fd, &fput_needed);
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0
-+	    && (file == NULL
-+		|| (lemona_file = lemona_relay_is_ours(file->f_dentry))))
-+	  lemona_log(__NR_pread64, true, 3, 0, &fd, &count, &pos);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      lemona_get_fn(&_lemona_log, &_lemona_relay_is_ours);
-+	    if (file == NULL
-+			|| (lemona_file = _lemona_relay_is_ours(file->f_dentry)))
-+	      _lemona_log(__NR_pread64, true, 3, 0, &fd, &count, &pos);
-+	  }
-+	else
-+	  _lemona_log			= NULL;
-+#endif
++		lemona_block_start {
++		  if (file == NULL
++		      || !(lemona_file = lemona_relay_is_ours(file->f_dentry)))
++		    lemona_log_in(__NR_pread64, 3, 0, &fd, &count, &pos);
++		} lemona_block_end;
++
 +		if (file) {
 +			ret = -ESPIPE;
 +			if (file->f_mode & FMODE_PREAD)
@@ -771,48 +506,30 @@ diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
 +	else
 +		ret = -EINVAL;
  
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  lemona_log(__NR_pread64, false, 2, 0, buf, &ret);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0 && lemona_file == false)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_pread64, false, 2, 0, buf, &ret);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  if (lemona_file == false)
++	    lemona_log_out(__NR_pread64, false, 2, 0, buf, &ret);
++	} lemona_block_end;
  	return ret;
  }
  
-@@ -412,17 +575,45 @@
+@@ -412,17 +479,25 @@
  	ssize_t ret = -EBADF;
  	int fput_needed;
  
 -	if (pos < 0)
 -		return -EINVAL;
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_pwrite64, true, 4, 0, &fd, buf, &count, &pos);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_pwrite64, true, 4, 0, &fd, buf, &count, &pos);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
- 
+-
 -	file = fget_light(fd, &fput_needed);
 -	if (file) {
 -		ret = -ESPIPE;
 -		if (file->f_mode & FMODE_PWRITE)  
 -			ret = vfs_write(file, buf, count, &pos);
 -		fput_light(file, fput_needed);
++	lemona_block_start {
++	  lemona_log_in(__NR_pwrite64, 4, 0, &fd, buf, &count, &pos);
++	} lemona_block_end;
++
 +	if (pos >= 0) {
 +		file = fget_light(fd, &fput_needed);
 +		if (file) {
@@ -825,25 +542,15 @@ diff -uNr linux.vanilla/fs/read_write.c linux.lemona/fs/read_write.c
 +	else
 +		ret = -EINVAL;
  
-+#if defined(CONFIG_LEMONA)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  lemona_log(__NR_pwrite64, false, 1, 0, &ret);
-+#elif defined(CONFIG_LEMONA_MODULE)
-+	if (atomic_read(&lemona_activated) != 0)
-+	  {
-+	    if (_lemona_log == NULL)
-+	      _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+	    _lemona_log(__NR_pwrite64, false, 1, 0, &ret);
-+	  }
-+	else
-+	  _lemona_log = NULL;
-+#endif
++	lemona_block_start {
++	  lemona_log_out(__NR_pwrite64, 1, 0, &ret);
++	} lemona_block_end;
  	return ret;
  }
  
-diff -uNr linux.vanilla/init/main.c linux.lemona/init/main.c
---- linux.vanilla/init/main.c	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/init/main.c	2008-11-05 20:12:50.000000000 +1100
+diff -uNr linux.vanilla/init/main.c linux.patch/init/main.c
+--- linux.vanilla/init/main.c	2008-09-27 17:26:15.000000000 +1000
++++ linux.patch/init/main.c	2008-12-08 13:33:03.000000000 +1100
 @@ -107,6 +107,11 @@
  enum system_states system_state;
  EXPORT_SYMBOL(system_state);
@@ -888,9 +595,9 @@ diff -uNr linux.vanilla/init/main.c linux.lemona/init/main.c
  	current->signal->flags |= SIGNAL_UNKILLABLE;
  
  	if (ramdisk_execute_command) {
-diff -uNr linux.vanilla/kernel/sched.c linux.lemona/kernel/sched.c
---- linux.vanilla/kernel/sched.c	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/kernel/sched.c	2008-11-05 20:12:50.000000000 +1100
+diff -uNr linux.vanilla/kernel/sched.c linux.patch/kernel/sched.c
+--- linux.vanilla/kernel/sched.c	2008-09-27 17:26:16.000000000 +1000
++++ linux.patch/kernel/sched.c	2008-12-08 13:33:16.000000000 +1100
 @@ -4188,6 +4188,8 @@
  	next = pick_next_task(rq, prev);
  
@@ -900,17 +607,406 @@ diff -uNr linux.vanilla/kernel/sched.c linux.lemona/kernel/sched.c
  		sched_info_switch(prev, next);
  
  		rq->nr_switches++;
-diff -uNr linux.vanilla/lemona/COPYING linux.lemona/lemona/COPYING
+diff -uNr linux.vanilla/lemona/blades/generics.c linux.patch/lemona/blades/generics.c
+--- linux.vanilla/lemona/blades/generics.c	1970-01-01 10:00:00.000000000 +1000
++++ linux.patch/lemona/blades/generics.c	2008-12-08 13:40:16.000000000 +1100
+@@ -0,0 +1,209 @@
++/*
++** This file is part of Lemona.
++** Copyright (C) 2008 Kenfe-Mickaël Laventure
++**
++** The contents of this file are subject to the terms of either the
++** GNU General Public License Version 2 ("GPL") or the MIT License
++** (collectively, the "License"). You may not use this file except in
++** compliance with the License. You can obtain a copy of the License
++** at http://www.opensource.org/licenses/gpl-2.0.php and
++** http://www.opensource.org/licenses/mit-license.php or GPL.LICENSE
++** and MIT.LICENSE. See the License for the specific language
++** governing permissions and limitations under the License.
++*/
++
++#include <linux/uaccess.h> /* copy_from_user */
++
++#include "../lemona.h"
++
++
++/**
++ * lemona_blade_integer - add a 32 bits integer value to a zest
++ * @zest: The zest to be filled
++ * @isExt: Is this part of the extended arguments?
++ * @idx: Index of the value in the zest
++ * @off: Offset relative to the zest at which to copy the value
++ * @fruit1: The value to be copied (32 bits)
++ * @fruit2: Unused
++ */
++int		lemona_blade_integer(struct lemona_zest *zest,
++				     int isExt, int idx, int off,
++				     void *fruit1, void *fruit2)
++{
++  int	val = *((int *)fruit1);
++  int	*sz;
++
++  /* shall we compute the size or fill the zest ? */
++  if (zest == NULL)
++    return (sizeof(val));
++
++  /* fill the zest */
++  sz = isExt == false ? zest->argsz : zest->extsz;
++  sz[idx] = sizeof(val);
++  *((int *)((char *)zest + off)) = val;
++
++  return (sizeof(val));
++}
++
++/**
++ * lemona_blade_integer64 - add a 64 bits integer value to a zest
++ * @zest: The zest to be filled
++ * @isExt: Is this part of the extended arguments?
++ * @idx: Index of the value in the zest
++ * @off: Offset relative to the zest at which to copy the value
++ * @fruit1: The value to be copied (64 bits)
++ * @fruit2: Unused
++ */
++int		lemona_blade_integer64(struct lemona_zest *zest,
++				       int isExt, int idx, int off,
++				       void *fruit1, void *fruit2)
++{
++  u64	val = *((u64 *)fruit1);
++  int	*sz;
++
++  /* shall we compute the size or fill the zest ? */
++  if (zest == NULL)
++    return (sizeof(val));
++
++  /* fill the zest */
++  sz = isExt == false ? zest->argsz : zest->extsz;
++  sz[idx] = sizeof(val);
++  *((u64 *)((char *)zest + off)) = val;
++
++  return (sizeof(val));
++}
++
++int		lemona_blade_long(struct lemona_zest *zest,
++				  int isExt, int idx, int off,
++				  void *fruit1, void *fruit2)
++{
++  long	val = *((long *)fruit1);
++  int	*sz;
++
++  /* shall we compute the size or fill the zest ? */
++  if (zest == NULL)
++    return (sizeof(val));
++
++  /* fill the zest */
++  sz = isExt == false ? zest->argsz : zest->extsz;
++  sz[idx] = sizeof(val);
++  *((int *)((char *)zest + off)) = val;
++
++  return (sizeof(val));
++}
++
++
++/*
++ * TODO: make this an alias to lemona_blade_integer64
++ */
++int		lemona_blade_long_long(struct lemona_zest *zest,
++				       int isExt, int idx, int off,
++				       void *fruit1, void *fruit2)
++{
++  long long		val = *((long long *)fruit1);
++  int			*sz;
++
++  /* shall we compute the size or fill the zest ? */
++  if (zest == NULL)
++    return (sizeof(val));
++
++  /* fill the zest */
++  sz = isExt == false ? zest->argsz : zest->extsz;
++  sz[idx] = sizeof(val);
++  *((int *)((char *)zest + off)) = val;
++
++  return (sizeof(val));
++}
++
++/**
++ * lemona_blade_output_buffer - add the size and buffer content to a zest
++ * @zest: The zest to be filled
++ * @isExt: Is this part of the extended arguments?
++ * @idx: Starting index of the arguments
++ * @off: Offset relative to the zest from which to copy the data
++ * @buf: The buffer addresse (need to be an userspace address)
++ * @len: Size of the buffer (32 bits). If < 0, it corresponds to an ERRNO
++ *
++ * If size is negative, the return value should be sizeof(ssize_t)
++ *
++ * NOTE: As you would have guessed this is a dual blade.
++ */
++int		lemona_blade_output_buffer(struct lemona_zest *zest,
++					   int isExt, int idx, int off,
++					   void __user *buf, void *len)
++{
++  ssize_t	size	= *((ssize_t *)len);
++  int		*sz;
++  unsigned long	uncopied = size;
++
++  /* shall we compute the size or fill the zest ? */
++  if (zest == NULL)
++    return (sizeof(size) + (size >= 0 ? size : 0));
++
++  /* fill the zest */
++  sz = isExt == false ? zest->argsz : zest->extsz;
++  sz[idx] = sizeof(size);
++  *((ssize_t *)((char *)zest + off)) = size;
++
++  /* try to copy only if we actually got something to copy */
++  if (size > 0)
++    {
++      sz[idx + 1] = size;
++
++      uncopied = copy_from_user((char *)zest + off + sizeof(size),
++				buf, size);
++
++      if (uncopied)
++	{
++	  lemona_printk("(syscall %i) "
++			"output_buffer: %p/%p copied %i instead of %i\n",
++			zest->sysnr, buf, len,
++			(int)(size - uncopied), (int)size);
++	  return (-1);
++	}
++    }
++  return (sizeof(size) + (size >= 0 ? size : 0));
++}
++
++/**
++ * lemona_blade_output_buffer64 - add the size and buffer content to a zest
++ * @zest: The zest to be filled
++ * @isExt: Is this part of the extended arguments?
++ * @idx: Starting index of the arguments
++ * @off: Offset relative to the zest from which to copy the data
++ * @buf: The buffer addresse (need to be an userspace address)
++ * @len: Size of the buffer (64 bits). If < 0, it corresponds to an ERRNO
++ *
++ * If size is negative, the return value should be sizeof(s64).
++ *
++ * NOTE: As you would have guessed this is a dual blade.
++ */
++int	lemona_blade_output_buffer64(struct lemona_zest *zest,
++				     int isExt, int idx, int off,
++				     void *buf, void *len)
++{
++  s64		size	= *((u64 *)len);
++  int		*sz;
++  unsigned long	uncopied;
++
++  /* shall we compute the size or fill the zest ? */
++  if (zest == NULL)
++    return (sizeof(size) + (size >= 0 ? size : 0));
++
++  /* fill the zest */
++  sz = isExt == false ? zest->argsz : zest->extsz;
++  sz[idx] = sizeof(size);
++  *((u64 *)((char *)zest + off)) = size;
++
++  /* try to copy only if we actually got something to copy */
++  if (size > 0)
++    {
++      sz[idx + 1] = size;
++
++      uncopied = copy_from_user((char *)zest + off + sizeof(size),
++				buf, size);
++      if (uncopied)
++	return (-1);
++    }
++  return (sizeof(size) + (size >= 0 ? size : 0));
++}
+diff -uNr linux.vanilla/lemona/blades/iovec.c linux.patch/lemona/blades/iovec.c
+--- linux.vanilla/lemona/blades/iovec.c	1970-01-01 10:00:00.000000000 +1000
++++ linux.patch/lemona/blades/iovec.c	2008-12-08 13:40:16.000000000 +1100
+@@ -0,0 +1,44 @@
++/*
++** This file is part of Lemona.
++** Copyright (C) 2008 Kenfe-Mickaël Laventure
++**
++** The contents of this file are subject to the terms of either the
++** GNU General Public License Version 2 ("GPL") or the MIT License
++** (collectively, the "License"). You may not use this file except in
++** compliance with the License. You can obtain a copy of the License
++** at http://www.opensource.org/licenses/gpl-2.0.php and
++** http://www.opensource.org/licenses/mit-license.php or GPL.LICENSE
++** and MIT.LICENSE. See the License for the specific language
++** governing permissions and limitations under the License.
++*/
++
++#include <linux/uaccess.h> /* copy_from_user */
++
++#include "../lemona.h"
++
++/**
++ * lemona_blade_iovec - Add the io vector to the zest
++ * @zest: The zest to be filled
++ * @isExt: Is this part of the extended arguments?
++ * @idx: Starting index of the arguments
++ * @off: Offset relative to the zest from which to copy the data
++ * @iov: Start of the io vector
++ * @vlen: Size of the io vector
++ *
++ * If called from a call entry (zest->in == true), only append the
++ * vector content to the zest.
++ *
++ * If called from a call exit (zest->in == false), only append the
++ * data pointed by the vector. /!\ In this case, the number of bytes
++ * to be copied if to be fetch from the value stored at the previous
++ * idx.
++ *
++ * NOTE: As you would have guessed this is a dual blade.
++ */
++int		lemona_blade_iovec(struct lemona_zest *zest,
++						   int isExt, int idx, int off,
++						   void *iov, void *vlen)
++{
++  /* TODO: code lemona_blade_iovec */
++  return (0);
++}
+diff -uNr linux.vanilla/lemona/blades/string.c linux.patch/lemona/blades/string.c
+--- linux.vanilla/lemona/blades/string.c	1970-01-01 10:00:00.000000000 +1000
++++ linux.patch/lemona/blades/string.c	2008-12-08 13:40:16.000000000 +1100
+@@ -0,0 +1,124 @@
++/*
++** This file is part of Lemona.
++** Copyright (C) 2008 Kenfe-Mickaël Laventure
++**
++** The contents of this file are subject to the terms of either the
++** GNU General Public License Version 2 ("GPL") or the MIT License
++** (collectively, the "License"). You may not use this file except in
++** compliance with the License. You can obtain a copy of the License
++** at http://www.opensource.org/licenses/gpl-2.0.php and
++** http://www.opensource.org/licenses/mit-license.php or GPL.LICENSE
++** and MIT.LICENSE. See the License for the specific language
++** governing permissions and limitations under the License.
++*/
++
++#include <linux/fs.h>			/* struct file */
++#include <linux/slab.h>			/* kzalloc */
++#include <linux/limits.h>		/* PATH_MAX */
++#include <linux/file.h>			/* struct file, fget_light, fput_light */
++#include <linux/uaccess.h>		/* strncopy_from_user */
++
++#include "../lemona.h"
++
++/**
++ * lemona_blade_string_null - Append the content of a null terminated string
++ * @zest: The zest to be filled
++ * @isExt: Is this part of the extended arguments?
++ * @idx: Index of the string in the arguments
++ * @off: Offset relative to the zest from which to copy the data
++ * @str: String address (user space address)
++ * @unused: well... it's unused ;-)
++ *
++ * TODO: shall we return PATH_MAX instead of getting the real size?
++ * Is speed better than wasted space in zest?
++ */
++int		lemona_blade_string_null(struct lemona_zest *zest,
++					 int isExt, int idx, int off,
++					 void __user *str, void *unused)
++{
++  long		len;
++  int		*sz;
++
++  /* shall we compute the size or fill the zest ? */
++  if (zest == NULL)
++    {
++      char	*buf;
++
++      buf = kzalloc(PATH_MAX, GFP_KERNEL);
++      if (buf == NULL)
++	return (-ENOMEM);
++
++      len = strncpy_from_user(buf, str, PATH_MAX);
++      kfree(buf);
++      return (len + 1); /* add place for \0 since strncpy copy it too */
++    }
++
++  /* fill the zest */
++  sz = isExt == false ? zest->argsz : zest->extsz;
++  /* copy and get size */
++  len = strncpy_from_user((char *)zest + off, str, PATH_MAX);
++  sz[idx] = len + 1; /* don't forget the \0, since it is copied too */
++  return (len + 1);
++}
++
++/**
++ * lemona_blade_string_fd - Append the path of a file descriptor
++ * @zest: The zest to be filled
++ * @isExt: Is this part of the extended arguments?
++ * @idx: Index of the string in the arguments
++ * @off: Offset relative to the zest from which to copy the data
++ * @pfd: Pointer to the fd
++ * @unused: well... it's unused ;-)
++ *
++ * TODO: do we need to lock the dentry while going through it?
++ */
++int		lemona_blade_string_fd(struct lemona_zest *zest,
++				       int isExt, int idx, int off,
++				       void *pfd, void *unused)
++{
++  long		fd		= *((long *)pfd);
++  int		size	= 0;
++  struct file	*file;
++  struct dentry	*dentry;
++  int		fput_needed;
++  char		*dest;
++  int		*sz;
++
++  /* if the fd is invalid no need to go further */
++  if (fd < 0 || (file = fget_light(fd, &fput_needed)) == NULL)
++    return (size);
++
++  dentry = file->f_dentry;
++
++  /* TODO: shall we compute the size or fill the zest ? */
++  if (zest == NULL)
++    {
++      while (dentry != dentry->d_parent)
++	{
++	  /* add space for '/' separator */
++	  size			+= (int)dentry->d_name.len + (size ? 1 : 0);
++	  dentry		= dentry->d_parent;
++	}
++
++      fput_light(file, fput_needed);
++      return (size + 1); /* add '/' (i.e. root path) */
++    }
++
++  /* fill the zest */
++  sz	= isExt == false ? zest->argsz : zest->extsz;
++  dest	= (char *)zest + off;
++  while (dentry != dentry->d_parent)
++    {
++      /* add '/' separator if needed */
++      if (size)
++	dest[size++]		= '/';
++      strncpy(dest + size, dentry->d_name.name, dentry->d_name.len);
++      size				+= (int)dentry->d_name.len;
++      dentry			= dentry->d_parent;
++    }
++  /* add '/' (i.e. root path) */
++  dest[size++]	= '/';
++  sz[idx]		= size;
++  fput_light(file, fput_needed);
++  return (size);
++}
+diff -uNr linux.vanilla/lemona/COPYING linux.patch/lemona/COPYING
 --- linux.vanilla/lemona/COPYING	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/COPYING	2008-11-07 20:14:45.000000000 +1100
++++ linux.patch/lemona/COPYING	2008-12-08 13:40:16.000000000 +1100
 @@ -0,0 +1,4 @@
 +This software is released under both the MIT and GPL license, the
 +content of these licenses can be found respectively in the MIT.LICENSE
 +and GPL.LICENSE files.
 +
-diff -uNr linux.vanilla/lemona/GPL.LICENSE linux.lemona/lemona/GPL.LICENSE
+diff -uNr linux.vanilla/lemona/GPL.LICENSE linux.patch/lemona/GPL.LICENSE
 --- linux.vanilla/lemona/GPL.LICENSE	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/GPL.LICENSE	2008-11-07 20:14:45.000000000 +1100
++++ linux.patch/lemona/GPL.LICENSE	2008-12-08 13:40:16.000000000 +1100
 @@ -0,0 +1,339 @@
 +		    GNU GENERAL PUBLIC LICENSE
 +		       Version 2, June 1991
@@ -1251,9 +1347,105 @@ diff -uNr linux.vanilla/lemona/GPL.LICENSE linux.lemona/lemona/GPL.LICENSE
 +consider it more useful to permit linking proprietary applications with the
 +library.  If this is what you want to do, use the GNU Lesser General
 +Public License instead of this License.
-diff -uNr linux.vanilla/lemona/Kconfig linux.lemona/lemona/Kconfig
+diff -uNr linux.vanilla/lemona/init.c linux.patch/lemona/init.c
+--- linux.vanilla/lemona/init.c	1970-01-01 10:00:00.000000000 +1000
++++ linux.patch/lemona/init.c	2008-12-08 13:40:16.000000000 +1100
+@@ -0,0 +1,92 @@
++/*
++** This file is part of Lemona.
++** Copyright (C) 2008 Kenfe-Mickaël Laventure
++**
++** The contents of this file are subject to the terms of either the
++** GNU General Public License Version 2 ("GPL") or the MIT License
++** (collectively, the "License"). You may not use this file except in
++** compliance with the License. You can obtain a copy of the License
++** at http://www.opensource.org/licenses/gpl-2.0.php and
++** http://www.opensource.org/licenses/mit-license.php or GPL.LICENSE
++** and MIT.LICENSE. See the License for the specific language
++** governing permissions and limitations under the License.
++*/
++
++#include <linux/sched.h>	/* schedule */
++#include <linux/init.h>		/* module_* */
++#include <linux/module.h>	/* MODULE_LICENSE */
++#include <linux/utsrelease.h>	/* UTS_RELEASE */
++
++#include "lemona.h"
++
++MODULE_LICENSE("Dual MIT/GPL");
++
++#if defined(CONFIG_LEMONA_MODULE)
++extern atomic_t			lemona_clients;
++# define lemona_clients_wait()			\
++  while (atomic_read(&lemona_clients) > 0)	\
++    schedule();
++#else
++# define lemona_clients_wait()
++#endif
++
++struct lemona			*juice	= NULL;
++
++static void			lemona_cleanup(void)
++{
++  lemona_relay_cleanup();
++  lemona_net_cleanup();
++  if (juice)
++    kfree(juice);
++  juice = NULL;
++}
++
++static int __init		lemona_init(void)
++{
++  long				err		= 0;
++  int				backends	= 0;
++  extern atomic_t		lemona_activated;
++
++  lemona_printk("Initialization for kernel tree " UTS_RELEASE "...\n");
++  juice = kzalloc(sizeof(*juice), GFP_KERNEL);
++  if (juice == NULL)
++    {
++      err = -ENOMEM;
++      goto err;
++    }
++  err = lemona_relay_init();
++  if (err == 0)
++    ++backends;
++  err = lemona_net_init();
++  if (err == 0)
++    ++backends;
++
++  if (backends == 0)
++    goto err;
++  lemona_printk("Done.\n");
++  atomic_set(&lemona_activated, 1);
++  return (0);
++
++ err:
++  lemona_cleanup();
++  lemona_printk("Failed.\n");
++  return (err);
++}
++
++static void __exit		lemona_exit(void)
++{
++  extern atomic_t		lemona_activated;
++
++  lemona_printk("Uninitializing Lemona...\n");
++  atomic_set(&lemona_activated, 0);
++  /*
++   * Wait until our last client finish working.
++   * Their logs will be lost anyway, but we don't want to generate an Oops
++   */
++  lemona_clients_wait();
++  lemona_cleanup();
++  lemona_printk("Done.\n");
++}
++
++module_init(lemona_init);
++module_exit(lemona_exit);
+diff -uNr linux.vanilla/lemona/Kconfig linux.patch/lemona/Kconfig
 --- linux.vanilla/lemona/Kconfig	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/Kconfig	2008-11-07 20:14:45.000000000 +1100
++++ linux.patch/lemona/Kconfig	2008-12-08 13:40:16.000000000 +1100
 @@ -0,0 +1,64 @@
 +#
 +# Lemona Configuration
@@ -1319,251 +1511,10 @@ diff -uNr linux.vanilla/lemona/Kconfig linux.lemona/lemona/Kconfig
 +	 Port on wich to connect
 +
 +endmenu
-diff -uNr linux.vanilla/lemona/MIT.LICENSE linux.lemona/lemona/MIT.LICENSE
---- linux.vanilla/lemona/MIT.LICENSE	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/MIT.LICENSE	2008-11-07 20:14:45.000000000 +1100
-@@ -0,0 +1,19 @@
-+Copyright (c) 2008 Kenfe-Mickaël Laventure, Laurent Malvert
-+
-+Permission is hereby granted, free of charge, to any person obtaining a copy
-+of this software and associated documentation files (the "Software"), to deal
-+in the Software without restriction, including without limitation the rights
-+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-+copies of the Software, and to permit persons to whom the Software is
-+furnished to do so, subject to the following conditions:
-+
-+The above copyright notice and this permission notice shall be included in
-+all copies or substantial portions of the Software.
-+
-+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-+THE SOFTWARE.
-diff -uNr linux.vanilla/lemona/Makefile linux.lemona/lemona/Makefile
---- linux.vanilla/lemona/Makefile	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/Makefile	2008-11-07 20:14:45.000000000 +1100
-@@ -0,0 +1,78 @@
-+##
-+## This file is part of Lemona.
-+## Copyright (C) 2008 Kenfe-Mickaël Laventure
-+##
-+## The contents of this file are subject to the terms of either the
-+## GNU General Public License Version 2 ("GPL") or the MIT License
-+## (collectively, the "License"). You may not use this file except in
-+## compliance with the License. You can obtain a copy of the License
-+## at http://www.opensource.org/licenses/gpl-2.0.php and
-+## http://www.opensource.org/licenses/mit-license.php or GPL.LICENSE
-+## and MIT.LICENSE. See the License for the specific language
-+## governing permissions and limitations under the License.
-+##
-+
-+# If KERNELRELEASE is defined, we've been invoked from the
-+# kernel build system and can use its language.
-+ifneq ($(KERNELRELEASE),)
-+
-+blades-objs				:= blades/generics.o blades/iovec.o blades/string.o
-+lemona-objs				:= init.o mixers.o logging.o $(blades-objs)
-+obj-$(CONFIG_LEMONA)	+= lemona.o
-+
-+#if relay support is needed add the relevant files
-+	ifneq ($(CONFIG_LEMONA_RELAY),)
-+			lemona-objs	+= relay.o
-+	endif
-+
-+#if net support is needed add the relevant files
-+	ifneq ($(CONFIG_LEMONA_NET_LOG),)
-+		lemona-objs	+= net.o
-+	endif
-+
-+# originated from command line, force CONFIG_LEMONA_RELAY declaration
-+	ifneq ($(LEMONA_RELAY),)
-+		EXTRA_CFLAGS		+= -DCONFIG_LEMONA_RELAY=1
-+	endif
-+
-+# Otherwise we were called from the command
-+# line; invoke the kernel build system
-+else
-+
-+	ifneq ($(LEMONA_TARGET),)
-+		UNAME	:= $(LEMONA_TARGET)
-+	else
-+		UNAME	:= $(shell uname -r)
-+	endif
-+
-+	KERNELDIR	?= /lib/modules/$(UNAME)/build
-+	PWD		:= $(shell pwd)
-+
-+	CONFIG_LEMONA	:= m
-+	export CONFIG_LEMONA
-+
-+	ifneq ($(LEMONA_RELAY),)
-+		CONFIG_LEMONA_RELAY	:= 1
-+		export CONFIG_LEMONA_RELAY
-+	endif
-+
-+	ifneq ($(LEMONA_NET_LOG),)
-+		CONFIG_LEMONA_NET_LOG	:= 1
-+		export CONFIG_LEMONA_NET_LOG
-+	endif
-+
-+default:
-+	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
-+
-+clean:
-+	@echo 'Cleaning up...'
-+	@find -name '*.o' -o -name '*.ko*' -o -name '*.mod.c' 	\
-+	-o -name '*.symvers' -o -name '*~' -o -name '*.order'	\
-+	-o -name '*.cmd' -type f | xargs rm -f
-+	@rm -rf .tmp_versions
-+
-+patchclean: clean
-+	@find -name '.svn' -type d | xargs rm -rf
-+	@find -name '*.tmp' -type f | xargs rm -f
-+
-+endif
-diff -uNr linux.vanilla/lemona/README linux.lemona/lemona/README
---- linux.vanilla/lemona/README	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/README	2008-11-07 20:14:45.000000000 +1100
-@@ -0,0 +1,132 @@
-+Lemona Good To Know Stuff
-+================================================
-+
-+* Supported Kernel & Architecture
-+* How-To Build Using Full Patch
-+* How-To Build Using Partial Patch (Developers)
-+* Loading Lemona (if build as a Module)
-+* Unloading Lemona (if build as a Module)
-+* How-To Generate Kernel Patch (Developers)
-+
-+================================================
-+Supported Kernel
-+================================================
-+
-+Currently, Lemona has only be tested against the Linux 2.6.26.3
-+vanilla sources. Futhermore, Lemona is only available for the x86
-+architecture.
-+
-+================================================
-+How-To Build Using Full Patch
-+================================================
-+
-+Building Lemona as a kernel module is quite simple:
-+
-+  - Download the patch corresponding to your kernel:
-+     wget http://lemona.googlecode.com/svn/trunk/patchs/patch-X.X.XX.X \
-+     -O lemona.patch-X.X.XX.X
-+
-+  - Apply the patch to your kernel
-+     cd $(PATH_TO_KERNEL_SRC)
-+     patch -p1 < lemona_patch-X.X.XX.X
-+
-+  - Select the build mode for lemona in your kernel .config by using
-+    make menuconfig for instance
-+     make menuconfig
-+       General Setup ->
-+         Kernel->user space relay support (formerly relayfs)
-+         Configure standard kernel features (for small systems) ->
-+           Load all symbols for debugging/ksymoops
-+             Include all symbol in kallsyms
-+       Kernel Hacking ->
-+         Debug Filesystem
-+       Lemona ->
-+         Enable Lemona
-+
-+  - Build & install your new kernel
-+
-+================================================
-+How-To Build Using Partial Patch (Developers)
-+================================================
-+
-+  - Checkout the lemona sources
-+     svn co http://lemona.googlecode.com/svn/trunk/ lemona-read-only
-+
-+  - Update your kernel sources to include lemona
-+     cd $(PATH_TO_KERNEL_SRC)
-+     patch -p1 < $(PATH_TO_LEMONA_SRC)/patchs/patch-X.X.XX.X.partial
-+     ln -s $(PATH_TO_LEMONA_SRC) lemona
-+
-+  - Select the build mode for lemona in your kernel .config by using
-+    make menuconfig for instance
-+     make menuconfig
-+       Lemona ->
-+         Enable Lemona
-+
-+  - Build & install your new kernel
-+
-+================================================
-+Loading Lemona (if build as a Module)
-+================================================
-+
-+To load Lemona simply use the following command:
-+  insmod ./lemona.ko
-+You should see a line like the following in your logs (use dmesg to see it):
-+  -==Lemona==- Initialization for kernel tree 2.6.26.3...
-+  -==Lemona==- Done.
-+
-+================================================
-+Unloading Lemona (if build as a Module)
-+================================================
-+
-+To unload Lemona simply use the following command:
-+  rmmod lemona
-+The following line should appear in your logs (use dmesg to see it)
-+  -==Lemona==- Uninitializing...
-+  -==Lemona==- Done.
-+
-+================================================
-+How-To Generate Kernel Patch (Developers)
-+================================================
-+
-+To generate a new lemona patch, you will need the following:
-+  - a Linux Kernel vanilla untouched (i.e. you just extracted it and
-+    didn't do ANYTHING else. No make menuconfig, no compilation, NOTHING).
-+    We'll call it linux.vanilla.
-+
-+  - The same Kernel modified to support Lemona but without any object,
-+    backup, vn or other uneeded files.
-+    We'll call it linux.lemona
-+
-+  - These 2 folders should be directly accessible from a common one
-+    (use symbolic links if necessary)
-+
-+Now, generating the patch is quite easy:
-+  - Go to the directory where you can directly access both kernel sources
-+
-+  - Execute the following command (where X.X.XX.X is the kernel version)
-+     diff -uNr linux.vanilla linux.lemona > patch-X.X.XX.X
-+
-+  - NOTE: Be sure NOT to have any trailing directory before either
-+    linux.vanilla or linux.lemona or the standard patching method (-p1
-+    option to patch) won't work
-+
-+  - Check your patch to ensure that it didn't include any unwanted
-+    change (maybe you forgot to delete a backup file?)
-+
-+
-+================================================
-+Debugging using KGDB (VirtualBox)
-+================================================
-+
-+ - Compile Kernel with Debug Info
-+ - Configure host pipe in VirtualBox
-+ - add following boot option
-+	kgdboc=ttyS0,115200 kgbwait
-+ - # socat -d -d /path_to_pipe/com_1 PTY:
-+		2008/11/01 12:00:16 socat[14779] N successfully connected via
-+		2008/11/01 12:00:16 socat[14779] N PTY is /dev/pts/7
-+		2008/11/01 12:00:16 socat[14779] N starting data transfer loop with FDs [3,3] and [4,4]
-+ - gdb vmlinux
-+		set remotebaud 115200
-+		target remote /dev/pts/7
-diff -uNr linux.vanilla/lemona/blades/generics.c linux.lemona/lemona/blades/generics.c
---- linux.vanilla/lemona/blades/generics.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/blades/generics.c	2008-11-07 20:14:45.000000000 +1100
-@@ -0,0 +1,209 @@
+diff -uNr linux.vanilla/lemona/lemona_blades.h linux.patch/lemona/lemona_blades.h
+--- linux.vanilla/lemona/lemona_blades.h	1970-01-01 10:00:00.000000000 +1000
++++ linux.patch/lemona/lemona_blades.h	2008-12-08 13:40:16.000000000 +1100
+@@ -0,0 +1,59 @@
 +/*
 +** This file is part of Lemona.
 +** Copyright (C) 2008 Kenfe-Mickaël Laventure
@@ -1578,474 +1529,58 @@ diff -uNr linux.vanilla/lemona/blades/generics.c linux.lemona/lemona/blades/gene
 +** governing permissions and limitations under the License.
 +*/
 +
-+#include <linux/uaccess.h> /* copy_from_user */
++#ifndef _LEMONA_BLADES_H_
++# define _LEMONA_BLADES_H_
 +
-+#include "../lemona.h"
++struct lemona_zest;
 +
-+
-+/**
-+ * lemona_blade_integer - add a 32 bits integer value to a zest
-+ * @zest: The zest to be filled
-+ * @isExt: Is this part of the extended arguments?
-+ * @idx: Index of the value in the zest
-+ * @off: Offset relative to the zest at which to copy the value
-+ * @fruit1: The value to be copied (32 bits)
-+ * @fruit2: Unused
++/*
++ * from blades/generics.c
 + */
 +int		lemona_blade_integer(struct lemona_zest *zest,
 +				     int isExt, int idx, int off,
-+				     void *fruit1, void *fruit2)
-+{
-+  int	val = *((int *)fruit1);
-+  int	*sz;
++				     void *fruit1, void *fruit2);
 +
-+  /* shall we compute the size or fill the zest ? */
-+  if (zest == NULL)
-+    return (sizeof(val));
-+
-+  /* fill the zest */
-+  sz = isExt == false ? zest->argsz : zest->extsz;
-+  sz[idx] = sizeof(val);
-+  *((int *)((char *)zest + off)) = val;
-+
-+  return (sizeof(val));
-+}
-+
-+/**
-+ * lemona_blade_integer64 - add a 64 bits integer value to a zest
-+ * @zest: The zest to be filled
-+ * @isExt: Is this part of the extended arguments?
-+ * @idx: Index of the value in the zest
-+ * @off: Offset relative to the zest at which to copy the value
-+ * @fruit1: The value to be copied (64 bits)
-+ * @fruit2: Unused
-+ */
 +int		lemona_blade_integer64(struct lemona_zest *zest,
 +				       int isExt, int idx, int off,
-+				       void *fruit1, void *fruit2)
-+{
-+  u64	val = *((u64 *)fruit1);
-+  int	*sz;
-+
-+  /* shall we compute the size or fill the zest ? */
-+  if (zest == NULL)
-+    return (sizeof(val));
-+
-+  /* fill the zest */
-+  sz = isExt == false ? zest->argsz : zest->extsz;
-+  sz[idx] = sizeof(val);
-+  *((u64 *)((char *)zest + off)) = val;
-+
-+  return (sizeof(val));
-+}
++				       void *fruit1, void *fruit2);
 +
 +int		lemona_blade_long(struct lemona_zest *zest,
 +				  int isExt, int idx, int off,
-+				  void *fruit1, void *fruit2)
-+{
-+  long	val = *((long *)fruit1);
-+  int	*sz;
++				  void *fruit1, void *fruit2);
 +
-+  /* shall we compute the size or fill the zest ? */
-+  if (zest == NULL)
-+    return (sizeof(val));
-+
-+  /* fill the zest */
-+  sz = isExt == false ? zest->argsz : zest->extsz;
-+  sz[idx] = sizeof(val);
-+  *((int *)((char *)zest + off)) = val;
-+
-+  return (sizeof(val));
-+}
-+
-+
-+/*
-+ * TODO: make this an alias to lemona_blade_integer64
-+ */
 +int		lemona_blade_long_long(struct lemona_zest *zest,
 +				       int isExt, int idx, int off,
-+				       void *fruit1, void *fruit2)
-+{
-+  long long		val = *((long long *)fruit1);
-+  int			*sz;
++				       void *fruit1, void *fruit2);
 +
-+  /* shall we compute the size or fill the zest ? */
-+  if (zest == NULL)
-+    return (sizeof(val));
-+
-+  /* fill the zest */
-+  sz = isExt == false ? zest->argsz : zest->extsz;
-+  sz[idx] = sizeof(val);
-+  *((int *)((char *)zest + off)) = val;
-+
-+  return (sizeof(val));
-+}
-+
-+/**
-+ * lemona_blade_output_buffer - add the size and buffer content to a zest
-+ * @zest: The zest to be filled
-+ * @isExt: Is this part of the extended arguments?
-+ * @idx: Starting index of the arguments
-+ * @off: Offset relative to the zest from which to copy the data
-+ * @buf: The buffer addresse (need to be an userspace address)
-+ * @len: Size of the buffer (32 bits). If < 0, it corresponds to an ERRNO
-+ *
-+ * If size is negative, the return value should be sizeof(ssize_t)
-+ *
-+ * NOTE: As you would have guessed this is a dual blade.
-+ */
++/* this is a dual blade */
 +int		lemona_blade_output_buffer(struct lemona_zest *zest,
 +					   int isExt, int idx, int off,
-+					   void __user *buf, void *len)
-+{
-+  ssize_t	size	= *((ssize_t *)len);
-+  int		*sz;
-+  unsigned long	uncopied = size;
++					   void *fruit1, void* fruit2);
 +
-+  /* shall we compute the size or fill the zest ? */
-+  if (zest == NULL)
-+    return (sizeof(size) + (size >= 0 ? size : 0));
++/* this is a dual blade */
++int		lemona_blade_output_buffer64(struct lemona_zest *zest,
++					     int isExt, int idx, int off,
++					     void *fruit1, void* fruit2);
 +
-+  /* fill the zest */
-+  sz = isExt == false ? zest->argsz : zest->extsz;
-+  sz[idx] = sizeof(size);
-+  *((ssize_t *)((char *)zest + off)) = size;
-+
-+  /* try to copy only if we actually got something to copy */
-+  if (size > 0)
-+    {
-+      sz[idx + 1] = size;
-+
-+      uncopied = copy_from_user((char *)zest + off + sizeof(size),
-+				buf, size);
-+
-+      if (uncopied)
-+	{
-+	  lemona_printk("(syscall %i) "
-+			"output_buffer: %p/%p copied %i instead of %i\n",
-+			zest->sysnr, buf, len,
-+			(int)(size - uncopied), (int)size);
-+	  return (-1);
-+	}
-+    }
-+  return (sizeof(size) + (size >= 0 ? size : 0));
-+}
-+
-+/**
-+ * lemona_blade_output_buffer64 - add the size and buffer content to a zest
-+ * @zest: The zest to be filled
-+ * @isExt: Is this part of the extended arguments?
-+ * @idx: Starting index of the arguments
-+ * @off: Offset relative to the zest from which to copy the data
-+ * @buf: The buffer addresse (need to be an userspace address)
-+ * @len: Size of the buffer (64 bits). If < 0, it corresponds to an ERRNO
-+ *
-+ * If size is negative, the return value should be sizeof(s64).
-+ *
-+ * NOTE: As you would have guessed this is a dual blade.
-+ */
-+int	lemona_blade_output_buffer64(struct lemona_zest *zest,
-+				     int isExt, int idx, int off,
-+				     void *buf, void *len)
-+{
-+  s64		size	= *((u64 *)len);
-+  int		*sz;
-+  unsigned long	uncopied;
-+
-+  /* shall we compute the size or fill the zest ? */
-+  if (zest == NULL)
-+    return (sizeof(size) + (size >= 0 ? size : 0));
-+
-+  /* fill the zest */
-+  sz = isExt == false ? zest->argsz : zest->extsz;
-+  sz[idx] = sizeof(size);
-+  *((u64 *)((char *)zest + off)) = size;
-+
-+  /* try to copy only if we actually got something to copy */
-+  if (size > 0)
-+    {
-+      sz[idx + 1] = size;
-+
-+      uncopied = copy_from_user((char *)zest + off + sizeof(size),
-+				buf, size);
-+      if (uncopied)
-+	return (-1);
-+    }
-+  return (sizeof(size) + (size >= 0 ? size : 0));
-+}
-diff -uNr linux.vanilla/lemona/blades/iovec.c linux.lemona/lemona/blades/iovec.c
---- linux.vanilla/lemona/blades/iovec.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/blades/iovec.c	2008-11-07 20:14:45.000000000 +1100
-@@ -0,0 +1,44 @@
 +/*
-+** This file is part of Lemona.
-+** Copyright (C) 2008 Kenfe-Mickaël Laventure
-+**
-+** The contents of this file are subject to the terms of either the
-+** GNU General Public License Version 2 ("GPL") or the MIT License
-+** (collectively, the "License"). You may not use this file except in
-+** compliance with the License. You can obtain a copy of the License
-+** at http://www.opensource.org/licenses/gpl-2.0.php and
-+** http://www.opensource.org/licenses/mit-license.php or GPL.LICENSE
-+** and MIT.LICENSE. See the License for the specific language
-+** governing permissions and limitations under the License.
-+*/
-+
-+#include <linux/uaccess.h> /* copy_from_user */
-+
-+#include "../lemona.h"
-+
-+/**
-+ * lemona_blade_iovec - Add the io vector to the zest
-+ * @zest: The zest to be filled
-+ * @isExt: Is this part of the extended arguments?
-+ * @idx: Starting index of the arguments
-+ * @off: Offset relative to the zest from which to copy the data
-+ * @iov: Start of the io vector
-+ * @vlen: Size of the io vector
-+ *
-+ * If called from a call entry (zest->in == true), only append the
-+ * vector content to the zest.
-+ *
-+ * If called from a call exit (zest->in == false), only append the
-+ * data pointed by the vector. /!\ In this case, the number of bytes
-+ * to be copied if to be fetch from the value stored at the previous
-+ * idx.
-+ *
-+ * NOTE: As you would have guessed this is a dual blade.
-+ */
-+int		lemona_blade_iovec(struct lemona_zest *zest,
-+						   int isExt, int idx, int off,
-+						   void *iov, void *vlen)
-+{
-+  /* TODO: code lemona_blade_iovec */
-+  return (0);
-+}
-diff -uNr linux.vanilla/lemona/blades/string.c linux.lemona/lemona/blades/string.c
---- linux.vanilla/lemona/blades/string.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/blades/string.c	2008-11-07 20:14:45.000000000 +1100
-@@ -0,0 +1,124 @@
-+/*
-+** This file is part of Lemona.
-+** Copyright (C) 2008 Kenfe-Mickaël Laventure
-+**
-+** The contents of this file are subject to the terms of either the
-+** GNU General Public License Version 2 ("GPL") or the MIT License
-+** (collectively, the "License"). You may not use this file except in
-+** compliance with the License. You can obtain a copy of the License
-+** at http://www.opensource.org/licenses/gpl-2.0.php and
-+** http://www.opensource.org/licenses/mit-license.php or GPL.LICENSE
-+** and MIT.LICENSE. See the License for the specific language
-+** governing permissions and limitations under the License.
-+*/
-+
-+#include <linux/fs.h>			/* struct file */
-+#include <linux/slab.h>			/* kzalloc */
-+#include <linux/limits.h>		/* PATH_MAX */
-+#include <linux/file.h>			/* struct file, fget_light, fput_light */
-+#include <linux/uaccess.h>		/* strncopy_from_user */
-+
-+#include "../lemona.h"
-+
-+/**
-+ * lemona_blade_string_null - Append the content of a null terminated string
-+ * @zest: The zest to be filled
-+ * @isExt: Is this part of the extended arguments?
-+ * @idx: Index of the string in the arguments
-+ * @off: Offset relative to the zest from which to copy the data
-+ * @str: String address (user space address)
-+ * @unused: well... it's unused ;-)
-+ *
-+ * TODO: shall we return PATH_MAX instead of getting the real size?
-+ * Is speed better than wasted space in zest?
++ * from blades/string.c
 + */
 +int		lemona_blade_string_null(struct lemona_zest *zest,
 +					 int isExt, int idx, int off,
-+					 void __user *str, void *unused)
-+{
-+  long		len;
-+  int		*sz;
-+
-+  /* shall we compute the size or fill the zest ? */
-+  if (zest == NULL)
-+    {
-+      char	*buf;
-+
-+      buf = kzalloc(PATH_MAX, GFP_KERNEL);
-+      if (buf == NULL)
-+	return (-ENOMEM);
-+
-+      len = strncpy_from_user(buf, str, PATH_MAX);
-+      kfree(buf);
-+      return (len + 1); /* add place for \0 since strncpy copy it too */
-+    }
-+
-+  /* fill the zest */
-+  sz = isExt == false ? zest->argsz : zest->extsz;
-+  /* copy and get size */
-+  len = strncpy_from_user((char *)zest + off, str, PATH_MAX);
-+  sz[idx] = len + 1; /* don't forget the \0, since it is copied too */
-+  return (len + 1);
-+}
-+
-+/**
-+ * lemona_blade_string_fd - Append the path of a file descriptor
-+ * @zest: The zest to be filled
-+ * @isExt: Is this part of the extended arguments?
-+ * @idx: Index of the string in the arguments
-+ * @off: Offset relative to the zest from which to copy the data
-+ * @pfd: Pointer to the fd
-+ * @unused: well... it's unused ;-)
-+ *
-+ * TODO: do we need to lock the dentry while going through it?
-+ */
++					 void __user *str, void *unused);
 +int		lemona_blade_string_fd(struct lemona_zest *zest,
 +				       int isExt, int idx, int off,
-+				       void *pfd, void *unused)
-+{
-+  long		fd		= *((long *)pfd);
-+  int		size	= 0;
-+  struct file	*file;
-+  struct dentry	*dentry;
-+  int		fput_needed;
-+  char		*dest;
-+  int		*sz;
++				       void __user *str, void *unused);
 +
-+  /* if the fd is invalid no need to go further */
-+  if (fd < 0 || (file = fget_light(fd, &fput_needed)) == NULL)
-+    return (size);
-+
-+  dentry = file->f_dentry;
-+
-+  /* shall we compute the size or fill the zest ? */
-+  if (zest == NULL)
-+    {
-+      while (dentry != dentry->d_parent)
-+	{
-+	  /* add space for '/' separator */
-+	  size			+= (int)dentry->d_name.len + (size ? 1 : 0);
-+	  dentry		= dentry->d_parent;
-+	}
-+
-+      fput_light(file, fput_needed);
-+      return (size + 1); /* add '/' (i.e. root path) */
-+    }
-+
-+  /* fill the zest */
-+  sz	= isExt == false ? zest->argsz : zest->extsz;
-+  dest	= (char *)zest + off;
-+  while (dentry != dentry->d_parent)
-+    {
-+      /* add '/' separator if needed */
-+      if (size)
-+	dest[size++]		= '/';
-+      strncpy(dest + size, dentry->d_name.name, dentry->d_name.len);
-+      size				+= (int)dentry->d_name.len;
-+      dentry			= dentry->d_parent;
-+    }
-+  /* add '/' (i.e. root path) */
-+  dest[size++]	= '/';
-+  sz[idx]		= size;
-+  fput_light(file, fput_needed);
-+  return (size);
-+}
-diff -uNr linux.vanilla/lemona/init.c linux.lemona/lemona/init.c
---- linux.vanilla/lemona/init.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/init.c	2008-11-07 20:14:45.000000000 +1100
-@@ -0,0 +1,86 @@
-+/*
-+** This file is part of Lemona.
-+** Copyright (C) 2008 Kenfe-Mickaël Laventure
-+**
-+** The contents of this file are subject to the terms of either the
-+** GNU General Public License Version 2 ("GPL") or the MIT License
-+** (collectively, the "License"). You may not use this file except in
-+** compliance with the License. You can obtain a copy of the License
-+** at http://www.opensource.org/licenses/gpl-2.0.php and
-+** http://www.opensource.org/licenses/mit-license.php or GPL.LICENSE
-+** and MIT.LICENSE. See the License for the specific language
-+** governing permissions and limitations under the License.
-+*/
-+
-+#include <linux/init.h>		/* module_* */
-+#include <linux/module.h>	/* MODULE_LICENSE */
-+#include <linux/utsrelease.h>	/* UTS_RELEASE */
-+
-+#include "lemona.h"
-+
-+MODULE_LICENSE("Dual MIT/GPL");
-+
-+#if defined(CONFIG_LEMONA_MODULE)
-+extern atomic_t			lemona_clients;
-+# define lemona_clients_wait()			\
-+  while (atomic_read(&lemona_clients) > 0)	\
-+    schedule();
-+#else
-+# define lemona_clients_wait()
 +#endif
-+
-+struct lemona			*juice			= NULL;
-+
-+static void			lemona_cleanup(void)
-+{
-+  lemona_relay_cleanup();
-+  lemona_net_cleanup();
-+  if (juice)
-+    kfree(juice);
-+}
-+
-+static int __init		lemona_init(void)
-+{
-+  long					err = 0;
-+  extern atomic_t		lemona_activated;
-+
-+  lemona_printk("Initialization for kernel tree " UTS_RELEASE "...\n");
-+  juice = kzalloc(sizeof(*juice), GFP_KERNEL);
-+  if (juice == NULL)
-+    {
-+      err = -ENOMEM;
-+      goto err;
-+    }
-+  err = lemona_relay_init();
-+  if (err)
-+    goto err;
-+  err = lemona_net_init(true);
-+  if (err < 0)
-+    goto err;
-+  lemona_printk("Done.\n");
-+  atomic_set(&lemona_activated, 1);
-+  return (0);
-+
-+ err:
-+  lemona_cleanup();
-+  lemona_printk("Failed.\n");
-+  return (err);
-+}
-+
-+static void __exit		lemona_exit(void)
-+{
-+  extern atomic_t		lemona_activated;
-+
-+  lemona_printk("Uninitializing Lemona...\n");
-+  atomic_set(&lemona_activated, 0);
-+  /*
-+   * Wait until our last client finish working.
-+   * Their logs will be lost anyway, but we don't want to generate an Oops
-+   */
-+  lemona_clients_wait();
-+  lemona_cleanup();
-+  lemona_printk("Done.\n");
-+}
-+
-+module_init(lemona_init);
-+module_exit(lemona_exit);
-diff -uNr linux.vanilla/lemona/lemona.h linux.lemona/lemona/lemona.h
+diff -uNr linux.vanilla/lemona/lemona.h linux.patch/lemona/lemona.h
 --- linux.vanilla/lemona/lemona.h	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/lemona.h	2008-11-07 20:14:45.000000000 +1100
-@@ -0,0 +1,138 @@
++++ linux.patch/lemona/lemona.h	2008-12-08 13:40:16.000000000 +1100
+@@ -0,0 +1,143 @@
 +/*
 +** This file is part of Lemona.
-+** Copyright (C) 2008 Kenfe-Mickaël Laventure
++** Copyright (C) 2008 Kenfe-Mickaël Laventure, Laurent Malvert
 +**
 +** The contents of this file are subject to the terms of either the
 +** GNU General Public License Version 2 ("GPL") or the MIT License
@@ -2070,8 +1605,13 @@ diff -uNr linux.vanilla/lemona/lemona.h linux.lemona/lemona/lemona.h
 + * Every single log entry is represented by a zest.
 + */
 +struct	lemona_zest {
-+  char			magic[4];
++  /*
++    need always to be the first member. This facilitate parsing since a
++    zest can find itself cut across two log files
++   */
 +  int			size;  	/* size taken by this zest and args sz/value */
++
++  char			magic[4];
 +
 +  int			in;
 +  struct timespec	time;	/* call start/end time (getnstimeofday) */
@@ -2176,78 +1716,15 @@ diff -uNr linux.vanilla/lemona/lemona.h linux.lemona/lemona/lemona.h
 + * Prototypes
 + */
 +extern int		lemona_log(int sysnr, int in,
-+						   int argnr, int extnr, ...);
++				   int argnr, int extnr, ...);
 +
 +# endif /* __KERNEL __ */
 +
 +#endif
-diff -uNr linux.vanilla/lemona/lemona_blades.h linux.lemona/lemona/lemona_blades.h
---- linux.vanilla/lemona/lemona_blades.h	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/lemona_blades.h	2008-11-07 20:14:45.000000000 +1100
-@@ -0,0 +1,59 @@
-+/*
-+** This file is part of Lemona.
-+** Copyright (C) 2008 Kenfe-Mickaël Laventure
-+**
-+** The contents of this file are subject to the terms of either the
-+** GNU General Public License Version 2 ("GPL") or the MIT License
-+** (collectively, the "License"). You may not use this file except in
-+** compliance with the License. You can obtain a copy of the License
-+** at http://www.opensource.org/licenses/gpl-2.0.php and
-+** http://www.opensource.org/licenses/mit-license.php or GPL.LICENSE
-+** and MIT.LICENSE. See the License for the specific language
-+** governing permissions and limitations under the License.
-+*/
-+
-+#ifndef _LEMONA_BLADES_H_
-+# define _LEMONA_BLADES_H_
-+
-+struct lemona_zest;
-+
-+/*
-+ * from blades/generics.c
-+ */
-+int		lemona_blade_integer(struct lemona_zest *zest,
-+							 int isExt, int idx, int off,
-+							 void *fruit1, void *fruit2);
-+
-+int		lemona_blade_integer64(struct lemona_zest *zest,
-+							   int isExt, int idx, int off,
-+							   void *fruit1, void *fruit2);
-+
-+int		lemona_blade_long(struct lemona_zest *zest,
-+						  int isExt, int idx, int off,
-+						  void *fruit1, void *fruit2);
-+
-+int		lemona_blade_long_long(struct lemona_zest *zest,
-+							   int isExt, int idx, int off,
-+							   void *fruit1, void *fruit2);
-+
-+/* this is a dual blade */
-+int		lemona_blade_output_buffer(struct lemona_zest *zest,
-+								   int isExt, int idx, int off,
-+								   void *fruit1, void* fruit2);
-+
-+/* this is a dual blade */
-+int		lemona_blade_output_buffer64(struct lemona_zest *zest,
-+									 int isExt, int idx, int off,
-+									 void *fruit1, void* fruit2);
-+
-+/*
-+ * from blades/string.c
-+ */
-+int		lemona_blade_string_null(struct lemona_zest *zest,
-+								 int isExt, int idx, int off,
-+								 void __user *str, void *unused);
-+int		lemona_blade_string_fd(struct lemona_zest *zest,
-+							   int isExt, int idx, int off,
-+							   void __user *str, void *unused);
-+
-+#endif
-diff -uNr linux.vanilla/lemona/lemona_net.h linux.lemona/lemona/lemona_net.h
+diff -uNr linux.vanilla/lemona/lemona_net.h linux.patch/lemona/lemona_net.h
 --- linux.vanilla/lemona/lemona_net.h	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/lemona_net.h	2008-11-07 20:14:45.000000000 +1100
-@@ -0,0 +1,66 @@
++++ linux.patch/lemona/lemona_net.h	2008-12-08 13:40:16.000000000 +1100
+@@ -0,0 +1,67 @@
 +/*
 +** This file is part of Lemona.
 +** Copyright (C) 2008 Kenfe-Mickaël Laventure
@@ -2293,13 +1770,14 @@ diff -uNr linux.vanilla/lemona/lemona_net.h linux.lemona/lemona/lemona_net.h
 +
 +struct lemona_net {
 +  struct mutex		lock;
++/*   spinlock_t		lock; */
 +  unsigned long		timeout;
 +
 +  struct sockaddr_in	sin;
 +  struct socket		*sock;
 +};
 +
-+int	lemona_net_init(bool init);
++int	lemona_net_init(void);
 +void	lemona_net_log(struct lemona_zest *zest);
 +void	lemona_net_cleanup(void);
 +
@@ -2307,20 +1785,20 @@ diff -uNr linux.vanilla/lemona/lemona_net.h linux.lemona/lemona/lemona_net.h
 +
 +struct lemona_net { };
 +
-+# define lemona_net_init(x)	0
++# define lemona_net_init()	-1
 +# define lemona_net_log(x)
 +# define lemona_net_cleanup()
 +
 +# endif /* CONFIG_LEMONA_NET_LOG */
 +
 +#endif
-diff -uNr linux.vanilla/lemona/lemona_patch.h linux.lemona/lemona/lemona_patch.h
+diff -uNr linux.vanilla/lemona/lemona_patch.h linux.patch/lemona/lemona_patch.h
 --- linux.vanilla/lemona/lemona_patch.h	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/lemona_patch.h	2008-11-07 20:14:45.000000000 +1100
-@@ -0,0 +1,82 @@
++++ linux.patch/lemona/lemona_patch.h	2008-12-08 13:40:16.000000000 +1100
+@@ -0,0 +1,96 @@
 +/*
 +** This file is part of Lemona.
-+** Copyright (C) 2008 Kenfe-Mickaël Laventure
++** Copyright (C) 2008 Kenfe-Mickaël Laventure, Laurent Malvert
 +**
 +** The contents of this file are subject to the terms of either the
 +** GNU General Public License Version 2 ("GPL") or the MIT License
@@ -2346,7 +1824,7 @@ diff -uNr linux.vanilla/lemona/lemona_patch.h linux.lemona/lemona/lemona_patch.h
 +/*
 + * add this define to avoid testing for CONFIG_LEMONA && CONFIG_LEMONA_MODULE
 + */
-+# define LEMONA	1
++#  define LEMONA	1
 +
 +/*
 + * Variable
@@ -2372,7 +1850,7 @@ diff -uNr linux.vanilla/lemona/lemona_patch.h linux.lemona/lemona/lemona_patch.h
 +      _lemona_log = NULL;			\
 +    }
 +
-+#define __lemona_log(sysnr, in, argnr, extnr, ...)	{		\
++#   define __lemona_log(sysnr, in, argnr, extnr, ...)	{		\
 +  if (_lemona_log == NULL)						\
 +    _lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");	\
 +  _lemona_log(sysnr, in, argnr, extnr, ## __VA_ARGS__);		        \
@@ -2381,28 +1859,42 @@ diff -uNr linux.vanilla/lemona/lemona_patch.h linux.lemona/lemona/lemona_patch.h
 +#   if defined(LEMONA_READ)
 +static lemonarelayisoursfn	_lemona_relay_is_ours	= NULL;
 +
-+void inline lemona_get_fn(lemonalogfn *_lemona_log,
-+			  lemonarelayisoursfn *_lemona_relay_is_ours)
++#    if defined(CONFIG_LEMONA_RELAY)
++inline bool	lemona_relay_is_ours(const struct dentry* d)
 +{
-+  *_lemona_log = (lemonalogfn)kallsyms_lookup_name("lemona_log");
-+  *_lemona_relay_is_ours = (lemonarelayisoursfn)kallsyms_lookup_name("lemona_relay_is_ours");
++  if (_lemona_relay_is_ours == NULL)
++    _lemona_relay_is_ours = (lemonarelayisoursfn)kallsyms_lookup_name("lemona_relay_is_ours");
++  return (_lemona_relay_is_ours(d));
 +}
++#    endif /* CONFIG_LEMONA_RELAY */
 +#   endif /* LEMONA_READ */
-+#  elif /* CONFIG_LEMONA */
++#  else /* CONFIG_LEMONA_MODULE (i.e. CONFIG_LEMONA defined) */
 +
-+#  define lemona_block_end			\
++#   define lemona_block_end			\
 +    }
 +
++#   if defined(CONFIG_LEMONA_RELAY)
++#    define lemona_relay_is_ours(d) __lemona_relay_is_ours(d)
++#   endif
 +
 +#   define __lemona_log(sysnr, in, argnr, extnr, ...)	lemona_log(sysnr, in, argnr, extnr, ## __VA_ARGS__)
 +
 +#  endif /* CONFIG_LEMONA_MODULE */
++
++# else /* CONFIG_LEMONA || CONFIG_LEMONA_MODULE */
++
++#  define lemona_block_start
++#  define lemona_block_end
++
++#  define lemona_log_in(sysnr, argnr, extnr, ...)
++#  define lemona_log_out(sysnr, argnr, extnr, ...)
++
 +# endif /* CONFIG_LEMONA || CONFIG_LEMONA_MODULE */
 +
 +#endif /* _LEMONA_PATCH_H_ */
-diff -uNr linux.vanilla/lemona/lemona_relay.h linux.lemona/lemona/lemona_relay.h
+diff -uNr linux.vanilla/lemona/lemona_relay.h linux.patch/lemona/lemona_relay.h
 --- linux.vanilla/lemona/lemona_relay.h	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/lemona_relay.h	2008-11-07 20:14:45.000000000 +1100
++++ linux.patch/lemona/lemona_relay.h	2008-12-08 13:40:16.000000000 +1100
 @@ -0,0 +1,99 @@
 +/*
 +** This file is part of Lemona.
@@ -2484,18 +1976,18 @@ diff -uNr linux.vanilla/lemona/lemona_relay.h linux.lemona/lemona/lemona_relay.h
 +
 +int __init	lemona_relay_init(void);
 +void		lemona_relay_cleanup(void);
-+int		lemona_relay_log(const struct lemona_zest *);
++void		lemona_relay_log(const struct lemona_zest *);
 +
 +typedef bool	(*lemonarelayisoursfn)(const struct dentry *dentry);
-+bool		lemona_relay_is_ours(const struct dentry *dentry);
++bool		__lemona_relay_is_ours(const struct dentry *dentry);
 +
 +# else /*  CONFIG_LEMONA_RELAY */
 +
 +struct lemona_relay { };
 +
-+#  define lemona_relay_init()	 0
++#  define lemona_relay_init()	 -1
 +#  define lemona_relay_cleanup()
-+#  define lemona_relay_log(z)	0
++#  define lemona_relay_log(z)
 +#  define lemona_relay_is_ours(d) false
 +
 +typedef bool (*lemonarelayisoursfn)(void *);
@@ -2503,10 +1995,10 @@ diff -uNr linux.vanilla/lemona/lemona_relay.h linux.lemona/lemona/lemona_relay.h
 +# endif /* CONFIG_LEMONA_RELAY */
 +
 +#endif
-diff -uNr linux.vanilla/lemona/logging.c linux.lemona/lemona/logging.c
+diff -uNr linux.vanilla/lemona/logging.c linux.patch/lemona/logging.c
 --- linux.vanilla/lemona/logging.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/logging.c	2008-11-07 20:14:45.000000000 +1100
-@@ -0,0 +1,359 @@
++++ linux.patch/lemona/logging.c	2008-12-08 13:40:16.000000000 +1100
+@@ -0,0 +1,366 @@
 +/*
 +** This file is part of Lemona.
 +** Copyright (C) 2008 Kenfe-Mickaël Laventure
@@ -2529,8 +2021,8 @@ diff -uNr linux.vanilla/lemona/logging.c linux.lemona/lemona/logging.c
 +
 +#include "lemona.h"
 +
-+extern const struct lemona_mixer		lemona_mixers[];
-+extern const int						lemona_mixers_size;
++extern const struct lemona_mixer	lemona_mixers[];
++extern const int			lemona_mixers_size;
 +
 +#if defined (CONFIG_LEMONA_MODULE)
 +atomic_t				lemona_clients	= ATOMIC_INIT(0);
@@ -2557,6 +2049,7 @@ diff -uNr linux.vanilla/lemona/logging.c linux.lemona/lemona/logging.c
 +				     int in, va_list ap)
 +{
 +  int					i	= 0;
++  int					j	= 0;
 +  int					tmp	= 0;
 +  int					size	= 0;
 +  int					bladesnr;
@@ -2577,7 +2070,7 @@ diff -uNr linux.vanilla/lemona/logging.c linux.lemona/lemona/logging.c
 +      bladesnr	= mixer->out.argnr + mixer->out.extnr;
 +    }
 +  /* one blade for each arg then for each ext */
-+  for (i = 0; i < bladesnr; i += handlers[i].dual ? 2 : 1)
++  for (i = 0, j = 0; j < bladesnr; j += handlers[i].dual ? 2 : 1, ++i)
 +    {
 +      if (handlers[i].blade == NULL)
 +	{
@@ -2629,6 +2122,7 @@ diff -uNr linux.vanilla/lemona/logging.c linux.lemona/lemona/logging.c
 +				 va_list ap)
 +{
 +  int					i;
++  int					j;
 +  int					off		= 0;
 +  int					ret		= 0;
 +  const struct __lemona_mixer_handler	*handlers;
@@ -2677,7 +2171,7 @@ diff -uNr linux.vanilla/lemona/logging.c linux.lemona/lemona/logging.c
 +   * Lets put our args into our zest
 +   */
 +  off = (int)((char *)z->args - (char *)z);
-+  for (i = 0; i < z->argnr; i += handlers[i].dual ? 2 : 1)
++  for (i = 0, j = 0; j < z->argnr; j += handlers[i].dual ? 2 : 1, ++i)
 +    {
 +      arg1 = va_arg(ap, void*);
 +      if (handlers[i].dual == true)
@@ -2702,16 +2196,17 @@ diff -uNr linux.vanilla/lemona/logging.c linux.lemona/lemona/logging.c
 +  z->extsz	= (int *)((char *)z + off); /* just after the last arg value */
 +  z->exts	= z->extsz + z->extnr; /* located right after z->extsz */
 +  off		= (int)((char *)z->exts - (char *)z);
-+  for (i = 0; i < z->extnr; i += handlers[i].dual ? 2 : 1)
++  /* don't reinit i, the idx is correct and take dual blades in account */
++  for (j = 0; j < z->extnr; j += handlers[i].dual ? 2 : 1, ++i)
 +    {
 +      arg1 = va_arg(ap, void*);
-+      if (handlers[z->argnr + i].dual == true)
++      if (handlers[i].dual == true)
 +	{
 +	  arg2	= va_arg(ap, void*);
-+	  ret	= handlers[z->argnr + i].blade(z, true, i, off, arg1, arg2);
++	  ret	= handlers[i].blade(z, true, i, off, arg1, arg2);
 +	}
 +      else
-+	ret	= handlers[z->argnr + i].blade(z, true, i, off, arg1, NULL);
++	ret	= handlers[i].blade(z, true, i, off, arg1, NULL);
 +      if (ret < 0)
 +	{
 +	  lemona_printk("exts (syscal %i) in: %i blade %i returned %i\n",
@@ -2762,9 +2257,13 @@ diff -uNr linux.vanilla/lemona/logging.c linux.lemona/lemona/logging.c
 +  zsz = lemona_zest_get_size(mixer, in, ap);
 +  if (zsz > 0)
 +    {
-+      z = kzalloc(zsz, GFP_KERNEL);
++      int	alignedsz;
++
++      /* aligned the allocation */
++      alignedsz	= (zsz / sizeof(int) + zsz % sizeof(int)) * sizeof(int);
++      z		= kzalloc(alignedsz, GFP_KERNEL);
 +      if (z != NULL)
-+	z->size = zsz;
++	z->size		= zsz;
 +      else
 +	{
 +	  lemona_printk("(syscall %i) Unable to create zest with size: %i\n",
@@ -2866,13 +2365,118 @@ diff -uNr linux.vanilla/lemona/logging.c linux.lemona/lemona/logging.c
 +  lemona_clients_dec();
 +  return (ret);
 +}
-diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
+diff -uNr linux.vanilla/lemona/Makefile linux.patch/lemona/Makefile
+--- linux.vanilla/lemona/Makefile	1970-01-01 10:00:00.000000000 +1000
++++ linux.patch/lemona/Makefile	2008-12-08 13:40:16.000000000 +1100
+@@ -0,0 +1,78 @@
++##
++## This file is part of Lemona.
++## Copyright (C) 2008 Kenfe-Mickaël Laventure
++##
++## The contents of this file are subject to the terms of either the
++## GNU General Public License Version 2 ("GPL") or the MIT License
++## (collectively, the "License"). You may not use this file except in
++## compliance with the License. You can obtain a copy of the License
++## at http://www.opensource.org/licenses/gpl-2.0.php and
++## http://www.opensource.org/licenses/mit-license.php or GPL.LICENSE
++## and MIT.LICENSE. See the License for the specific language
++## governing permissions and limitations under the License.
++##
++
++# If KERNELRELEASE is defined, we've been invoked from the
++# kernel build system and can use its language.
++ifneq ($(KERNELRELEASE),)
++
++blades-objs				:= blades/generics.o blades/iovec.o blades/string.o
++lemona-objs				:= init.o mixers.o logging.o $(blades-objs)
++obj-$(CONFIG_LEMONA)	+= lemona.o
++
++#if relay support is needed add the relevant files
++	ifneq ($(CONFIG_LEMONA_RELAY),)
++			lemona-objs	+= relay.o
++	endif
++
++#if net support is needed add the relevant files
++	ifneq ($(CONFIG_LEMONA_NET_LOG),)
++		lemona-objs	+= net.o
++	endif
++
++# originated from command line, force CONFIG_LEMONA_RELAY declaration
++	ifneq ($(LEMONA_RELAY),)
++		EXTRA_CFLAGS		+= -DCONFIG_LEMONA_RELAY=1
++	endif
++
++# Otherwise we were called from the command
++# line; invoke the kernel build system
++else
++
++	ifneq ($(LEMONA_TARGET),)
++		UNAME	:= $(LEMONA_TARGET)
++	else
++		UNAME	:= $(shell uname -r)
++	endif
++
++	KERNELDIR	?= /lib/modules/$(UNAME)/build
++	PWD		:= $(shell pwd)
++
++	CONFIG_LEMONA	:= m
++	export CONFIG_LEMONA
++
++	ifneq ($(LEMONA_RELAY),)
++		CONFIG_LEMONA_RELAY	:= 1
++		export CONFIG_LEMONA_RELAY
++	endif
++
++	ifneq ($(LEMONA_NET_LOG),)
++		CONFIG_LEMONA_NET_LOG	:= 1
++		export CONFIG_LEMONA_NET_LOG
++	endif
++
++default:
++	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
++
++clean:
++	@echo 'Cleaning up...'
++	@find -name '*.o' -o -name '*.ko*' -o -name '*.mod.c' 	\
++	-o -name '*.symvers' -o -name '*~' -o -name '*.order'	\
++	-o -name '*.cmd' -type f | xargs rm -f
++	@rm -rf .tmp_versions
++
++patchclean: clean
++	@find -name '.svn' -type d | xargs rm -rf
++	@find -name '*.tmp' -type f | xargs rm -f
++
++endif
+diff -uNr linux.vanilla/lemona/MIT.LICENSE linux.patch/lemona/MIT.LICENSE
+--- linux.vanilla/lemona/MIT.LICENSE	1970-01-01 10:00:00.000000000 +1000
++++ linux.patch/lemona/MIT.LICENSE	2008-12-08 13:40:16.000000000 +1100
+@@ -0,0 +1,19 @@
++Copyright (c) 2008 Kenfe-Mickaël Laventure, Laurent Malvert
++
++Permission is hereby granted, free of charge, to any person obtaining a copy
++of this software and associated documentation files (the "Software"), to deal
++in the Software without restriction, including without limitation the rights
++to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
++copies of the Software, and to permit persons to whom the Software is
++furnished to do so, subject to the following conditions:
++
++The above copyright notice and this permission notice shall be included in
++all copies or substantial portions of the Software.
++
++THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
++IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
++FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
++AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
++LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
++OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
++THE SOFTWARE.
+diff -uNr linux.vanilla/lemona/mixers.c linux.patch/lemona/mixers.c
 --- linux.vanilla/lemona/mixers.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/mixers.c	2008-11-07 20:14:45.000000000 +1100
-@@ -0,0 +1,5732 @@
++++ linux.patch/lemona/mixers.c	2008-12-08 13:40:16.000000000 +1100
+@@ -0,0 +1,5711 @@
 +/*
 +** This file is part of Lemona.
-+** Copyright (C) 2008 Kenfe-Mickaël Laventure
++** Copyright (C) 2008 Kenfe-Mickaël Laventure, Laurent Malvert
 +**
 +** The contents of this file are subject to the terms of either the
 +** GNU General Public License Version 2 ("GPL") or the MIT License
@@ -2956,8 +2560,8 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +      .argnr	= 2,
 +      .extnr	= 0,
 +      .handlers	= {
-+	/* buf & ret (in this order) */
-+	{ .dual = true	, .blade = lemona_blade_output_buffer	},
++	/* passed as buf & ret (in this order), stored as ret & buf */
++	{ .dual = true	, .blade = lemona_blade_output_buffer		},
 +      },
 +    }
 +  },
@@ -2969,8 +2573,8 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +      .handlers	= {
 +	/* fd */
 +	{ .dual	= false	, .blade = lemona_blade_integer			},
-+	/* buf & count (in this order) */
-+	{ .dual	= true	, .blade = lemona_blade_output_buffer	},
++	/* buf & count (in this order), stored as count & buf */
++	{ .dual	= true	, .blade = lemona_blade_output_buffer		},
 +      }
 +    },
 +    .out	= {
@@ -3061,43 +2665,36 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +    }
 +  },
 +  {
-+    .sysnr	= __NR_link,
++    .sysnr	= __NR_link, /* logged along __NR_linkat */
 +    .in		= {
-+      .argnr	= 2,
++      .argnr	= -1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* oldname */
-+		{ .dual	= true, .blade = lemona_blade_string_null },
-+		/* newname */
-+		{ .dual	= true, .blade = lemona_blade_string_null },
++	{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
-+      .argnr	= 1,
++      .argnr	= -1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* retval */
-+		{ .dual = false, .blade = lemona_blade_long },
-+	{ .dual = false, .blade = NULL },
++	{ .dual = false	, .blade = NULL	},
 +      },
 +    }
 +  },
 +  {
-+    .sysnr	= __NR_unlink,
++    .sysnr	= __NR_unlink, /* logged along __NR_unlinkat */
 +    .in		= {
-+      .argnr	= 1,
++      .argnr	= -1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* pathname */
-+		{ .dual	= false, .blade = lemona_blade_string_null },
++	{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
-+      .argnr	= 1,
++      .argnr	= -1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* retval */
-+		{ .dual = false, .blade = lemona_blade_long },
++	{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3153,25 +2750,19 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +    }
 +  },
 +  {
-+    .sysnr	= __NR_mknod,
++    .sysnr	= __NR_mknod, /* logged along __NR_mknodat */
 +    .in		= {
-+      .argnr	= 3,
++      .argnr	= -1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* filename */
-+		{ .dual	= true, .blade = lemona_blade_string_null },
-+		/* mode */
-+		{ .dual	= true, .blade = lemona_blade_integer },
-+		/* dev */
-+		{ .dual	= true, .blade = lemona_blade_long },
++	{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
-+      .argnr	= 1,
++      .argnr	= -1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* retval */
-+		{ .dual = false, .blade = lemona_blade_long },
++	{ .dual	= false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3573,44 +3164,36 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +    }
 +  },
 +  {
-+    .sysnr	= __NR_rename,
++    .sysnr	= __NR_rename, /* logged along __NR_renameat */
 +    .in		= {
-+      .argnr	= 2,
++      .argnr	= -1,
 +      .extnr	= 0,
 +      .handlers	= {
-+	/* oldname */
-+	{ .dual	= true, .blade = lemona_blade_string_null },
-+	/* newname */
-+	{ .dual	= true, .blade = lemona_blade_string_null },
++	{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
-+      .argnr	= 1,
++      .argnr	= -1,
 +      .extnr	= 0,
 +      .handlers	= {
-+	/* retval */
-+	{ .dual = false, .blade = lemona_blade_long },
++	{ .dual = false, .blade = NULL },
 +      },
 +    }
 +  },
 +  {
-+    .sysnr	= __NR_mkdir,
++    .sysnr	= __NR_mkdir, /* logged along __NR_mkdirat */
 +    .in		= {
-+      .argnr	= 2,
++      .argnr	= -1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* path_name */
-+		{ .dual	= false	, .blade = lemona_blade_string_null	},
-+		/* mode */
-+		{ .dual	= false	, .blade = lemona_blade_integer		}
++	{ .dual	= true, .blade = NULL },
 +      }
 +    },
 +    .out	= {
-+      .argnr	= 1,
++      .argnr	= -1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* retval */
-+		{ .dual	= false	, .blade = lemona_blade_long	},
++	{ .dual	= false, .blade = NULL },
 +      },
 +    }
 +  },
@@ -3620,16 +3203,16 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +      .argnr	= 1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* retval */
-+		{ .dual	= false	, .blade = lemona_blade_string_null	},
++	/* pathname */
++	{ .dual	= false	, .blade = lemona_blade_string_null		},
 +      }
 +    },
 +    .out	= {
 +      .argnr	= 1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* retval */
-+		{ .dual	= false	, .blade = lemona_blade_long	},
++	/* retval */
++	{ .dual	= false	, .blade = lemona_blade_long			},
 +      },
 +    }
 +  },
@@ -4353,18 +3936,18 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +      .argnr	= 2,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* oldname */
-+		{ .dual	= false	, .blade = lemona_blade_string_null	},
-+		/* newname */
-+		{ .dual	= false	, .blade = lemona_blade_string_null	},
++	/* oldpath */
++	{ .dual	= false	, .blade = lemona_blade_string_null		},
++	/* newpath */
++	{ .dual	= false	, .blade = lemona_blade_string_null		},
 +      }
 +    },
 +    .out	= {
 +      .argnr	= 1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* retval */
-+		{ .dual	= false	, .blade = lemona_blade_long	},
++	/* retval */
++	{ .dual	= false	, .blade = lemona_blade_long			},
 +      },
 +    }
 +  },
@@ -6036,7 +5619,7 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +      .extnr	= 0,
 +      .handlers	= {
 +	/* buf & ret (in this order) */
-+	{ .dual	= true	, .blade = lemona_blade_output_buffer	},
++	{ .dual	= true	, .blade = lemona_blade_output_buffer		},
 +      },
 +    }
 +  },
@@ -6049,7 +5632,7 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +	/* fd */
 +	{ .dual	= false	, .blade = lemona_blade_integer			},
 +	/* buf & count (in this order) */
-+	{ .dual	= true	, .blade = lemona_blade_output_buffer	},
++	{ .dual	= true	, .blade = lemona_blade_output_buffer		},
 +	/* offset */
 +	{ .dual	= false	, .blade = lemona_blade_integer64		},
 +      }
@@ -6059,7 +5642,7 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +      .extnr	= 0,
 +      .handlers	= {
 +	/* ret */
-+	{ .dual = false	, .blade = lemona_blade_integer64	},
++	{ .dual = false	, .blade = lemona_blade_integer64		},
 +      },
 +    }
 +  },
@@ -6693,7 +6276,7 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +    }
 +  },
 +  {
-+    .sysnr	= __NR_madvise, /* __NR_madvise1 as the same number */
++    .sysnr	= __NR_madvise, /* __NR_madvise1 has the same number */
 +    .in		= {
 +      .argnr	= -1,
 +      .extnr	= -1,
@@ -8032,20 +7615,20 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +      .argnr	= 3,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* dfd */
-+		{ .dual	= false, .blade = lemona_blade_integer },
-+		/* pathname */
-+		{ .dual	= false, .blade = lemona_blade_string_null },
-+		/* mode */
-+		{ .dual	= false, .blade = lemona_blade_integer },
++	/* dfd */
++	{ .dual	= false	, .blade = lemona_blade_integer			},
++	/* pathname */
++	{ .dual	= false	, .blade = lemona_blade_string_null		},
++	/* mode */
++	{ .dual	= false	, .blade = lemona_blade_integer			},
 +      }
 +    },
 +    .out	= {
 +      .argnr	= 1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* retval */
-+		{ .dual = false, .blade = lemona_blade_long },
++	/* retval */
++	{ .dual = false	, .blade = lemona_blade_long			},
 +      },
 +    }
 +  },
@@ -8055,22 +7638,22 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +      .argnr	= 4,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* dfd */
-+		{ .dual	= false, .blade = lemona_blade_integer },
-+		/* filename */
-+		{ .dual	= false, .blade = lemona_blade_string_null },
-+		/* mode */
-+		{ .dual	= false, .blade = lemona_blade_integer },
-+		/* dev */
-+		{ .dual	= false, .blade = lemona_blade_long },
++	/* dfd */
++	{ .dual	= false	, .blade = lemona_blade_integer			},
++	/* filename */
++	{ .dual	= false	, .blade = lemona_blade_string_null		},
++	/* mode */
++	{ .dual	= false	, .blade = lemona_blade_integer			},
++	/* dev */
++	{ .dual	= false	, .blade = lemona_blade_long			},
 +      }
 +    },
 +    .out	= {
 +      .argnr	= 1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* retval */
-+		{ .dual = false, .blade = lemona_blade_long },
++	/* retval */
++	{ .dual = false	, .blade = lemona_blade_long			},
 +      },
 +    }
 +  },
@@ -8131,20 +7714,20 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +      .argnr	= 3,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* dfd */
-+		{ .dual = false, .blade = lemona_blade_integer },
-+		/* pathname */
-+		{ .dual = false, .blade = lemona_blade_string_null },
-+		/* flag */
-+		{ .dual = false, .blade = lemona_blade_integer },
++	/* dfd */
++	{ .dual = false	, .blade = lemona_blade_integer			},
++	/* pathname */
++	{ .dual = false	, .blade = lemona_blade_string_null		},
++	/* flag */
++	{ .dual = false	, .blade = lemona_blade_integer			},
 +      }
 +    },
 +    .out	= {
 +      .argnr	= 1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* retval */
-+		{ .dual = false, .blade = lemona_blade_long },
++	/* retval */
++	{ .dual = false	, .blade = lemona_blade_long			},
 +      },
 +    }
 +  },
@@ -8154,22 +7737,22 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +      .argnr	= 4,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* olddfd */
-+		{ .dual = false, .blade = lemona_blade_integer },
-+		/* oldname */
-+		{ .dual = false, .blade = lemona_blade_string_null },
-+		/* newdfd */
-+		{ .dual = false, .blade = lemona_blade_integer },
-+		/*  */
-+		{ .dual = false, .blade = lemona_blade_string_null },
++	/* olddfd */
++	{ .dual = false	, .blade = lemona_blade_integer			},
++	/* oldname */
++	{ .dual = false	, .blade = lemona_blade_string_null		},
++	/* newdfd */
++	{ .dual = false	, .blade = lemona_blade_integer			},
++	/*  */
++	{ .dual = false	, .blade = lemona_blade_string_null		},
 +      }
 +    },
 +    .out	= {
 +      .argnr	= 1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* error */
-+		{ .dual = false, .blade = lemona_blade_long },
++	/* error */
++	{ .dual = false	, .blade = lemona_blade_long			},
 +      },
 +    }
 +  },
@@ -8179,24 +7762,24 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +      .argnr	= 5,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* olddfd */
-+		{ .dual = false, .blade = lemona_blade_integer },
-+		/* oldname */
-+		{ .dual = false, .blade = lemona_blade_string_null },
-+		/* newdfd */
-+		{ .dual = false, .blade = lemona_blade_integer },
-+		/* newname */
-+		{ .dual = false, .blade = lemona_blade_string_null },
-+		/* flags */
-+		{ .dual = false, .blade = lemona_blade_integer },
++	/* olddfd */
++	{ .dual = false	, .blade = lemona_blade_integer			},
++	/* oldname */
++	{ .dual = false	, .blade = lemona_blade_string_null		},
++	/* newdfd */
++	{ .dual = false	, .blade = lemona_blade_integer			},
++	/* newname */
++	{ .dual = false	, .blade = lemona_blade_string_null		},
++	/* flags */
++	{ .dual = false	, .blade = lemona_blade_integer			},
 +      }
 +    },
 +    .out	= {
 +      .argnr	= 1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* retval */
-+		{ .dual = false, .blade = lemona_blade_long },
++	/* retval */
++	{ .dual = false	, .blade = lemona_blade_long			},
 +      },
 +    }
 +  },
@@ -8206,20 +7789,20 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +      .argnr	= 3,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* oldname */
-+		{ .dual = false, .blade = lemona_blade_string_null },
-+		/* newfd */
-+		{ .dual = false, .blade = lemona_blade_integer },
-+		/* newname */
-+		{ .dual = false, .blade = lemona_blade_string_null },
++	/* oldname */
++	{ .dual = false, .blade = lemona_blade_string_null },
++	/* newfd */
++	{ .dual = false, .blade = lemona_blade_integer },
++	/* newname */
++	{ .dual = false, .blade = lemona_blade_string_null },
 +      }
 +    },
 +    .out	= {
 +      .argnr	= 1,
 +      .extnr	= 0,
 +      .handlers	= {
-+		/* retval */
-+		{ .dual = false, .blade = lemona_blade_long },
++	/* retval */
++	{ .dual = false, .blade = lemona_blade_long },
 +      },
 +    }
 +  },
@@ -8602,10 +8185,10 @@ diff -uNr linux.vanilla/lemona/mixers.c linux.lemona/lemona/mixers.c
 +const int	lemona_mixers_size = sizeof(lemona_mixers)
 +					/ sizeof(*lemona_mixers);
 +
-diff -uNr linux.vanilla/lemona/net.c linux.lemona/lemona/net.c
+diff -uNr linux.vanilla/lemona/net.c linux.patch/lemona/net.c
 --- linux.vanilla/lemona/net.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/net.c	2008-11-07 20:14:45.000000000 +1100
-@@ -0,0 +1,141 @@
++++ linux.patch/lemona/net.c	2008-12-08 13:40:16.000000000 +1100
+@@ -0,0 +1,214 @@
 +/*
 +** This file is part of Lemona.
 +** Copyright (C) 2008 Kenfe-Mickaël Laventure
@@ -8620,8 +8203,16 @@ diff -uNr linux.vanilla/lemona/net.c linux.lemona/lemona/net.c
 +** governing permissions and limitations under the License.
 +*/
 +
++#include <linux/inetdevice.h>
++#include <linux/notifier.h> /* struct notifier_block */
 +#include <linux/jiffies.h> /* jiffies, time_after, HZ */
 +#include <linux/module.h> /* module_param */
++
++#include <linux/in.h> /* INADDR_LOOPBACK */
++#include <linux/net.h> /* struct socket */
++#include <net/sock.h> /* struct sock */
++
++#include <linux/spinlock.h>
 +
 +#include "lemona.h"
 +
@@ -8630,9 +8221,20 @@ diff -uNr linux.vanilla/lemona/net.c linux.lemona/lemona/net.c
 +module_param(net_log_addr, charp, S_IRUGO);
 +module_param(net_log_port, int, S_IRUGO);
 +
++static int		lemona_net_activated = 0;
++
 +extern struct lemona	*juice;
 +
-+static void	__lemona_net_cleanup(void);
++static int		__lemona_net_init(void);
++static void		__lemona_net_cleanup(void);
++
++static int		lemona_net_inetaddr_notifier(struct notifier_block *,
++						     unsigned long,
++						     void *);
++
++static struct notifier_block	lemona_net_inetaddr_nb = {
++  .notifier_call	= lemona_net_inetaddr_notifier,
++};
 +
 +static inline int	lemona_net_serv_get(void)
 +{
@@ -8645,26 +8247,34 @@ diff -uNr linux.vanilla/lemona/net.c linux.lemona/lemona/net.c
 +  return (htonl((a << 24) | (b << 16) | (c << 8) | d));
 +}
 +
-+int				lemona_net_init(bool init)
++static int		lemona_net_inetaddr_notifier(struct notifier_block *nb,
++						     unsigned long val,
++						     void * data)
 +{
-+  int		ret	= 0;
-+  struct socket	*sock	= NULL;
++/*   struct in_ifaddr	*addr = (struct in_ifaddr *)data; */
 +
-+  if (init == true)
-+    {
-+      mutex_init(&(juice->net.lock));
++  if (!lemona_net_activated)
++    return (NOTIFY_DONE);
 +
-+      juice->net.sin.sin_family		= AF_INET;
-+      juice->net.sin.sin_addr.s_addr	= lemona_net_serv_get();
-+      juice->net.sin.sin_port		= htons(net_log_port);
-+    }
++  /* if interface is going down... */
++  if (val == NETDEV_DOWN)
++    lemona_net_cleanup();
 +
-+  mutex_lock(&(juice->net.lock));
++  /*
++    TODO: Found a way to only cleanup when reboot/halt function are called
++    to avoid overhead of releasing and reopening the socket for nothing
++   */
++  return (NOTIFY_DONE);
++}
++
++static int		__lemona_net_init(void)
++{
++  int			ret	= 0;
++  struct socket		*sock	= NULL;
 +
 +  if (juice->net.sock != NULL
 +      || (juice->net.sock == NULL
-+	  && !(ret = time_after(jiffies, juice->net.timeout))
-+	  && init == false))
++	  && !(ret = time_after(jiffies, juice->net.timeout))))
 +    goto out;
 +
 +  ret = sock_create_kern(AF_INET, SOCK_STREAM, IPPROTO_TCP, &sock);
@@ -8683,6 +8293,7 @@ diff -uNr linux.vanilla/lemona/net.c linux.lemona/lemona/net.c
 +      lemona_printk("Unable to connect to server: %i\n", ret);
 +      goto out;
 +    }
++  sock->sk->sk_rcvtimeo	= 2 * HZ;
 +  lemona_printk("We are now connected to server %s:%d\n",
 +		net_log_addr, net_log_port);
 + out:
@@ -8691,8 +8302,34 @@ diff -uNr linux.vanilla/lemona/net.c linux.lemona/lemona/net.c
 +      juice->net.timeout	= jiffies + (NET_LOG_RETRY * HZ);
 +      __lemona_net_cleanup();
 +    }
++  return (ret);
++}
++
++int			lemona_net_init(void)
++{
++  int		ret	= 0;
++
++  mutex_init(&(juice->net.lock));
++
++  juice->net.sin.sin_family		= AF_INET;
++  juice->net.sin.sin_addr.s_addr	= lemona_net_serv_get();
++  juice->net.sin.sin_port		= htons(net_log_port);
++
++  ret = register_inetaddr_notifier(&lemona_net_inetaddr_nb);
++  if (ret != 0)
++    {
++      lemona_printk("Unable to register notifier for inetaddr changes. "
++		    "Net module will be deactivated\n");
++      return (0);
++    }
++
++  mutex_lock(&(juice->net.lock));
++  /* ensure timeout don't block us */
++  juice->net.timeout	= jiffies - (NET_LOG_RETRY * HZ);
++  __lemona_net_init();
++  lemona_net_activated = 1;
 +  mutex_unlock(&(juice->net.lock));
-+  return (init ? 0 : ret);
++  return (0);
 +}
 +
 +/*
@@ -8701,39 +8338,58 @@ diff -uNr linux.vanilla/lemona/net.c linux.lemona/lemona/net.c
 + */
 +void			lemona_net_log(struct lemona_zest *zest)
 +{
-+  if (lemona_net_init(false) != 0)
-+    return; /* couldn't get a socket working */
++  if (!lemona_net_activated)
++    return;
++
++  mutex_lock(&(juice->net.lock));
++  if (__lemona_net_init() != 0)
++    {
++      mutex_unlock(&(juice->net.lock));
++      return; /* couldn't get a socket working */
++    }
 +
 +  if (juice->net.sock)
 +    {
-+      int			ret;
-+      int			sent;
-+      struct kvec		kvec = {
-+	.iov_base		= zest,
-+	.iov_len		= zest->size
++      int		ret;
++      struct kvec	kvec = {
++	.iov_base	= zest,
++	/* Zest are aligned on sizeof(int) */
++	.iov_len	= (zest->size / sizeof(int)
++			   + zest->size % sizeof(int)) * sizeof(int)
 +      };
-+      struct msghdr		hdr = { 0 };
++      struct msghdr	hdr = {
++	.msg_flags	= /* MSG_DONTWAIT | */ MSG_NOSIGNAL
++      };
 +
-+      hdr.msg_flags = MSG_NOSIGNAL;
-+      mutex_lock(&(juice->net.lock));
-+      for (sent = 0; sent != zest->size; sent += ret)
++      /*
++       * TODO: if the interface used doesn't have an IP
++       * and the link is broken the whole system will freeze.
++       * I have no workaround so far for that. I don't even understand
++       * why the kernel let us connect in the first place...
++       */
++      while (kvec.iov_len > 0)
 +	{
 +	  ret = kernel_sendmsg(juice->net.sock, &hdr, &kvec, 1, kvec.iov_len);
-+	  if (ret < 0)
++	  if (ret <= 0)
 +	    {
-+	      lemona_printk("kernel_sendmsg: unable to send message: %i\n",
-+			    ret);
-+	      lemona_net_cleanup();
++	      if (ret == -EAGAIN)
++		  continue;
++	      __lemona_net_cleanup();
++	      if (ret != 0)
++		lemona_printk("kernel_sendmsg: unable to send message: %i\n",
++			      ret);
 +	      /* this is the time after which we will be able to try again */
 +	      juice->net.timeout	= jiffies + (NET_LOG_RETRY * HZ);
 +	      break;
 +	    }
++	  kvec.iov_base	= (char *)zest + ret;
++	  kvec.iov_len	= kvec.iov_len - ret;
 +	}
-+      mutex_unlock(&(juice->net.lock));
 +    }
++  mutex_unlock(&(juice->net.lock));
 +}
 +
-+static void	__lemona_net_cleanup(void)
++static void		__lemona_net_cleanup(void)
 +{
 +  if (!juice->net.sock)
 +    return;
@@ -8741,16 +8397,152 @@ diff -uNr linux.vanilla/lemona/net.c linux.lemona/lemona/net.c
 +  juice->net.sock	= NULL;
 +}
 +
-+void	lemona_net_cleanup(void)
++void			lemona_net_cleanup(void)
 +{
 +  mutex_lock(&(juice->net.lock));
 +  __lemona_net_cleanup();
 +  mutex_unlock(&(juice->net.lock));
 +}
-diff -uNr linux.vanilla/lemona/relay.c linux.lemona/lemona/relay.c
+diff -uNr linux.vanilla/lemona/README linux.patch/lemona/README
+--- linux.vanilla/lemona/README	1970-01-01 10:00:00.000000000 +1000
++++ linux.patch/lemona/README	2008-12-08 13:40:16.000000000 +1100
+@@ -0,0 +1,132 @@
++Lemona Good To Know Stuff
++================================================
++
++* Supported Kernel & Architecture
++* How-To Build Using Full Patch
++* How-To Build Using Partial Patch (Developers)
++* Loading Lemona (if build as a Module)
++* Unloading Lemona (if build as a Module)
++* How-To Generate Kernel Patch (Developers)
++
++================================================
++Supported Kernel
++================================================
++
++Currently, Lemona has only be tested against the Linux 2.6.26.3
++vanilla sources. Futhermore, Lemona is only available for the x86
++architecture.
++
++================================================
++How-To Build Using Full Patch
++================================================
++
++Building Lemona as a kernel module is quite simple:
++
++  - Download the patch corresponding to your kernel:
++     wget http://lemona.googlecode.com/svn/trunk/patchs/patch-X.X.XX.X \
++     -O lemona.patch-X.X.XX.X
++
++  - Apply the patch to your kernel
++     cd $(PATH_TO_KERNEL_SRC)
++     patch -p1 < lemona_patch-X.X.XX.X
++
++  - Select the build mode for lemona in your kernel .config by using
++    make menuconfig for instance
++     make menuconfig
++       General Setup ->
++         Kernel->user space relay support (formerly relayfs)
++         Configure standard kernel features (for small systems) ->
++           Load all symbols for debugging/ksymoops
++             Include all symbol in kallsyms
++       Kernel Hacking ->
++         Debug Filesystem
++       Lemona ->
++         Enable Lemona
++
++  - Build & install your new kernel
++
++================================================
++How-To Build Using Partial Patch (Developers)
++================================================
++
++  - Checkout the lemona sources
++     svn co http://lemona.googlecode.com/svn/trunk/ lemona-read-only
++
++  - Update your kernel sources to include lemona
++     cd $(PATH_TO_KERNEL_SRC)
++     patch -p1 < $(PATH_TO_LEMONA_SRC)/patchs/patch-X.X.XX.X.partial
++     ln -s $(PATH_TO_LEMONA_SRC) lemona
++
++  - Select the build mode for lemona in your kernel .config by using
++    make menuconfig for instance
++     make menuconfig
++       Lemona ->
++         Enable Lemona
++
++  - Build & install your new kernel
++
++================================================
++Loading Lemona (if build as a Module)
++================================================
++
++To load Lemona simply use the following command:
++  insmod ./lemona.ko
++You should see a line like the following in your logs (use dmesg to see it):
++  -==Lemona==- Initialization for kernel tree 2.6.26.3...
++  -==Lemona==- Done.
++
++================================================
++Unloading Lemona (if build as a Module)
++================================================
++
++To unload Lemona simply use the following command:
++  rmmod lemona
++The following line should appear in your logs (use dmesg to see it)
++  -==Lemona==- Uninitializing...
++  -==Lemona==- Done.
++
++================================================
++How-To Generate Kernel Patch (Developers)
++================================================
++
++To generate a new lemona patch, you will need the following:
++  - a Linux Kernel vanilla untouched (i.e. you just extracted it and
++    didn't do ANYTHING else. No make menuconfig, no compilation, NOTHING).
++    We'll call it linux.vanilla.
++
++  - The same Kernel modified to support Lemona but without any object,
++    backup, vn or other uneeded files.
++    We'll call it linux.lemona
++
++  - These 2 folders should be directly accessible from a common one
++    (use symbolic links if necessary)
++
++Now, generating the patch is quite easy:
++  - Go to the directory where you can directly access both kernel sources
++
++  - Execute the following command (where X.X.XX.X is the kernel version)
++     diff -uNr linux.vanilla linux.lemona > patch-X.X.XX.X
++
++  - NOTE: Be sure NOT to have any trailing directory before either
++    linux.vanilla or linux.lemona or the standard patching method (-p1
++    option to patch) won't work
++
++  - Check your patch to ensure that it didn't include any unwanted
++    change (maybe you forgot to delete a backup file?)
++
++
++================================================
++Debugging using KGDB (VirtualBox)
++================================================
++
++ - Compile Kernel with Debug Info
++ - Configure host pipe in VirtualBox
++ - add following boot option
++	kgdboc=ttyS0,115200 kgbwait
++ - # socat -d -d /path_to_pipe/com_1 PTY:
++		2008/11/01 12:00:16 socat[14779] N successfully connected via
++		2008/11/01 12:00:16 socat[14779] N PTY is /dev/pts/7
++		2008/11/01 12:00:16 socat[14779] N starting data transfer loop with FDs [3,3] and [4,4]
++ - gdb vmlinux
++		set remotebaud 115200
++		target remote /dev/pts/7
+diff -uNr linux.vanilla/lemona/relay.c linux.patch/lemona/relay.c
 --- linux.vanilla/lemona/relay.c	1970-01-01 10:00:00.000000000 +1000
-+++ linux.lemona/lemona/relay.c	2008-11-07 20:14:45.000000000 +1100
-@@ -0,0 +1,159 @@
++++ linux.patch/lemona/relay.c	2008-12-08 13:40:16.000000000 +1100
+@@ -0,0 +1,161 @@
 +/*
 +** This file is part of Lemona.
 +** Copyright (C) 2008 Kenfe-Mickaël Laventure
@@ -8883,7 +8675,7 @@ diff -uNr linux.vanilla/lemona/relay.c linux.lemona/lemona/relay.c
 +  return (err);
 +}
 +
-+bool			lemona_relay_is_ours(const struct dentry *dentry)
++bool			__lemona_relay_is_ours(const struct dentry *dentry)
 +{
 +  struct lemona_relay_file	*f;
 +
@@ -8894,10 +8686,12 @@ diff -uNr linux.vanilla/lemona/relay.c linux.lemona/lemona/relay.c
 +  return (false);
 +}
 +
-+int			lemona_relay_log(const struct lemona_zest *zest)
++void			lemona_relay_log(const struct lemona_zest *zest)
 +{
-+  relay_write(juice->rchan, zest, zest->size);
-+  return (0);
++  /* Zest are aligned on sizeof(int) */
++  relay_write(juice->rchan, zest,
++	      (zest->size / sizeof(int)
++	       + zest->size % sizeof(int)) * sizeof(int));
 +}
 +
 +void			lemona_relay_cleanup(void)
@@ -8910,9 +8704,46 @@ diff -uNr linux.vanilla/lemona/relay.c linux.lemona/lemona/relay.c
 +		debugfs_remove(juice->relay.dir);
 +    }
 +}
-diff -uNr linux.vanilla/mm/mmap.c linux.lemona/mm/mmap.c
---- linux.vanilla/mm/mmap.c	2008-08-21 04:11:37.000000000 +1000
-+++ linux.lemona/mm/mmap.c	2008-11-05 20:12:50.000000000 +1100
+diff -uNr linux.vanilla/Makefile linux.patch/Makefile
+--- linux.vanilla/Makefile	2008-09-27 17:26:00.000000000 +1000
++++ linux.patch/Makefile	2008-12-08 13:30:53.000000000 +1100
+@@ -454,6 +454,7 @@
+ net-y		:= net/
+ libs-y		:= lib/
+ core-y		:= usr/
++lemona-y	:= lemona/
+ endif # KBUILD_EXTMOD
+ 
+ ifeq ($(dot-config),1)
+@@ -611,7 +612,7 @@
+ 
+ vmlinux-dirs	:= $(patsubst %/,%,$(filter %/, $(init-y) $(init-m) \
+ 		     $(core-y) $(core-m) $(drivers-y) $(drivers-m) \
+-		     $(net-y) $(net-m) $(libs-y) $(libs-m)))
++		     $(net-y) $(net-m) $(libs-y) $(libs-m) $(lemona-y)))
+ 
+ vmlinux-alldirs	:= $(sort $(vmlinux-dirs) $(patsubst %/,%,$(filter %/, \
+ 		     $(init-n) $(init-) \
+@@ -625,6 +626,7 @@
+ libs-y1		:= $(patsubst %/, %/lib.a, $(libs-y))
+ libs-y2		:= $(patsubst %/, %/built-in.o, $(libs-y))
+ libs-y		:= $(libs-y1) $(libs-y2)
++lemona-y	:=  $(patsubst %/, %/built-in.o, $(lemona-y))
+ 
+ # Build vmlinux
+ # ---------------------------------------------------------------------------
+@@ -654,7 +656,7 @@
+ # System.map is generated to document addresses of all kernel symbols
+ 
+ vmlinux-init := $(head-y) $(init-y)
+-vmlinux-main := $(core-y) $(libs-y) $(drivers-y) $(net-y)
++vmlinux-main := $(core-y) $(libs-y) $(drivers-y) $(net-y) $(lemona-y)
+ vmlinux-all  := $(vmlinux-init) $(vmlinux-main)
+ vmlinux-lds  := arch/$(SRCARCH)/kernel/vmlinux.lds
+ export KBUILD_VMLINUX_OBJS := $(vmlinux-all)
+diff -uNr linux.vanilla/mm/mmap.c linux.patch/mm/mmap.c
+--- linux.vanilla/mm/mmap.c	2008-09-27 17:26:16.000000000 +1000
++++ linux.patch/mm/mmap.c	2008-12-08 13:33:25.000000000 +1100
 @@ -1130,8 +1130,8 @@
  	 */
  	if (!file && !(vm_flags & VM_SHARED) &&
