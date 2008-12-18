@@ -56,4 +56,11 @@ int		lemona_blade_string_fd(struct lemona_zest *zest,
 				       int isExt, int idx, int off,
 				       void __user *str, void *unused);
 
+/*
+ * from blades/iovec.c
+ */
+int		lemona_blade_iovec(struct lemona_zest *zest,
+				   int isExt, int idx, int off,
+				   void *iov, void *vlen);
+
 #endif

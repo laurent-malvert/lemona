@@ -16,22 +16,22 @@
 from struct     import unpack_from
 from blades     import console
 
-sysnr   = { "2.6.26.3" : 5 }
+sysnr   = { "2.6.26.3" : 295 }
 
-sysname = "__NR_open"
+sysname = "__NR_openat"
 
 def ProcessIn(z):
     # some sanity check
-    if z.argnr != 3 or z.extnr != 0:
+    if z.argnr != 4 or z.extnr != 0:
         raise NameError("Invalid '%s' Zest (In)" % sysname, z)
     #Filename as passed by user
-    print z.argsz[0]
-    console.PrintString("FILENAME", z.args[0], z.argsz[0])
+    console.PrintString("FILENAME", z.args[1], z.argsz[1])
     #Flags & mode
-    print " %s | %s " % ("FLAGS".center(37), "MODE".center(37))
+    print " %s | %s | %s " % ("DIRFD".center(22),
+                              "FLAGS".center(22), "MODE".center(22))
     print "-" * 80
-    flags       = unpack_from("i", z.args[1])[0]
-    mode        = unpack_from("i", z.args[2])[0]
+    flags       = unpack_from("i", z.args[2])[0]
+    mode        = unpack_from("i", z.args[3])[0]
     print " %s | %s " % (str(flags).center(37), str(mode).center(37))
     print "-" * 80
 
@@ -45,10 +45,10 @@ def ProcessOut(z):
     print "-" * 80
     #Path as resolved by kernel
     if ret >= 0:
-        pth     = z.exts[0].split("/")
-        pth.reverse()
-        pth     = "/".join(pth)
-        console.PrintString("RESOLVED PATH", pth, z.extsz[0])
+        str     = z.args[1].split("/")
+        str.reverse()
+        str     = "/".join(str)
+        console.PrintString("RESOLVED PATH", str, z.argsz[1])
 
 def Process(zest):
     if zest.inout == True:

@@ -71,13 +71,15 @@ def PrintString(header, str, strlen):
 def PrintBuffer(header, buf, buflen):
     print "%s" % header.center(80)
     print "-" * 80
-    off         = 0
-    #avoid uneeded \n
-    if buf[-1] == "\n":
-        buf = buf[:buflen - 1]
-    while off < buflen:
-        print " %017x | %s " % (off, buf[off:off+58])
-        off     += 58
+    offTot      = 0
+    bufs        = buf.replace("\t", "    ").split("\n")
+    for b in bufs:
+        off     = 0
+        blen    = len(b)
+        while off < blen:
+            print " %017x | %s " % (offTot + off, b[off:off+58])
+            off     += 58
+        offTot  += blen
     print "-" * 80
 
 def Process(opts, zest):

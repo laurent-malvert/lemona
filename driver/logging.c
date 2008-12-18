@@ -51,6 +51,7 @@ static int	lemona_zest_get_size(const struct lemona_mixer *mixer,
   int					j	= 0;
   int					tmp	= 0;
   int					size	= 0;
+  int					argnr	= 0;
   int					bladesnr;
   const struct __lemona_mixer_handler	*handlers;
   void					*arg1, *arg2;
@@ -60,11 +61,13 @@ static int	lemona_zest_get_size(const struct lemona_mixer *mixer,
 
   if (in == true)
     {
+      argnr     = mixer->in.argnr;
       handlers	= mixer->in.handlers;
       bladesnr	= mixer->in.argnr + mixer->in.extnr;
     }
   else
     {
+      argnr     = mixer->out.argnr;
       handlers	= mixer->out.handlers;
       bladesnr	= mixer->out.argnr + mixer->out.extnr;
     }
@@ -83,10 +86,10 @@ static int	lemona_zest_get_size(const struct lemona_mixer *mixer,
       if (handlers[i].dual == true)
 	{
 	  arg2	= va_arg(ap, void*);
-	  tmp	= handlers[i].blade(NULL, false, i, 0, arg1, arg2);
+	  tmp	= handlers[i].blade(NULL, i > argnr, -1, 0, arg1, arg2);
 	}
       else
-	tmp	= handlers[i].blade(NULL, false, i, 0, arg1, NULL);
+	tmp	= handlers[i].blade(NULL, i > argnr, -1, 0, arg1, NULL);
       if (tmp < 0)
 	{
 	  lemona_printk("lemona_zest_get_size: "
@@ -176,10 +179,10 @@ static int	lemona_zest_fill(const struct lemona_mixer *mixer,
       if (handlers[i].dual == true)
 	{
 	  arg2	= va_arg(ap, void*);
-	  ret	= handlers[i].blade(z, false, i, off, arg1, arg2);
+	  ret	= handlers[i].blade(z, false, j, off, arg1, arg2);
 	}
       else
-	ret	= handlers[i].blade(z, false, i, off, arg1, NULL);
+	ret	= handlers[i].blade(z, false, j, off, arg1, NULL);
       if (ret < 0)
 	{
 	  lemona_printk("args (syscal %i) in: %i blade %i returned -1\n",
@@ -202,10 +205,10 @@ static int	lemona_zest_fill(const struct lemona_mixer *mixer,
       if (handlers[i].dual == true)
 	{
 	  arg2	= va_arg(ap, void*);
-	  ret	= handlers[i].blade(z, true, i, off, arg1, arg2);
+	  ret	= handlers[i].blade(z, true, j, off, arg1, arg2);
 	}
       else
-	ret	= handlers[i].blade(z, true, i, off, arg1, NULL);
+	ret	= handlers[i].blade(z, true, j, off, arg1, NULL);
       if (ret < 0)
 	{
 	  lemona_printk("exts (syscal %i) in: %i blade %i returned %i\n",

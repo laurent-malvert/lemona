@@ -29,7 +29,7 @@ diff -uNr linux.vanilla/arch/x86/mm/fault.c linux.patch/arch/x86/mm/fault.c
  /*
 diff -uNr linux.vanilla/fs/namei.c linux.patch/fs/namei.c
 --- linux.vanilla/fs/namei.c	2008-09-27 17:26:10.000000000 +1000
-+++ linux.patch/fs/namei.c	2008-12-08 13:30:26.000000000 +1100
++++ linux.patch/fs/namei.c	2008-12-18 16:33:47.000000000 +1100
 @@ -34,6 +34,9 @@
  #include <asm/namei.h>
  #include <asm/uaccess.h>
@@ -260,7 +260,7 @@ diff -uNr linux.vanilla/fs/namei.c linux.patch/fs/namei.c
  
 diff -uNr linux.vanilla/fs/open.c linux.patch/fs/open.c
 --- linux.vanilla/fs/open.c	2008-09-27 17:26:11.000000000 +1000
-+++ linux.patch/fs/open.c	2008-12-08 13:30:20.000000000 +1100
++++ linux.patch/fs/open.c	2008-12-18 16:33:38.000000000 +1100
 @@ -30,6 +30,8 @@
  #include <linux/audit.h>
  #include <linux/falloc.h>
@@ -347,7 +347,7 @@ diff -uNr linux.vanilla/fs/open.c linux.patch/fs/open.c
  EXPORT_SYMBOL(sys_close);
 diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
 --- linux.vanilla/fs/read_write.c	2008-09-27 17:26:11.000000000 +1000
-+++ linux.patch/fs/read_write.c	2008-12-08 13:30:11.000000000 +1100
++++ linux.patch/fs/read_write.c	2008-12-18 16:33:27.000000000 +1100
 @@ -21,6 +21,9 @@
  #include <asm/uaccess.h>
  #include <asm/unistd.h>
@@ -382,7 +382,7 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
  bad:
 +	lemona_block_start {
 +	  if (lemona_file == false)
-+	    lemona_log_out(__NR_lseek, false, 1, 0, &retval);
++	    lemona_log_out(__NR_lseek, 1, 0, &retval);
 +	} lemona_block_end;
  	return retval;
  }
@@ -445,7 +445,7 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
  
 +	lemona_block_start {
 +	  if (lemona_file == false)
-+	    lemona_log_out(__NR_read, false, 2, 0, buf, &ret);
++	    lemona_log_out(__NR_read, 2, 0, buf, &ret);
 +	} lemona_block_end;
  	return ret;
  }
@@ -508,7 +508,7 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
  
 +	lemona_block_start {
 +	  if (lemona_file == false)
-+	    lemona_log_out(__NR_pread64, false, 2, 0, buf, &ret);
++	    lemona_log_out(__NR_pread64, 2, 0, buf, &ret);
 +	} lemona_block_end;
  	return ret;
  }
@@ -544,6 +544,59 @@ diff -uNr linux.vanilla/fs/read_write.c linux.patch/fs/read_write.c
  
 +	lemona_block_start {
 +	  lemona_log_out(__NR_pwrite64, 1, 0, &ret);
++	} lemona_block_end;
+ 	return ret;
+ }
+ 
+@@ -659,8 +734,18 @@
+ 	struct file *file;
+ 	ssize_t ret = -EBADF;
+ 	int fput_needed;
++#if defined(LEMONA)
++	bool lemona_file = false;
++#endif
+ 
+ 	file = fget_light(fd, &fput_needed);
++
++	lemona_block_start {
++	  if (file == NULL
++	      || !(lemona_file = lemona_relay_is_ours(file->f_dentry)))
++	    lemona_log_in(__NR_readv, 1, 0, &fd);
++	} lemona_block_end;
++
+ 	if (file) {
+ 		loff_t pos = file_pos_read(file);
+ 		ret = vfs_readv(file, vec, vlen, &pos);
+@@ -671,6 +756,11 @@
+ 	if (ret > 0)
+ 		add_rchar(current, ret);
+ 	inc_syscr(current);
++
++	lemona_block_start {
++	  if (lemona_file == false)
++	    lemona_log_out(__NR_readv, 3, 0, &ret, vec, vlen);
++	} lemona_block_end;
+ 	return ret;
+ }
+ 
+@@ -681,6 +771,10 @@
+ 	ssize_t ret = -EBADF;
+ 	int fput_needed;
+ 
++	lemona_block_start {
++	  lemona_log_in(__NR_writev, 3, 0, &fd, vec, &vlen);
++	} lemona_block_end;
++
+ 	file = fget_light(fd, &fput_needed);
+ 	if (file) {
+ 		loff_t pos = file_pos_read(file);
+@@ -692,6 +786,10 @@
+ 	if (ret > 0)
+ 		add_wchar(current, ret);
+ 	inc_syscw(current);
++
++	lemona_block_start {
++	  lemona_log_out(__NR_writev, 1, 0, &ret);
 +	} lemona_block_end;
  	return ret;
  }

@@ -22,14 +22,14 @@ sysname = "__NR_close"
 
 def ProcessDo(z, hdr):
     # some sanity check
-    if z.argnr != 2 or z.extnr != 0:
-        raise NameError("Invalid '%s' Zest (In)" % sysname, zest)
+    if z.argnr != 1 or z.extnr != 0:
+        raise NameError("Invalid '%s' Zest (In)" % sysname, z)
     val       = unpack_from("i", z.args[0])[0]
     print " %s | %s " % (hdr.center(17), str(val).center(38))
     print "-" * 80
 
 def Process(zest):
     if zest.inout == True:
-        ProcessIn(zest, "FD")
+        ProcessDo(zest, "FD")
     else:
-        ProcessOut(zest, "RETURNED")
+        ProcessDo(zest, "RETURNED")

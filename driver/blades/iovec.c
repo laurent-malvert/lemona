@@ -36,8 +36,8 @@
  * NOTE: As you would have guessed this is a dual blade.
  */
 int		lemona_blade_iovec(struct lemona_zest *zest,
-						   int isExt, int idx, int off,
-						   void *iov, void *vlen)
+				   int isExt, int idx, int off,
+				   void *iov, void *vlen)
 {
   /* TODO: code lemona_blade_iovec */
   return (0);

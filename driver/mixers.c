@@ -2435,7 +2435,7 @@ const struct lemona_mixer	lemona_mixers[]= {
       .handlers	= {
 	/* fd */
 	{ .dual	= false	, .blade = lemona_blade_integer			},
-	/* offset_hight */
+	/* offset_high */
 	{ .dual	= false	, .blade = lemona_blade_long			},
 	/* offset_low */
 	{ .dual	= false	, .blade = lemona_blade_long			},
@@ -2529,34 +2529,36 @@ const struct lemona_mixer	lemona_mixers[]= {
   {
     .sysnr	= __NR_readv,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+	{ .dual	= false	, .blade = lemona_blade_long			},
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 3,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+	{ .dual = false	, .blade = lemona_blade_integer			},
+	{ .dual = true	, .blade = lemona_blade_iovec			},
       },
     }
   },
   {
     .sysnr	= __NR_writev,
     .in		= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 3,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual	= true, .blade = NULL },
+	{ .dual	= false	, .blade = lemona_blade_long			},
+	{ .dual	= true	, .blade = lemona_blade_iovec			},
       }
     },
     .out	= {
-      .argnr	= -1,
-      .extnr	= -1,
+      .argnr	= 1,
+      .extnr	= 0,
       .handlers	= {
-	{ .dual = false, .blade = NULL },
+	{ .dual = false	, .blade = lemona_blade_integer			},
       },
     }
   },

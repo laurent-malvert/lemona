@@ -23,7 +23,7 @@ sysname = "__NR_lseek"
 def ProcessIn(z):
     # some sanity check
     if z.argnr != 3 or z.extnr != 0:
-        raise NameError("Invalid '%s' Zest (In)" % sysname, zest)
+        raise NameError("Invalid '%s' Zest (In)" % sysname, z)
     #fd, offset & whence
     print " %s | %s | %s " % ("FD".center(24), "OFFSET".center(24),
                               "WHENCE".center(24))
@@ -37,14 +37,15 @@ def ProcessIn(z):
         wh      = "SEEK_CUR"
     else:
         wh      = "SEEK_END"
-    print " %s | %s | %s" % (str(fd).center(37), str(off).center(37))
+    print " %s | %s | %s " % (str(fd).center(24), str(off).center(24),
+                              wh.center(24))
     print "-" * 80
 
 def ProcessOut(z):
     # some sanity check
     if z.argnr != 1 or z.extnr != 0:
         print z
-        raise NameError("Invalid '%s' Zest (Out)" % sysname, zest)
+        raise NameError("Invalid '%s' Zest (Out)" % sysname, z)
     ret = unpack_from("i", z.args[0])[0]
     print " %s | %s " % ("RETURNED".center(17), str(ret).center(58))
     print "-" * 80

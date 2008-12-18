@@ -16,39 +16,40 @@
 from struct     import unpack_from
 from blades     import console
 
-sysnr   = { "2.6.26.3" : 5 }
+sysnr   = { "2.6.26.3" : 140 }
 
-sysname = "__NR_open"
+sysname = "__NR__llseek"
 
 def ProcessIn(z):
     # some sanity check
-    if z.argnr != 3 or z.extnr != 0:
+    if z.argnr != 4 or z.extnr != 0:
         raise NameError("Invalid '%s' Zest (In)" % sysname, z)
-    #Filename as passed by user
-    print z.argsz[0]
-    console.PrintString("FILENAME", z.args[0], z.argsz[0])
-    #Flags & mode
-    print " %s | %s " % ("FLAGS".center(37), "MODE".center(37))
+    #fd, offset & whence
+    print " %s | %s | %s | %s " % ("FD".center(17), "OFFSET HIGH".center(17),
+                                   "OFFSET LOW".center(17), "WHENCE".center(17))
     print "-" * 80
-    flags       = unpack_from("i", z.args[1])[0]
-    mode        = unpack_from("i", z.args[2])[0]
-    print " %s | %s " % (str(flags).center(37), str(mode).center(37))
+    fd          = unpack_from("i", z.args[0])[0]
+    offh        = unpack_from("i", z.args[1])[0]
+    offl        = unpack_from("i", z.args[2])[0]
+    wh          = unpack_from("i", z.args[3])[0]
+    if wh == 0:
+        wh      = "SEEK_SET"
+    elif wh == 1:
+        wh      = "SEEK_CUR"
+    else:
+        wh      = "SEEK_END"
+    print " %s | %s | %s | %s " % (str(fd).center(17), str(offh).center(17),
+                                   str(offl).center(17), wh.center(17))
     print "-" * 80
 
 def ProcessOut(z):
     # some sanity check
-    if z.argnr != 1 or z.extnr != 1:
+    if z.argnr != 1 or z.extnr != 0:
         print z
         raise NameError("Invalid '%s' Zest (Out)" % sysname, z)
-    ret = unpack_from("i", z.args[0])[0]
+    ret = unpack_from("q", z.args[0])[0]
     print " %s | %s " % ("RETURNED".center(17), str(ret).center(58))
     print "-" * 80
-    #Path as resolved by kernel
-    if ret >= 0:
-        pth     = z.exts[0].split("/")
-        pth.reverse()
-        pth     = "/".join(pth)
-        console.PrintString("RESOLVED PATH", pth, z.extsz[0])
 
 def Process(zest):
     if zest.inout == True:

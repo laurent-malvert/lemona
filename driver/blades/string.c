@@ -76,7 +76,7 @@ int		lemona_blade_string_fd(struct lemona_zest *zest,
 				       int isExt, int idx, int off,
 				       void *pfd, void *unused)
 {
-  long		fd		= *((long *)pfd);
+  long		fd	= *((long *)pfd);
   int		size	= 0;
   struct file	*file;
   struct dentry	*dentry;
@@ -99,7 +99,6 @@ int		lemona_blade_string_fd(struct lemona_zest *zest,
 	  size			+= (int)dentry->d_name.len + (size ? 1 : 0);
 	  dentry		= dentry->d_parent;
 	}
-
       fput_light(file, fput_needed);
       return (size + 1); /* add '/' (i.e. root path) */
     }
@@ -113,7 +112,7 @@ int		lemona_blade_string_fd(struct lemona_zest *zest,
       if (size)
 	dest[size++]		= '/';
       strncpy(dest + size, dentry->d_name.name, dentry->d_name.len);
-      size				+= (int)dentry->d_name.len;
+      size			+= (int)dentry->d_name.len;
       dentry			= dentry->d_parent;
     }
   /* add '/' (i.e. root path) */
